@@ -12,6 +12,7 @@ origins = [
     'http://localhost:3000' #i am now allowing requests from this origin,
     #planning to make this the fronend url, we will change this. 
     #this isnt that secure, but for the first sprint let it be. 
+    'http://localhost:5173' 
 ]
 
 app.add_middleware(
