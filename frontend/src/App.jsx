@@ -2,6 +2,9 @@ import { LoginPage } from './pages'
 import { RegisterPage } from './pages'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
+import React, {useState, useEffect} from 'react';
+import api from './api.js';
+
 export default function App() {
   return (
     <Router>
@@ -14,4 +17,9 @@ export default function App() {
       </div>
     </Router>
   );
+
+  const fetchLogin = async () => {
+    const response = await api.get('/login');
+    console.log(response.data);
+  }
 }
