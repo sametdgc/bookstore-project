@@ -1,15 +1,16 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+import sqlalchemy as _sql
+import sqlalchemy.orm as _orm
+import sqlalchemy.ext.declarative as _declarative
 
 
 URL_DB = 'mysql+pymysql://root:test123456test@localhost:3306/ChapterZero' 
 #after the column you should write your_password: username:password , root:test123456test
 #after the localhost you should write the name_of_your_database for now i said ChapterZero
  
-engine = create_engine(URL_DB)
+engine = _sql.create_engine(URL_DB)
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = _orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
+Base = _declarative.declarative_base()
 
+    
