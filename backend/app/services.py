@@ -40,7 +40,7 @@ async def create_token(user: _models.User, db: _orm.Session):
         payload['date_last_updated'] = payload['date_last_updated'].isoformat()
 
     token = _jwt.encode(
-        user_obj.model_dump(),
+        payload,
         JWT_SECRET
     )
     return dict(access_token=token, token_type="bearer")
