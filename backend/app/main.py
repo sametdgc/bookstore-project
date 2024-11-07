@@ -1,49 +1,58 @@
-from fastapi import FastAPI, HTTPException
-from supabase import create_client, Client
-import models, schemas
-import datetime as _dt
-import asyncio
 from config import SUPABASE_URL, SUPABASE_KEY
+import schemas as _schemas
+import services as _services
+import datetime as _dt
+from fastapi import FastAPI, HTTPException, status, Depends
+from fastapi.security import OAuth2PasswordRequestForm
+from supabase import create_client, Client
+from fastapi.middleware.cors import CORSMiddleware #needed to allow requests from frontend
+
 
 # Initialize FastAPI
 app = FastAPI()
 
+origins = [
+    'http://localhost:3000' #i am now allowing requests from th3se origin,
+    'http://localhost:5173' 
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+)
+
 # Initialize Supabase client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Function to create a user (for testing purposes without an endpoint)
-async def create_user_for_test():
-    # Example user data (this should be similar to what you want to insert)
-    user = schemas.UserCreate(
-       #user_id=1,   #ID should be generated automatically if needed
-        full_name="John Doe",
-        email="john.doe@example.com",
-        tax_id="1234567890",
-        phone_number="+123456789",
-        hashed_password="securepassword",  # You should hash the password here
-        role_id=1  #I have added the role_id 1 as the admin in the table to not get reference error
-    )
+
+@app.post("/api/users", status_code=status.HTTP_201_CREATED)
+async def register_user(user: _schemas._UserCreate):
+
+    response = supabase.table("users").select("*").eq("email", user.email).execute()
+    if response.data:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
     
-    # Hash the password before storing
-    hashed_password = models.User.create_password_hash(user.hashed_password)
-    user_data = {
-        #"user_id": user.user_id,
-        "full_name": user.full_name,
+    result = supabase.table("users").insert({
         "email": user.email,
-        "tax_id": user.tax_id,
-        "phone_number": user.phone_number,
-        "hashed_password": hashed_password,
-        "created_at": _dt.datetime.now().isoformat(),  # Convert to ISO 8601 string
-        "updated_at": _dt.datetime.now().isoformat(),  # Convert to ISO 8601 string
-        "role_id": user.role_id,  
-    }
+        "hashed_password": _services.get_password_hash(user.password),  # Assuming password hashing logic is in _services
+        "created_at": _dt.datetime.utcnow()
+    }).execute()
+
+    if result.error:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create user")
     
-    # Insert the new user into Supabase
-    response = supabase.table("users").insert(user_data).execute()
+    return {"message": "User registered successfully"}
 
-
-
-# Run the function to create a user (no need for frontend, just testing in terminal)
-if __name__ == "__main__":
-    # Use asyncio to run the asynchronous function
-    asyncio.run(create_user_for_test())
+@app.post("/api/token")
+async def generate_token(
+    form_data: OAuth2PasswordRequestForm = Depends()
+):
+    # Authenticate user using Supabase query
+    response = supabase.table("users").select("*").eq("email", form_data.username).execute()
+    user = response.data[0] if response.data else None
+    
+    if not user or not _services.verify_password(form_data.password, user["hashed_password"]):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    
+    # Create and return the token
+    return _services.create_token(user)

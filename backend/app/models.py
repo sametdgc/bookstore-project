@@ -1,7 +1,7 @@
 import datetime as _dt
 import passlib.hash as _hash
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional
 
 class User(BaseModel):
     user_id: int
