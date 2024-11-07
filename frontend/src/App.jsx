@@ -18,8 +18,4 @@ export default function App() {
     </Router>
   );
 
-  const fetchLogin = async () => {
-    const response = await api.get('/login');
-    console.log(response.data);
-  }
 }
