@@ -1,53 +1,49 @@
-import fastapi as _fastapi
-import fastapi.security as _security
-from sqlalchemy.orm import Session
-from typing import Annotated, List
-import services as _services
-import models as _models
-import schemas as _schemas
-from fastapi.middleware.cors import CORSMiddleware #needed to allow requests from frontend
-from database import SessionLocal, engine, Base
+from fastapi import FastAPI, HTTPException
+from supabase import create_client, Client
+import models, schemas
+import datetime as _dt
+import asyncio
+from config import SUPABASE_URL, SUPABASE_KEY
 
-app = _fastapi.FastAPI()
+# Initialize FastAPI
+app = FastAPI()
 
-origins = [
-    'http://localhost:3000' #i am now allowing requests from th3se origin,
-    'http://localhost:5173' 
-]
+# Initialize Supabase client
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-)
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-db_dependency = Annotated[Session, _fastapi.Depends(get_db)]
-
-Base.metadata.create_all(bind=engine)
-
-@app.post("/api/users", status_code=_fastapi.status.HTTP_201_CREATED)
-async def register_user(
-    user: _schemas._UserCreate, db: db_dependency):
-    db_user = await _services.get_user_by_email(user.email, db)
-    if db_user:
-        raise _fastapi.HTTPException(status_code=_fastapi.status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-    return await _services.create_user(user, db)
-
-@app.post("/api/token")
-async def generate_token(
-    form_data: _security.OAuth2PasswordRequestForm = _fastapi.Depends(), 
-    db: db_dependency = db_dependency
-):
-    user = await _services.authenticate_user(form_data.username, #email for us
-                                             form_data.password, 
-                                             db)
-    if not user:
-        raise _fastapi.HTTPException(status_code=_fastapi.status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+# Function to create a user (for testing purposes without an endpoint)
+async def create_user_for_test():
+    # Example user data (this should be similar to what you want to insert)
+    user = schemas.UserCreate(
+       #user_id=1,   #ID should be generated automatically if needed
+        full_name="John Doe",
+        email="john.doe@example.com",
+        tax_id="1234567890",
+        phone_number="+123456789",
+        hashed_password="securepassword",  # You should hash the password here
+        role_id=1  #I have added the role_id 1 as the admin in the table to not get reference error
+    )
     
-    return await _services.create_token(user, db)
+    # Hash the password before storing
+    hashed_password = models.User.create_password_hash(user.hashed_password)
+    user_data = {
+        #"user_id": user.user_id,
+        "full_name": user.full_name,
+        "email": user.email,
+        "tax_id": user.tax_id,
+        "phone_number": user.phone_number,
+        "hashed_password": hashed_password,
+        "created_at": _dt.datetime.now().isoformat(),  # Convert to ISO 8601 string
+        "updated_at": _dt.datetime.now().isoformat(),  # Convert to ISO 8601 string
+        "role_id": user.role_id,  
+    }
+    
+    # Insert the new user into Supabase
+    response = supabase.table("users").insert(user_data).execute()
+
+
+
+# Run the function to create a user (no need for frontend, just testing in terminal)
+if __name__ == "__main__":
+    # Use asyncio to run the asynchronous function
+    asyncio.run(create_user_for_test())
