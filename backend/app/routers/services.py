@@ -1,10 +1,10 @@
-import models as _models 
+import app.models.models as _models 
 from supabase import create_client, Client
-from app import schemas as _schemas
+from app.schemas import schemas 
 import passlib.hash as _hash
 import jwt as _jwt
 from datetime import datetime
-from config import SUPABASE_URL, SUPABASE_KEY
+from app.config import SUPABASE_URL, SUPABASE_KEY
 
 # Initialize Supabase client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -16,11 +16,11 @@ async def get_user_by_email(email: str):
     response = supabase.table("users").select("*").eq("email", email).execute()
     return response.data[0] if response.data else None
 
-async def create_user(user: _schemas._UserCreate):
+async def create_user(user: schemas.UserCreate):
     # Create user object to insert into Supabase
     user_obj = _models.User(email=user.email, 
                             full_name=user.full_name, 
-                            tax_id=user.tax_id, 
+                            tax_id=user.tax_id,
                             phone_number=user.phone_number, 
                             hashed_password= _hash.bcrypt.hash(user.hashed_password))
 
@@ -43,7 +43,7 @@ async def authenticate_user(email: str, password: str):
 
 async def create_token(user: dict):
     # Assume `user` is already a dictionary from Supabase, convert to schema if needed
-    user_obj = _schemas._User.model_validate(user)
+    user_obj = schemas._User.model_validate(user)
 
     # Prepare the payload for JWT
     payload = user_obj.model_dump()
@@ -56,4 +56,3 @@ async def create_token(user: dict):
 
     token = _jwt.encode(payload, JWT_SECRET)
     return {"access_token": token, "token_type": "bearer"}
-

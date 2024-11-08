@@ -1,6 +1,6 @@
 import datetime as _dt
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
 
 # User schema
 class User(BaseModel):
