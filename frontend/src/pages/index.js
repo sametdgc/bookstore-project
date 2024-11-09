@@ -4,7 +4,7 @@ import MainPage from "./MainPage";
 import ShoppingCart from "./ShoppingCart";
 import Wishlist from "./Wishlist";
 import AllBooksPage from "./AllBooksPage";
-import BookDetailsPage from "./BookDetailsPage";
+// import BookDetailsPage from "./BookDetailsPage";
 
 export {
   LoginPage,
@@ -13,5 +13,5 @@ export {
   ShoppingCart,
   Wishlist,
   AllBooksPage,
-  BookDetailsPage
+  // BookDetailsPage
 };
