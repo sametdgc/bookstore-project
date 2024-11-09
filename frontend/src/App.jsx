@@ -5,7 +5,8 @@ import {
   RegisterPage,
   MainPage,
   ShoppingCart,
-  Wishlist,
+  Wishlist, 
+  BookDetailsPage,
   AllBooksPage,
 } from "./pages";
 
@@ -24,8 +25,13 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          {/* Routes for wishlist and cart pages */}
+          {/* Routes for book details pages*/}
+          <Route path="/books/:bookId" element={<BookDetailsPage />} />
+
+          {/* Routes for wishlist page*/}
           <Route path="/wishlist" element={<Wishlist />} />
+
+          {/* Routes for cart page*/}
           <Route path="/cart" element={<ShoppingCart />} />
 
           {/* Fallback route: redirect to MainPage for any undefined path */}
