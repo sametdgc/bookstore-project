@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
 
 const RegisterForm = () => {
+  const navigate = useNavigate(); 
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [email, setEmail] = useState('');
@@ -31,7 +32,6 @@ const RegisterForm = () => {
     
     const fullName = `${name} ${surname}`;
     
-    console.log({ fullName, email, phone, password });
     
 
     try {
@@ -53,10 +53,12 @@ const RegisterForm = () => {
         setError(error.message);
       } else {
         setSuccess(true);
-        //maybe direct user to the login page
-        console.log('User registered:', data.user);
+        console.log('User registered:', user); // Corrected: Log the 'user' directly
         // Redirect or handle post-registration actions as needed
         setName('');setSurname('');setEmail('');setTaxId('');setPhone('');setPassword('');setConfirmPassword('');
+        
+        //maybe direct user to the login page
+        navigate('/login');
       }
     } catch (err) {
       console.error('Error during registration:', err);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link,useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
 
@@ -7,11 +7,11 @@ const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate(); 
 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ email, password });
     
     try {
       const { user, session, error } = await supabase.auth.signInWithPassword({
@@ -23,7 +23,7 @@ const LoginForm = () => {
         setError('Wrong email or password, please try again.'); 
       } else {
         console.log('User signed in:', user);
-        // Redirect or update UI as needed
+        navigate('/');
       }
     } catch (err) {
       console.error('Login error:', err);
@@ -63,7 +63,7 @@ const LoginForm = () => {
         {error && (
           <div className="text-red-500 text-sm mt-2">{error}</div>
         )}
-        
+
         <button 
           type="submit" 
           className="w-full py-2 px-4 bg-orange-500 text-white font-semibold rounded-md shadow hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50"
