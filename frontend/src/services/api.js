@@ -12,6 +12,127 @@ export const getGenres = async () => {
     return data; 
 };
 
+// GET all books
+export const getAllBooks = async () => {
+  const { data, error } = await supabase
+      .from('books')
+      .select('*');
+  if (error) console.log('Error fetching books:', error.message);
+  return data;
+};
+
+
+// GET books by id
+export const getBookById = async (bookId) => {
+  const { data, error } = await supabase
+      .from('books')
+      .select('*')
+      .eq('book_id', bookId)
+      .single();
+  if (error) console.log('Error fetching book:', error.message);
+  return data;
+};
+
+// UPDATE a book
+export const updateBook = async (bookId, updates) => {
+  const { data, error } = await supabase
+      .from('books')
+      .update(updates)
+      .eq('book_id', bookId);
+  if (error) console.log('Error updating book:', error.message);
+  return data;
+};
+
+// GET cart of a user
+export const getCartByUserId = async (userId) => {
+  const { data, error } = await supabase
+      .from('Cart')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+  if (error) console.log('Error fetching cart:', error.message);
+  return data;
+};
+
+// ADD an item to the cart
+export const addItemToCart = async (cartId, cartItem) => {
+  const { data, error } = await supabase
+      .from('CartItems')
+      .insert([{ cart_id: cartId, ...cartItem }]);
+  if (error) console.log('Error adding item to cart:', error.message);
+  return data;
+};
+
+// UPDATE an item's quantity in the cart
+export const updateCartItemQuantity = async (cartId, bookId, quantity) => {
+  const { data, error } = await supabase
+      .from('CartItems')
+      .update({ quantity })
+      .eq('cart_id', cartId)
+      .eq('book_id', bookId);
+  if (error) console.log('Error updating cart item:', error.message);
+  return data;
+};
+
+// PLACE an order
+export const placeOrder = async (order) => {
+  const { data, error } = await supabase
+      .from('Orders')
+      .insert([order]);
+  if (error) console.log('Error placing order:', error.message);
+  return data;
+};
+
+// GET all orders of a user
+
+
+
+// ADD a new review
+export const addReview = async (review) => {
+  const { data, error } = await supabase
+      .from('Reviews')
+      .insert([review]);
+  if (error) console.log('Error adding review:', error.message);
+  return data;
+};
+
+// GET all reviews of a book
+export const getReviewsForBook = async (bookId) => {
+  const { data, error } = await supabase
+      .from('Reviews')
+      .select('*')
+      .eq('book_id', bookId);
+  if (error) console.log('Error fetching reviews:', error.message);
+  return data;
+};
+
+// ADD a book to the wishlist
+export const addBookToWishlist = async (userId, bookId) => {
+  const { data, error } = await supabase
+      .from('Wishlist')
+      .insert([{ user_id: userId, book_id: bookId }]);
+  if (error) console.log('Error adding book to wishlist:', error.message);
+  return data;
+};
+
+// GET the wishlist of a user
+export const getWishlistByUserId = async (userId) => {
+  const { data, error } = await supabase
+      .from('Wishlist')
+      .select('*')
+      .eq('user_id', userId);
+  if (error) console.log('Error fetching wishlist:', error.message);
+  return data;
+};
+
+
+
+/* 
+
+  AUTHENTICATION SERVICES
+
+*/
+
 
 // Fetch the current user
 export const fetchUser = async () => {
