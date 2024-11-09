@@ -13,7 +13,7 @@ const BookCard = ({ book }) => {
 
       {/* Book image */}
       <img
-        src={book.image_url} 
+        src={book.image_url}
         alt={book.title}
         className="w-full h-64 object-cover mb-4 rounded-md"
       />
@@ -25,7 +25,9 @@ const BookCard = ({ book }) => {
       <p className="text-gray-500 text-sm text-center">{book.author_name}</p>
 
       {/* Price */}
-      <p className="text-gray-800 text-xl font-bold text-center mt-2">${book.price}</p>
+      <p className="text-gray-800 text-xl font-bold text-center mt-2">
+        ${book.price}
+      </p>
 
       {/* Add to Cart button */}
       <button className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
@@ -34,6 +36,5 @@ const BookCard = ({ book }) => {
     </div>
   );
 };
-
 
 export default BookCard;
