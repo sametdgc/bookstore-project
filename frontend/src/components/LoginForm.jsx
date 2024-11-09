@@ -1,14 +1,35 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link,useNavigate } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
+
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate(); 
 
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ email, password });
-    // API calls for user authentication
+    
+    try {
+      const { user, session, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        console.error("Login error details:", error);
+        setError('Wrong email or password, please try again.'); 
+      } else {
+        console.log('User signed in:', user);
+        navigate('/');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('An unexpected error occurred. Please try again.');
+    }
+    
   };
 
   return (
@@ -38,6 +59,10 @@ const LoginForm = () => {
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
           />
         </div>
+
+        {error && (
+          <div className="text-red-500 text-sm mt-2">{error}</div>
+        )}
 
         <button 
           type="submit" 
