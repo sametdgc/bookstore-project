@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link,useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
-
+import {testSupabaseConnection} from '../services/api';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +14,7 @@ const LoginForm = () => {
     e.preventDefault();
     
     try {
+      testSupabaseConnection();
       const { user, session, error } = await supabase.auth.signInWithPassword({
         email,
         password,

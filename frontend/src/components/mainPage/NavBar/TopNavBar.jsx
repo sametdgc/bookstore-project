@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ShoppingCartIcon, HeartIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { chapter0logo } from '../../../assets';
 import CategoryLinks from './CategoryLinks';
+import LoginStatus from './LoginStatus';
 
 const TopNavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -27,9 +28,7 @@ const TopNavBar = () => {
 
         {/* Icons and Hamburger Menu */}
         <div className="flex items-center space-x-4">
-          <Link to="/login" className="hidden md:inline hover:underline">Login</Link>
-          <Link to="/register" className="hidden md:inline hover:underline">Register</Link>
-          
+          <LoginStatus />
           <Link to="/wishlist" className="text-white hover:text-[#f5f5f5]">
             <HeartIcon className="w-6 h-6" />
           </Link>

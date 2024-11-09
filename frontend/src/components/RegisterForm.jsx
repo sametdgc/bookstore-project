@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
+import {testSupabaseConnection} from '../services/api';
 
 
 const RegisterForm = () => {
@@ -32,10 +33,10 @@ const RegisterForm = () => {
     
     const fullName = `${name} ${surname}`;
     
-    
-
     try {
       // Register user with Supabase
+      console.log('Registering user:', email, password, fullName, taxId, phone, role); // Corrected: Log the input values
+      testSupabaseConnection();
       const { user, error } = await supabase.auth.signUp({
         email,
         password,

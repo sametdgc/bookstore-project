@@ -35,3 +35,22 @@ export const signOut = async () => {
     }
     return error;
 };
+
+
+//test wheter you are connected to the api or not
+export const testSupabaseConnection = async () => {
+    try {
+      const { data, error } = await supabase.auth.getSession();
+  
+      if (error) {
+        console.error('Error connecting to Supabase:', error);
+      } else {
+        console.log('Connection successful:', data);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+    }
+  };
+
+  
+
