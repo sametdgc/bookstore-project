@@ -4,55 +4,112 @@ import { supabase } from '../services/supabaseClient';
 import { TopNavBar, Footer } from '../components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar } from '@fortawesome/free-solid-svg-icons';
+import { FaHeart } from 'react-icons/fa';
 
 const BookDetailsPage = () => {
-  const { bookId } = useParams();
+  const { book_id } = useParams();
   const [book, setBook] = useState(null);
-  const [showMessage, setShowMessage] = useState(false);
+  const [wishlistMessage, setWishlistMessage] = useState("");
+  const [cartMessage, setCartMessage] = useState(""); // State for cart message
+  const [isInWishlist, setIsInWishlist] = useState(false); // Track wishlist status
 
   useEffect(() => {
     const fetchBookDetails = async () => {
-      const dummyComments = [
-        { user: 'User1', text: 'Amazing book!', rating: 5 },
-        { user: 'User2', text: 'Enjoyed every chapter.', rating: 4 },
-        { user: 'User3', text: 'Good read but a bit lengthy.', rating: 3 },
-        { user: 'User4', text: 'Absolutely loved it!', rating: 5 },
-        { user: 'User5', text: 'Not my type.', rating: 2 },
-        { user: 'User6', text: 'Great writing!', rating: 4 },
-        { user: 'User7', text: 'Interesting story.', rating: 3 },
-        { user: 'User8', text: 'Fantastic book, highly recommend.', rating: 5 },
-        { user: 'User9', text: 'Pretty good.', rating: 4 },
-        { user: 'User10', text: 'Could have been better.', rating: 3 },
-        { user: 'User11', text: 'A masterpiece.', rating: 5 },
-      ];
+      try {
+        // Fetch book details from Supabase
+        const { data: bookData, error: bookError } = await supabase
+          .from('books')
+          .select('*')
+          .eq('book_id', book_id)
+          .single();
 
-      const totalRating = dummyComments.reduce((sum, comment) => sum + comment.rating, 0);
-      const averageRating = totalRating / dummyComments.length;
+        if (bookError) throw bookError;
 
-      setBook({
-        title: 'Sample Book Title',
-        author: 'John Doe',
-        genre: 'Fiction',
-        published_date: '2023-01-01',
-        price: 19.99,
-        stock_quantity: 25,
-        description: 'This is a sample description of the book. It provides an overview of the plot, themes, and other interesting aspects.',
-        imageUrl: 'https://via.placeholder.com/200x300', // Replace with actual URL for book image
-        comments: dummyComments,
-        ratings: averageRating,
-      });
+        // Fetch genre name based on genre_id
+        const { data: genreData, error: genreError } = await supabase
+          .from('genres')
+          .select('genre_name')
+          .eq('genre_id', bookData.genre_id)
+          .single();
+
+        if (genreError) throw genreError;
+
+        // Fetch language name based on language_id
+        const { data: languageData, error: languageError } = await supabase
+          .from('languages')
+          .select('language_name')
+          .eq('language_id', bookData.language_id)
+          .single();
+
+        if (languageError) throw languageError;
+
+        // Fetch author name based on author_id
+        const { data: authorData, error: authorError } = await supabase
+          .from('authors')
+          .select('author_name')
+          .eq('author_id', bookData.author_id)
+          .single();
+
+        if (authorError) throw authorError;
+
+        // Fetch approved reviews for the book
+        const { data: reviewsData, error: reviewsError } = await supabase
+          .from('reviews')
+          .select('*')
+          .eq('book_id', book_id)
+          .eq('approval_status', true);
+
+        if (reviewsError) throw reviewsError;
+
+        // Fetch user names for each review based on user_id
+        const userIds = reviewsData.map((review) => review.user_id);
+        const { data: usersData, error: usersError } = await supabase
+          .from('users')
+          .select('user_id, full_name')
+          .in('user_id', userIds);
+
+        if (usersError) throw usersError;
+
+        // Map user full names to corresponding reviews
+        const reviewsWithUserNames = reviewsData.map((review) => ({
+          ...review,
+          full_name: usersData.find((user) => user.user_id === review.user_id)?.full_name || 'Unknown User',
+        }));
+
+        // Calculate the average rating from the approved reviews
+        const totalRating = reviewsData.reduce((sum, review) => sum + review.rating, 0);
+        const averageRating = reviewsData.length > 0 ? totalRating / reviewsData.length : 0;
+
+        // Set the book data with genre, language, author, reviews with user names, and average rating
+        setBook({
+          ...bookData,
+          genre_name: genreData.genre_name,
+          language_name: languageData.language_name,
+          author_name: authorData.author_name,
+          reviews: reviewsWithUserNames,
+          ratings: averageRating,
+        });
+      } catch (error) {
+        console.error("Error fetching book details:", error);
+      }
     };
 
     fetchBookDetails();
-  }, [bookId]);
+  }, [book_id]);
 
   const handleAddToCart = () => {
-    setShowMessage(true);
+    setCartMessage("Product is successfully added to your cart!");
+    setTimeout(() => setCartMessage(""), 2000);
+  };
 
-    // Hide the message after 2 seconds
-    setTimeout(() => {
-      setShowMessage(false);
-    }, 2000);
+  const handleWishlistToggle = () => {
+    setIsInWishlist(!isInWishlist);
+    setWishlistMessage(
+      isInWishlist
+        ? "Product is removed from the wishlist."
+        : "Product is added to wishlist."
+    );
+    setTimeout(() => setWishlistMessage(""), 2000);
   };
 
   if (!book) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -61,7 +118,6 @@ const BookDetailsPage = () => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
       const fillPercentage = Math.min(Math.max(rating - i + 1, 0), 1) * 100;
-      
       stars.push(
         <div key={i} className="relative inline-block text-gray-300" style={{ width: '1em', height: '1em' }}>
           <FontAwesomeIcon icon={faStar} className="text-gray-300 absolute top-0 left-0" />
@@ -78,15 +134,28 @@ const BookDetailsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
       {/* Main Content */}
-      <div className="container mx-auto py-16 px-4">
+      <div className="container mx-auto py-16 px-4 relative">
         <div className="bg-white shadow-md rounded-md p-8 flex flex-col md:flex-row items-start md:items-start space-y-8 md:space-y-0 md:space-x-8">
           
-          {/* Book Image */}
-          <div className="md:w-1/4 flex justify-center md:justify-start">
+          {/* Book Image and Wishlist Icon */}
+          <div className="md:w-1/4 flex justify-center md:justify-start relative">
+            {/* Wishlist Heart Icon and Message */}
+            {wishlistMessage && (
+              <p className="absolute -top-8  text-sm text-gray-600 bg-gray-200 px-2 py-1 rounded">
+                {wishlistMessage}
+              </p>
+            )}
+            <button
+              onClick={handleWishlistToggle}
+              className={`absolute top-2 left-2 p-2 rounded-full border-2 transition ${
+                isInWishlist ? 'bg-red-500 text-white border-red-500' : 'text-red-500 border-red-500'
+              }`}
+            >
+              <FaHeart size={24} />
+            </button>
             <img
-              src={book.imageUrl}
+              src={book.image_url || 'https://via.placeholder.com/200x300'}
               alt={`${book.title} cover`}
               className="rounded-lg shadow-lg object-cover"
               style={{ width: '100%', height: '350px', maxWidth: '250px' }}
@@ -96,19 +165,27 @@ const BookDetailsPage = () => {
           {/* Book Details */}
           <div className="md:w-2/4 flex flex-col space-y-4">
             <h1 className="text-4xl font-bold text-[#65aa92]">{book.title}</h1>
-            <p className="text-2xl text-gray-700">Author: {book.author}</p>
-            <p className="text-gray-600">{book.description}</p>
+            <p className="text-2xl text-gray-700">{book.author_name}</p>
+            <p className="text-md text-gray-600 mt-2">{book.description}</p>
 
             {/* Additional Details */}
             <div className="text-md text-gray-500 space-y-1">
-              <p><span className="font-semibold">Genre:</span> {book.genre}</p>
-              <p><span className="font-semibold">Published Date:</span> {book.published_date}</p>
-              <p><span className="font-semibold">Stock:</span> {book.stock_quantity}</p>
+              <p><span className="font-semibold">Genre:</span> {book.genre_name}</p>
+              <p><span className="font-semibold">Publisher:</span> {book.publisher}</p>
+              <p><span className="font-semibold">ISBN:</span> {book.isbn}</p>
+              <p><span className="font-semibold">Language:</span> {book.language_name}</p>
+              <p><span className="font-semibold">Stock:</span> {book.available_quantity}</p>
               <p className="flex items-center">
                 <span className="font-semibold">Average Rating:</span>
                 <span className="ml-2 flex items-center">
-                  {renderStars(book.ratings)}
-                  <span className="ml-2 text-black">{book.ratings.toFixed(1)} / 5</span>
+                  {book.reviews.length > 0 ? (
+                    <>
+                      {renderStars(book.ratings)}
+                      <span className="ml-2 text-black">{book.ratings.toFixed(1)} / 5</span>
+                    </>
+                  ) : (
+                    <span className="text-gray-600">No ratings yet.</span>
+                  )}
                 </span>
               </p>
             </div>
@@ -119,37 +196,54 @@ const BookDetailsPage = () => {
             <div className="bg-gray-50 p-4 rounded-md shadow-lg text-center font-semibold" style={{ width: '300px', height: '60px' }}>
               <p className="text-2xl text-gray-700">${book.price}</p>
             </div>
+            
             <button
-              onClick={handleAddToCart}
-              className="bg-white text-red-500 border border-red-500 py-2 px-4 rounded-md font-semibold hover:bg-red-500 hover:text-white transition-colors duration-300 text-xl"
+              onClick={book.available_quantity > 0 ? handleAddToCart : null}
+              className={`py-2 px-4 rounded-md font-semibold text-xl transition-colors duration-300 ${
+                book.available_quantity > 0
+                  ? 'bg-white text-blue-500 border border-blue-500 hover:bg-blue-500 hover:text-white'
+                  : 'bg-red-500 text-white cursor-not-allowed'
+              }`}
               style={{ width: '300px', height: '50px' }}
+              disabled={book.available_quantity === 0}
             >
-              Add to Cart
+              {book.available_quantity > 0 ? 'Add to Cart' : 'Out of Stock'}
             </button>
-
-            {/* Reserved Space for Success Message */}
-            <p
-              className={`text-[#65aa92] font-semibold mt-2 text-sm text-center ${showMessage ? 'visible' : 'invisible'}`}
-              style={{ minHeight: '1.5em' , width: '300px'}}
+            
+            <div
+              className={`text-sm px-2 py-1 rounded shadow-md text-center transition-opacity duration-300 ${
+                cartMessage ? 'opacity-100 bg-gray-200 text-gray-600' : 'opacity-0'
+              }`} 
+              style={{minHeight: '30px', width: '300px' }} 
             >
-              Product is successfully added to your cart!
-            </p>
+              {cartMessage}
+            </div>
           </div>
+
+
+
         </div>
 
-        {/* Comments Section */}
+        {/* Reviews Section */}
         <div className="bg-white shadow-md rounded-md p-8 mt-8">
-          <h2 className="text-2xl font-semibold text-[#65aa92] mb-4">Comments</h2>
-          {book.comments.map((comment, index) => (
-            <div key={index} className="mb-4 p-4 bg-gray-100 rounded-md">
-              <p className="font-semibold">{comment.user}</p>
-              <p className="text-gray-600">{comment.text}</p>
-              <p className="text-yellow-500">
-                <span className="font-semibold">Rating:</span> 
-                <span className="text-black"> {comment.rating} / 5</span>
-              </p>
-            </div>
-          ))}
+          <h2 className="text-2xl font-semibold text-[#65aa92] mb-4">Reviews</h2>
+          {book.reviews.length > 0 ? (
+            book.reviews.map((review) => (
+              <div key={review.review_id} className="mb-4 p-4 bg-gray-100 rounded-md">
+                <p className="font-semibold">{review.full_name}</p>
+                <p className="text-gray-600">{review.comment}</p>
+                <div className="flex items-center">
+                  <span className="text-yellow-500 font-semibold mr-2">Rating:</span>
+                  <div className="flex items-center">
+                    {renderStars(review.rating)}
+                    <span className="ml-2 text-black">{review.rating} / 5</span>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-600 text-lg">No reviews yet!</p>
+          )}
         </div>
       </div>
 
