@@ -7,13 +7,17 @@ const RegisterForm = () => {
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [email, setEmail] = useState('');
+  const [taxId, setTaxId] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState('user'); // Default role
   const [error, setError] = useState('');  // Added state for error
   const [success, setSuccess] = useState(false);  // Added state for success
 
-
+  const handleRoleChange = (e) => {
+    setRole(e.target.value);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,18 +28,23 @@ const RegisterForm = () => {
       alert("Passwords do not match");
       return;
     }
-    console.log({ name, surname, email, phone, password });
     
+    const fullName = `${name} ${surname}`;
+    
+    console.log({ fullName, email, phone, password });
+    
+
     try {
       // Register user with Supabase
-      const { data, error } = await supabase.auth.signUp({
+      const { user, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            name,
-            surname,
+            fullName,  // Combine name and surname into fullName
+            taxId,
             phone,
+            role,  
           },
         },
       });
@@ -44,10 +53,10 @@ const RegisterForm = () => {
         setError(error.message);
       } else {
         setSuccess(true);
-        alert("Registration successful! Please check your email for verification.");
+        //maybe direct user to the login page
         console.log('User registered:', data.user);
         // Redirect or handle post-registration actions as needed
-        setName('');setSurname('');setEmail('');setPhone('');setPassword('');setConfirmPassword('');
+        setName('');setSurname('');setEmail('');setTaxId('');setPhone('');setPassword('');setConfirmPassword('');
       }
     } catch (err) {
       console.error('Error during registration:', err);
@@ -97,6 +106,19 @@ const RegisterForm = () => {
         </div>
 
         <div>
+          <label htmlFor="taxId" className="block text-sm font-medium text-gray-700">Tax ID</label>
+          <input 
+            type="text" 
+            id="taxId" 
+            value={taxId} 
+            onChange={(e) => setTaxId(e.target.value)} 
+            required 
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+          />
+        </div>
+    
+
+        <div>
           <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone Number</label>
           <input 
             type="tel" 
@@ -131,6 +153,50 @@ const RegisterForm = () => {
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
           />
         </div>
+
+        {/* Role selection */}
+        <div>
+          <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role</label>
+          <div className="flex space-x-6 mt-2">
+            <div className="flex items-center">
+              <input 
+                type="radio" 
+                id="customer" 
+                name="role" 
+                value="customer" 
+                checked={role === 'customer'} 
+                onChange={handleRoleChange} 
+                className="h-5 w-5 text-orange-500 focus:ring-orange-500 border-gray-300 rounded-full"
+              />
+              <label htmlFor="customer" className="ml-2 text-gray-700">Customer</label>
+            </div>
+            <div className="flex items-center">
+              <input 
+                type="radio" 
+                id="salesManager" 
+                name="role" 
+                value="salesManager" 
+                checked={role === 'salesManager'} 
+                onChange={handleRoleChange} 
+                className="h-5 w-5 text-orange-500 focus:ring-orange-500 border-gray-300 rounded-full"
+              />
+              <label htmlFor="salesManager" className="ml-2 text-gray-700">Sales Manager</label>
+            </div>
+            <div className="flex items-center">
+              <input 
+                type="radio" 
+                id="productManager" 
+                name="role" 
+                value="productManager" 
+                checked={role === 'productManager'} 
+                onChange={handleRoleChange} 
+                className="h-5 w-5 text-orange-500 focus:ring-orange-500 border-gray-300 rounded-full"
+              />
+              <label htmlFor="productManager" className="ml-2 text-gray-700">Product Manager</label>
+            </div>
+          </div>
+        </div>
+
 
         {/* Display error or success messages */}
         {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
