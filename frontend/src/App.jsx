@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import {
   LoginPage,
   RegisterPage,
@@ -9,38 +9,38 @@ import {
   BookDetailsPage,
   AllBooksPage,
 } from "./pages";
+import { TopNavBar } from "../src/components";
 
-export default function App() {
+function App() {
+  const location = useLocation();
+
+  // Define paths where the navbar should be hidden
+  const hideNavPaths = ["/login", "/register"];
+
+  return (
+    <div className="App">
+      {/* Conditionally render TopNavBar based on the current path */}
+      {!hideNavPaths.includes(location.pathname) && <TopNavBar />}
+      
+      <Routes>
+        <Route path="/" element={<MainPage />} />
+        <Route path="/all-books" element={<AllBooksPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/books/:bookId" element={<BookDetailsPage />} />
+        <Route path="/book-details" element={<BookDetailsPage />} />
+        <Route path="/wishlist" element={<Wishlist />} />
+        <Route path="/cart" element={<ShoppingCart />} />
+        <Route path="*" element={<MainPage />} />
+      </Routes>
+    </div>
+  );
+}
+
+export default function AppWrapper() {
   return (
     <Router>
-      <div className="App">
-        <Routes>
-          {/* Route for the main page */}
-          <Route path="/" element={<MainPage />} />
-
-          {/* Route for the all books page */}
-          <Route path="/all-books" element={<AllBooksPage />} />
-
-          {/* Routes for login and register pages */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-
-          {/* Routes for book details pages*/}
-          <Route path="/books/:bookId" element={<BookDetailsPage />} />
-
-          {/* Temporary route to view BookDetailsPage with a dummy book ID */}
-          <Route path="/book-details" element={<BookDetailsPage />} />
-
-          {/* Routes for wishlist page*/}
-          <Route path="/wishlist" element={<Wishlist />} />
-
-          {/* Routes for cart page*/}
-          <Route path="/cart" element={<ShoppingCart />} />
-
-          {/* Fallback route: redirect to MainPage for any undefined path */}
-          <Route path="*" element={<MainPage />} />
-        </Routes>
-      </div>
+      <App />
     </Router>
   );
 }
