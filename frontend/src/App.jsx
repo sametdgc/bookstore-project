@@ -28,6 +28,9 @@ export default function App() {
           {/* Routes for book details pages*/}
           <Route path="/books/:bookId" element={<BookDetailsPage />} />
 
+          {/* Temporary route to view BookDetailsPage with a dummy book ID */}
+          <Route path="/book-details" element={<BookDetailsPage />} />
+
           {/* Routes for wishlist page*/}
           <Route path="/wishlist" element={<Wishlist />} />
 
