@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
+
 
 const RegisterForm = () => {
   const [name, setName] = useState('');
@@ -9,13 +11,42 @@ const RegisterForm = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+    setSuccess(false);
+
     if (password !== confirmPassword) {
       alert("Passwords do not match");
       return;
     }
     console.log({ name, surname, email, phone, password });
+    try {
+      // Register user with Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            surname,
+            phone,
+          },
+        },
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setSuccess(true);
+        alert("Registration successful! Please check your email for verification.");
+        console.log('User registered:', data.user);
+        // Redirect or handle post-registration actions as needed
+      }
+    } catch (err) {
+      console.error('Error during registration:', err);
+      setError('An unexpected error occurred. Please try again.');
+    }
   };
 
   return (
