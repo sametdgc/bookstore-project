@@ -1,12 +1,10 @@
 import React from 'react';
-import { TopNavBar, HeroSection, SubscriptionBanner, Footer } from '../components';
+import { HeroSection, SubscriptionBanner, Footer } from '../components';
 
 
 const MainPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top Navigation Bar */}
-      <TopNavBar />
 
       {/* Hero Section */}
       <HeroSection />

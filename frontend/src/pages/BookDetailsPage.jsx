@@ -78,8 +78,6 @@ const BookDetailsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top Navigation Bar */}
-      <TopNavBar />
 
       {/* Main Content */}
       <div className="container mx-auto py-16 px-4">
