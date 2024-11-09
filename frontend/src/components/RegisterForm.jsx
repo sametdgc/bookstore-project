@@ -10,6 +10,10 @@ const RegisterForm = () => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');  // Added state for error
+  const [success, setSuccess] = useState(false);  // Added state for success
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,6 +25,7 @@ const RegisterForm = () => {
       return;
     }
     console.log({ name, surname, email, phone, password });
+    
     try {
       // Register user with Supabase
       const { data, error } = await supabase.auth.signUp({
@@ -42,11 +47,13 @@ const RegisterForm = () => {
         alert("Registration successful! Please check your email for verification.");
         console.log('User registered:', data.user);
         // Redirect or handle post-registration actions as needed
+        setName('');setSurname('');setEmail('');setPhone('');setPassword('');setConfirmPassword('');
       }
     } catch (err) {
       console.error('Error during registration:', err);
       setError('An unexpected error occurred. Please try again.');
     }
+      
   };
 
   return (
@@ -124,6 +131,10 @@ const RegisterForm = () => {
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
           />
         </div>
+
+        {/* Display error or success messages */}
+        {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
+        {success && <div className="text-green-500 text-sm mt-2">Registration successful!</div>}
 
         <button 
           type="submit" 
