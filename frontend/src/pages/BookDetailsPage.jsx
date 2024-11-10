@@ -25,10 +25,13 @@ const BookDetailsPage = () => {
     };
 
     fetchBookDetails();
+
+    // Check if book is already in wishlist
+    const existingWishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+    setIsInWishlist(existingWishlist.some((item) => item.book_id === parseInt(book_id)));
   }, [book_id]);
 
   const handleAddToCart = () => {
-    // Add book to localStorage cart
     const savedCart = JSON.parse(localStorage.getItem('cart')) || [];
     const updatedCart = [...savedCart, book];
     localStorage.setItem('cart', JSON.stringify(updatedCart));
@@ -39,12 +42,21 @@ const BookDetailsPage = () => {
   };
 
   const handleWishlistToggle = () => {
+    const existingWishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+    let updatedWishlist;
+
+    if (isInWishlist) {
+      // Remove from wishlist
+      updatedWishlist = existingWishlist.filter((item) => item.book_id !== book.book_id);
+      setWishlistMessage('Product is removed from the wishlist.');
+    } else {
+      // Add to wishlist
+      updatedWishlist = [...existingWishlist, book];
+      setWishlistMessage('Product is added to wishlist.');
+    }
+
+    localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
     setIsInWishlist(!isInWishlist);
-    setWishlistMessage(
-      isInWishlist
-        ? 'Product is removed from the wishlist.'
-        : 'Product is added to wishlist.'
-    );
     setTimeout(() => setWishlistMessage(''), 2000);
   };
 
