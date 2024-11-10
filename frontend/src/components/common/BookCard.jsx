@@ -43,15 +43,17 @@ const BookCard = ({ book, onAddToCart }) => {
       </p>
 
       {/* Add to Cart button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation(); // Prevents navigating when clicking "Add to Cart"
-          onAddToCart(book);
-        }}
-        className="mt-4 bg-[#65aa92] text-white px-4 py-2 rounded hover:bg-[#4a886e] transition"
-      >
-        Add to Cart
-      </button>
+      <div className="mt-auto w-full">
+        <button
+          onClick={(e) => {
+            e.stopPropagation(); // Prevents navigating when clicking "Add to Cart"
+            onAddToCart(book);
+          }}
+          className="w-full bg-[#65aa92] text-white px-4 py-2 rounded hover:bg-[#4a886e] transition"
+        >
+          Add to Cart
+        </button>
+      </div>
     </div>
   );
 };
