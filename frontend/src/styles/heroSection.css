@@ -1,0 +1,26 @@
+.swiper-button-prev,
+.swiper-button-next {
+  color: #65aa92 !important; /* Force color to match your green theme */
+  width: 2rem;
+  height: 2rem;
+  opacity: 0.8;
+  transition: opacity 0.3s;
+}
+
+.swiper-button-prev:hover,
+.swiper-button-next:hover {
+  opacity: 1;
+}
+
+.swiper-pagination-bullet {
+    background-color: #65aa92; 
+    opacity: 0.6;
+    transition: opacity 0.3s;
+  }
+  
+
+  .swiper-pagination-bullet-active {
+    background-color: #65aa92 !important; 
+    opacity: 1;
+    transform: scale(1.2);
+  }
