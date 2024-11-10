@@ -12,9 +12,11 @@ const TopNavBar = () => {
     <nav className="bg-[#65aa92] text-white shadow-lg">
       <div className="container mx-auto flex items-center justify-between px-4 py-4">
         
-        {/* Logo */}
+        {/* Logo with Link to Home */}
         <div className="flex items-center space-x-2">
-          <img src={chapter0logo} alt="Chapter 0 Logo" className="h-12 w-auto" />
+          <Link to="/">
+            <img src={chapter0logo} alt="Chapter 0 Logo" className="h-12 w-auto" />
+          </Link>
         </div>
 
         {/* Search Bar */}

@@ -1,12 +1,25 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { FaHeart } from "react-icons/fa";
 
-const BookCard = ({ book }) => {
+const BookCard = ({ book, onAddToCart }) => {
+  const navigate = useNavigate();
+
+  const handleCardClick = () => {
+    navigate(`/books/${book.book_id}`); // Redirect to the BookDetailsPage with the book ID in the URL
+  };
+
   return (
-    <div className="border rounded-lg shadow-lg p-4 flex flex-col items-center relative bg-white">
+    <div
+      onClick={handleCardClick}
+      className="border rounded-lg shadow-lg p-4 flex flex-col items-center relative bg-white cursor-pointer transition-transform duration-200 hover:scale-105"
+    >
       {/* Heart icon for wishlist */}
-      <div className="absolute top-2 right-2">
-        <button className="text-red-500 hover:text-red-600 transition">
+      <div
+        className="absolute top-2 right-2 z-10"
+        onClick={(e) => e.stopPropagation()} // Prevents navigating when clicking the heart
+      >
+        <button className="text-gray-300 hover:text-red-500 transition">
           <FaHeart size={24} />
         </button>
       </div>
@@ -30,7 +43,13 @@ const BookCard = ({ book }) => {
       </p>
 
       {/* Add to Cart button */}
-      <button className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+      <button
+        onClick={(e) => {
+          e.stopPropagation(); // Prevents navigating when clicking "Add to Cart"
+          onAddToCart(book);
+        }}
+        className="mt-4 bg-[#65aa92] text-white px-4 py-2 rounded hover:bg-[#4a886e] transition"
+      >
         Add to Cart
       </button>
     </div>

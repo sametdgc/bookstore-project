@@ -12,12 +12,50 @@ export const getGenres = async () => {
     return data; 
 };
 
-// GET all books
-export const getAllBooks = async () => {
+// GET all books with pagination
+export const getAllBooks = async (limit, offset) => {
   const { data, error } = await supabase
-      .from('books')
-      .select('*');
-  if (error) console.log('Error fetching books:', error.message);
+    .from('books')
+    .select('*')
+    .range(offset, offset + limit - 1); 
+
+  if (error) {
+    console.log('Error fetching books:', error.message);
+  }
+
+  return data;
+};
+
+// GET a book with genre, author, language, and reviews
+export const getBookDetailsById = async (bookId) => {
+  const { data, error } = await supabase
+    .from('books')
+    .select(`
+      *,
+      author:authors (author_name),
+      genre:genres (genre_name),
+      language:languages (language_name),
+      reviews:reviews (
+        review_id,
+        user:user_id (full_name),
+        rating,
+        comment,
+        approval_status
+      )
+    `)
+    .eq('book_id', bookId)
+    .single();
+
+  if (error) {
+    console.log('Error fetching book details:', error.message);
+    return null;
+  }
+
+  // Filter only approved reviews
+  if (data.reviews) {
+    data.reviews = data.reviews.filter((review) => review.approval_status === true);
+  }
+
   return data;
 };
 

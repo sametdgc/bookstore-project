@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { getAllBooks } from "../services/api";
-import { getGenres } from "../services/api"; // Import getGenres
+import { useSearchParams } from "react-router-dom";
+import { getAllBooks, getGenres } from "../services/api";
 import BookCard from "../components/common/BookCard";
 
 const AllBooksPage = () => {
@@ -10,12 +10,16 @@ const AllBooksPage = () => {
   const [selectedGenre, setSelectedGenre] = useState("");
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [cart, setCart] = useState([]); // State to manage the cart
+  const [cart, setCart] = useState([]);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pageSize = parseInt(searchParams.get("pageSize")) || 10;
+  const pageNum = parseInt(searchParams.get("pageNum")) || 1;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const booksData = await getAllBooks();
+        const booksData = await getAllBooks(pageSize, (pageNum - 1) * pageSize);
         const genresData = await getGenres();
         setBooks(booksData);
         setGenres(genresData);
@@ -26,7 +30,7 @@ const AllBooksPage = () => {
     };
 
     fetchData();
-  }, []);
+  }, [pageSize, pageNum]); // Fetch new data when pageSize or pageNum changes
 
   const handleGenreChange = (event) => {
     const selected = event.target.value;
@@ -69,63 +73,58 @@ const AllBooksPage = () => {
     setFilteredBooks(filtered);
   };
 
-  // Add to Cart handler
+  const handlePageSizeChange = (event) => {
+    const newPageSize = Number(event.target.value);
+    setSearchParams({ pageSize: newPageSize, pageNum: 1 }); // Reset to first page when page size changes
+  };
+
+  const handlePageChange = (newPageNum) => {
+    setSearchParams({ pageSize, pageNum: newPageNum });
+  };
+
   const handleAddToCart = (book) => {
     setCart((prevCart) => {
       const updatedCart = [...prevCart, book];
-      // You can store it in localStorage to persist across page refreshes
       localStorage.setItem("cart", JSON.stringify(updatedCart));
       return updatedCart;
     });
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 text-center">Books</h1>
+    <div className="container mx-auto p-6 font-sans">
+      <h1 className="text-4xl font-bold mb-8 text-center text-[#65aa92]">Books</h1>
 
       {/* Filters Section */}
-      <div className="flex gap-4 mb-6">
-        {/* Search Bar */}
-        <div className="flex-1">
-          <input
-            type="text"
-            className="p-3 border rounded w-full"
-            placeholder="Search for books"
-            value={searchQuery}
-            onChange={handleSearchChange}
-          />
-        </div>
+      <div className="flex flex-col md:flex-row gap-6 mb-8 items-center justify-between bg-gray-100 p-6 rounded-lg shadow-md">
+        <input
+          type="text"
+          className="flex-1 p-3 border border-gray-300 rounded-lg w-full md:w-1/2 focus:outline-none focus:border-[#65aa92]"
+          placeholder="Search for books..."
+          value={searchQuery}
+          onChange={handleSearchChange}
+        />
 
-        {/* Filters Group (Genre and Price) */}
-        <div className="flex gap-4">
-          {/* Genre Filter Dropdown */}
-          <div className="w-32">
-            <label htmlFor="genre" className="block text-lg font-semibold mb-2">
-              Genre:
-            </label>
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <div className="w-40">
+            <label htmlFor="genre" className="block text-sm font-semibold mb-1">Genre</label>
             <select
               id="genre"
-              className="p-3 border rounded w-full"
+              className="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:border-[#65aa92]"
               value={selectedGenre}
               onChange={handleGenreChange}
             >
               <option value="">All Genres</option>
               {genres.map((genre) => (
-                <option key={genre.genre_id} value={genre.genre_id}>
-                  {genre.genre_name}
-                </option>
+                <option key={genre.genre_id} value={genre.genre_id}>{genre.genre_name}</option>
               ))}
             </select>
           </div>
 
-          {/* Price Filter Dropdown */}
-          <div className="w-32">
-            <label htmlFor="price" className="block text-lg font-semibold mb-2">
-              Price:
-            </label>
+          <div className="w-40">
+            <label htmlFor="price" className="block text-sm font-semibold mb-1">Price</label>
             <select
               id="price"
-              className="p-3 border rounded w-full"
+              className="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:border-[#65aa92]"
               value={selectedPriceRange}
               onChange={handlePriceChange}
             >
@@ -137,18 +136,47 @@ const AllBooksPage = () => {
               <option value="50-100">$50 - $100</option>
             </select>
           </div>
+
+          <div className="w-40">
+            <label htmlFor="pageSize" className="block text-sm font-semibold mb-1">Page Size</label>
+            <select
+              id="pageSize"
+              className="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:border-[#65aa92]"
+              value={pageSize}
+              onChange={handlePageSizeChange}
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {/* Display filtered books */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {filteredBooks.map((book) => (
-          <BookCard
-            key={book.book_id}
-            book={book}
-            onAddToCart={handleAddToCart}
-          />
+          <BookCard key={book.book_id} book={book} onAddToCart={handleAddToCart} />
         ))}
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-center mt-8 gap-4">
+        <button
+          className="p-2 bg-[#65aa92] text-white rounded-lg disabled:opacity-50"
+          onClick={() => handlePageChange(pageNum - 1)}
+          disabled={pageNum === 1}
+        >
+          Previous
+        </button>
+        <span className="text-lg">{`Page ${pageNum}`}</span>
+        <button
+          className="p-2 bg-[#65aa92] text-white rounded-lg disabled:opacity-50"
+          onClick={() => handlePageChange(pageNum + 1)}
+          disabled={filteredBooks.length < pageSize} // Disable if fewer results than page size
+        >
+          Next
+        </button>
       </div>
     </div>
   );

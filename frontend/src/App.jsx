@@ -9,7 +9,7 @@ import {
   BookDetailsPage,
   AllBooksPage,
 } from "./pages";
-import { TopNavBar } from "../src/components";
+import { TopNavBar, SubscriptionBanner, Footer } from "./components";
 
 function App() {
   const location = useLocation();
@@ -21,18 +21,21 @@ function App() {
     <div className="App">
       {/* Conditionally render TopNavBar based on the current path */}
       {!hideNavPaths.includes(location.pathname) && <TopNavBar />}
-      
+
+      {/* Main Routes */}
       <Routes>
         <Route path="/" element={<MainPage />} />
         <Route path="/all-books" element={<AllBooksPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/books/:book_id" element={<BookDetailsPage />} />
-        <Route path="/book-details" element={<BookDetailsPage />} />
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/cart" element={<ShoppingCart />} />
         <Route path="*" element={<MainPage />} />
       </Routes>
+
+      <SubscriptionBanner />
+      <Footer />
     </div>
   );
 }
