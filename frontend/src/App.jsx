@@ -5,7 +5,7 @@ import {
   RegisterPage,
   MainPage,
   ShoppingCart,
-  Wishlist, 
+  Wishlist,
   BookDetailsPage,
   AllBooksPage,
 } from "./pages";
@@ -14,7 +14,7 @@ import { TopNavBar, SubscriptionBanner, Footer } from "./components";
 function App() {
   const location = useLocation();
 
-  // Define paths where the navbar should be hidden
+  // Define paths where TopNavBar, SubscriptionBanner, and Footer should be hidden
   const hideNavPaths = ["/login", "/register"];
 
   return (
@@ -34,8 +34,9 @@ function App() {
         <Route path="*" element={<MainPage />} />
       </Routes>
 
-      <SubscriptionBanner />
-      <Footer />
+      {/* Conditionally render SubscriptionBanner and Footer based on the current path */}
+      {!hideNavPaths.includes(location.pathname) && <SubscriptionBanner />}
+      {!hideNavPaths.includes(location.pathname) && <Footer />}
     </div>
   );
 }

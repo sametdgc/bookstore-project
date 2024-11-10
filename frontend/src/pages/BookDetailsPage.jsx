@@ -1,3 +1,4 @@
+// src/pages/BookDetailsPage.js
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -27,6 +28,12 @@ const BookDetailsPage = () => {
   }, [book_id]);
 
   const handleAddToCart = () => {
+    // Add book to localStorage cart
+    const savedCart = JSON.parse(localStorage.getItem('cart')) || [];
+    const updatedCart = [...savedCart, book];
+    localStorage.setItem('cart', JSON.stringify(updatedCart));
+
+    // Display confirmation message
     setCartMessage('Product is successfully added to your cart!');
     setTimeout(() => setCartMessage(''), 2000);
   };
@@ -131,7 +138,7 @@ const BookDetailsPage = () => {
               className={`text-sm px-2 py-1 rounded shadow-md text-center transition-opacity duration-300 ${
                 cartMessage ? 'opacity-100 bg-gray-200 text-gray-600' : 'opacity-0'
               }`} 
-              style={{minHeight: '30px', width: '300px' }} 
+              style={{ minHeight: '30px', width: '300px' }} 
             >
               {cartMessage}
             </div>

@@ -1,3 +1,4 @@
+// src/pages/AllBooksPage.js
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { getAllBooks, getGenres } from "../services/api";
@@ -10,8 +11,6 @@ const AllBooksPage = () => {
   const [selectedGenre, setSelectedGenre] = useState("");
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [cart, setCart] = useState([]);
-
   const [searchParams, setSearchParams] = useSearchParams();
   const pageSize = parseInt(searchParams.get("pageSize")) || 10;
   const pageNum = parseInt(searchParams.get("pageNum")) || 1;
@@ -28,9 +27,8 @@ const AllBooksPage = () => {
         console.error("Error fetching data:", error);
       }
     };
-
     fetchData();
-  }, [pageSize, pageNum]); // Fetch new data when pageSize or pageNum changes
+  }, [pageSize, pageNum]);
 
   const handleGenreChange = (event) => {
     const selected = event.target.value;
@@ -52,49 +50,42 @@ const AllBooksPage = () => {
 
   const applyFilters = (genre, price, query) => {
     let filtered = books;
-
     if (genre) {
       filtered = filtered.filter((book) => book.genre_id === parseInt(genre));
     }
-
     if (price) {
       const [minPrice, maxPrice] = price.split("-").map(Number);
       filtered = filtered.filter(
         (book) => book.price >= minPrice && book.price <= maxPrice
       );
     }
-
     if (query) {
       filtered = filtered.filter((book) =>
         book.title.toLowerCase().includes(query.toLowerCase())
       );
     }
-
     setFilteredBooks(filtered);
   };
 
   const handlePageSizeChange = (event) => {
     const newPageSize = Number(event.target.value);
-    setSearchParams({ pageSize: newPageSize, pageNum: 1 }); // Reset to first page when page size changes
+    setSearchParams({ pageSize: newPageSize, pageNum: 1 });
   };
 
   const handlePageChange = (newPageNum) => {
     setSearchParams({ pageSize, pageNum: newPageNum });
   };
 
+  // Updated function to add items to cart
   const handleAddToCart = (book) => {
-    setCart((prevCart) => {
-      const updatedCart = [...prevCart, book];
-      localStorage.setItem("cart", JSON.stringify(updatedCart));
-      return updatedCart;
-    });
+    const existingCart = JSON.parse(localStorage.getItem("cart")) || [];
+    const updatedCart = [...existingCart, book];
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
 
   return (
     <div className="container mx-auto p-6 font-sans">
       <h1 className="text-4xl font-bold mb-8 text-center text-[#65aa92]">Books</h1>
-
-      {/* Filters Section */}
       <div className="flex flex-col md:flex-row gap-6 mb-8 items-center justify-between bg-gray-100 p-6 rounded-lg shadow-md">
         <input
           type="text"
@@ -103,7 +94,6 @@ const AllBooksPage = () => {
           value={searchQuery}
           onChange={handleSearchChange}
         />
-
         <div className="flex flex-col sm:flex-row gap-4 items-center">
           <div className="w-40">
             <label htmlFor="genre" className="block text-sm font-semibold mb-1">Genre</label>
@@ -119,7 +109,6 @@ const AllBooksPage = () => {
               ))}
             </select>
           </div>
-
           <div className="w-40">
             <label htmlFor="price" className="block text-sm font-semibold mb-1">Price</label>
             <select
@@ -136,7 +125,6 @@ const AllBooksPage = () => {
               <option value="50-100">$50 - $100</option>
             </select>
           </div>
-
           <div className="w-40">
             <label htmlFor="pageSize" className="block text-sm font-semibold mb-1">Page Size</label>
             <select
@@ -153,14 +141,11 @@ const AllBooksPage = () => {
         </div>
       </div>
 
-      {/* Display filtered books */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {filteredBooks.map((book) => (
-          <BookCard key={book.book_id} book={book} onAddToCart={handleAddToCart} />
+          <BookCard key={book.book_id} book={book} onAddToCart={() => handleAddToCart(book)} />
         ))}
       </div>
-
-      {/* Pagination Controls */}
       <div className="flex justify-center mt-8 gap-4">
         <button
           className="p-2 bg-[#65aa92] text-white rounded-lg disabled:opacity-50"
@@ -173,7 +158,7 @@ const AllBooksPage = () => {
         <button
           className="p-2 bg-[#65aa92] text-white rounded-lg disabled:opacity-50"
           onClick={() => handlePageChange(pageNum + 1)}
-          disabled={filteredBooks.length < pageSize} // Disable if fewer results than page size
+          disabled={filteredBooks.length < pageSize}
         >
           Next
         </button>
