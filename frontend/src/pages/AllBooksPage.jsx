@@ -12,6 +12,7 @@ const AllBooksPage = () => {
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
+  const [cartMessage, setCartMessage] = useState(""); // Popup state
   const pageSize = parseInt(searchParams.get("pageSize")) || 10;
   const pageNum = parseInt(searchParams.get("pageNum")) || 1;
 
@@ -81,11 +82,24 @@ const AllBooksPage = () => {
     const existingCart = JSON.parse(localStorage.getItem("cart")) || [];
     const updatedCart = [...existingCart, book];
     localStorage.setItem("cart", JSON.stringify(updatedCart));
+
+    // Display confirmation message
+    setCartMessage("Product is successfully added to your cart!");
+    setTimeout(() => setCartMessage(""), 2000);
   };
 
   return (
     <div className="container mx-auto p-6 font-sans">
-      <h1 className="text-4xl font-bold mb-8 text-center text-[#65aa92]">Books</h1>
+      {/* Popup message */}
+      {cartMessage && (
+        <div className="fixed top-0 left-1/2 transform -translate-x-1/2 bg-[#65aa92] text-white p-4 rounded-lg shadow-lg z-50">
+          {cartMessage}
+        </div>
+      )}
+
+      <h1 className="text-4xl font-bold mb-8 text-center text-[#65aa92]">
+        Books
+      </h1>
       <div className="flex flex-col md:flex-row gap-6 mb-8 items-center justify-between bg-gray-100 p-6 rounded-lg shadow-md">
         <input
           type="text"
@@ -96,7 +110,9 @@ const AllBooksPage = () => {
         />
         <div className="flex flex-col sm:flex-row gap-4 items-center">
           <div className="w-40">
-            <label htmlFor="genre" className="block text-sm font-semibold mb-1">Genre</label>
+            <label htmlFor="genre" className="block text-sm font-semibold mb-1">
+              Genre
+            </label>
             <select
               id="genre"
               className="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:border-[#65aa92]"
@@ -105,12 +121,16 @@ const AllBooksPage = () => {
             >
               <option value="">All Genres</option>
               {genres.map((genre) => (
-                <option key={genre.genre_id} value={genre.genre_id}>{genre.genre_name}</option>
+                <option key={genre.genre_id} value={genre.genre_id}>
+                  {genre.genre_name}
+                </option>
               ))}
             </select>
           </div>
           <div className="w-40">
-            <label htmlFor="price" className="block text-sm font-semibold mb-1">Price</label>
+            <label htmlFor="price" className="block text-sm font-semibold mb-1">
+              Price
+            </label>
             <select
               id="price"
               className="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:border-[#65aa92]"
@@ -126,7 +146,12 @@ const AllBooksPage = () => {
             </select>
           </div>
           <div className="w-40">
-            <label htmlFor="pageSize" className="block text-sm font-semibold mb-1">Page Size</label>
+            <label
+              htmlFor="pageSize"
+              className="block text-sm font-semibold mb-1"
+            >
+              Page Size
+            </label>
             <select
               id="pageSize"
               className="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:border-[#65aa92]"
@@ -143,7 +168,11 @@ const AllBooksPage = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {filteredBooks.map((book) => (
-          <BookCard key={book.book_id} book={book} onAddToCart={() => handleAddToCart(book)} />
+          <BookCard
+            key={book.book_id}
+            book={book}
+            onAddToCart={() => handleAddToCart(book)}
+          />
         ))}
       </div>
       <div className="flex justify-center mt-8 gap-4">
