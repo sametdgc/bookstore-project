@@ -1,8 +1,9 @@
+// src/components/common/BookCard.js
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHeart } from "react-icons/fa";
 
-const BookCard = ({ book, onAddToCart }) => {
+const BookCard = ({ book, onAddToCart, onAddToWishlist }) => {
   const navigate = useNavigate();
 
   const handleCardClick = () => {
@@ -17,7 +18,10 @@ const BookCard = ({ book, onAddToCart }) => {
       {/* Heart icon for wishlist */}
       <div
         className="absolute top-2 right-2 z-10"
-        onClick={(e) => e.stopPropagation()} // Prevents navigating when clicking the heart
+        onClick={(e) => {
+          e.stopPropagation(); // Prevents navigating when clicking the heart
+          onAddToWishlist(book); // Call the wishlist handler
+        }}
       >
         <button className="text-gray-300 hover:text-red-500 transition">
           <FaHeart size={24} />

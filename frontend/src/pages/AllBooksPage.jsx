@@ -76,7 +76,16 @@ const AllBooksPage = () => {
     setSearchParams({ pageSize, pageNum: newPageNum });
   };
 
-  // Updated function to add items to cart
+  // Add to Wishlist function
+  const handleAddToWishlist = (book) => {
+    const existingWishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+    if (!existingWishlist.find((item) => item.book_id === book.book_id)) {
+      const updatedWishlist = [...existingWishlist, book];
+      localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+    }
+  };
+
+  // Add to Cart function
   const handleAddToCart = (book) => {
     const existingCart = JSON.parse(localStorage.getItem("cart")) || [];
     const updatedCart = [...existingCart, book];
@@ -143,7 +152,12 @@ const AllBooksPage = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {filteredBooks.map((book) => (
-          <BookCard key={book.book_id} book={book} onAddToCart={() => handleAddToCart(book)} />
+          <BookCard 
+            key={book.book_id} 
+            book={book} 
+            onAddToCart={() => handleAddToCart(book)} 
+            onAddToWishlist={() => handleAddToWishlist(book)} // Add wishlist handler
+          />
         ))}
       </div>
       <div className="flex justify-center mt-8 gap-4">
