@@ -5,6 +5,7 @@ import ShoppingCart from "./ShoppingCart";
 import Wishlist from "./Wishlist";
 import AllBooksPage from "./AllBooksPage";
 import BookDetailsPage from "./BookDetailsPage";
+import GenrePage from "./GenrePage";
 
 export {
   LoginPage,
@@ -13,5 +14,6 @@ export {
   ShoppingCart,
   Wishlist,
   AllBooksPage,
-  BookDetailsPage
+  BookDetailsPage,
+  GenrePage
 };

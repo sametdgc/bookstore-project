@@ -181,6 +181,36 @@ export const searchBooks = async (query) => {
   return data;
 };
 
+// GET a books by genre
+export const getBooksByGenre = async (genreId) => {
+  const { data, error } = await supabase
+    .from('books')
+    .select('*')
+    .eq('genre_id', genreId);
+
+  if (error) {
+    console.log('Error fetching books by genre:', error.message);
+    return [];
+  }
+
+  return data;
+}
+
+// GET genre id by name
+export const getGenreIdByName = async (genreName) => {
+  const { data, error } = await supabase
+    .from('genres')
+    .select('genre_id')
+    .ilike('genre_name', `%${genreName}%`)
+    .single();
+
+  if (error) {
+    console.log('Error fetching genre ID:', error.message);
+    return null;
+  }
+
+  return data.genre_id;
+};
 
 
 /* 

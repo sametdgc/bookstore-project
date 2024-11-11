@@ -8,6 +8,7 @@ import {
   Wishlist,
   BookDetailsPage,
   AllBooksPage,
+  GenrePage
 } from "./pages";
 import { TopNavBar, SubscriptionBanner, Footer } from "./components";
 
@@ -23,20 +24,21 @@ function App() {
       {!hideNavPaths.includes(location.pathname) && <TopNavBar />}
 
       {/* Main Routes */}
-      <Routes>
-        <Route path="/" element={<MainPage />} />
-        <Route path="/all-books" element={<AllBooksPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/books/:book_id" element={<BookDetailsPage />} />
-        <Route path="/wishlist" element={<Wishlist />} />
-        <Route path="/cart" element={<ShoppingCart />} />
-        <Route path="*" element={<MainPage />} />
-      </Routes>
-
-      {/* Conditionally render SubscriptionBanner and Footer based on the current path */}
-      {!hideNavPaths.includes(location.pathname) && <SubscriptionBanner />}
-      {!hideNavPaths.includes(location.pathname) && <Footer />}
+      <div className="px-10 lg:px-20">
+        <Routes>
+          <Route path="/" element={<MainPage />} />
+          <Route path="/all-books" element={<AllBooksPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/books/:book_id" element={<BookDetailsPage />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/cart" element={<ShoppingCart />} />
+          <Route path="/genre/:genreName" element={<GenrePage />} />
+          <Route path="*" element={<MainPage />} />
+        </Routes>
+      </div>
+      <SubscriptionBanner />
+      <Footer />
     </div>
   );
 }
