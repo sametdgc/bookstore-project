@@ -22,11 +22,11 @@ const CategoryLinks = () => {
             </Link>
             {categories.map((category) => (
                 <Link
-                    key={category.genre_id} // Use genre_id or any unique field as the key
-                    to={`/${category.genre_name.toLowerCase().replace(/ /g, "-")}`}
+                    key={category.genre_id}
+                    to={`/genre/${category.genre_name.toLowerCase().replace(/ /g, "-")}`}
                     className="hover:text-gray-300 px-2 py-1 whitespace-nowrap"
                 >
-                    {category.genre_name} {/* Display genre_name here */}
+                    {category.genre_name}
                 </Link>
             ))}
         </div>
