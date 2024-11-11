@@ -163,6 +163,24 @@ export const getWishlistByUserId = async (userId) => {
   return data;
 };
 
+// SEARCH for books by title, ISBN, or author
+export const searchBooks = async (query) => {
+  const { data, error } = await supabase
+    .from('books')
+    .select(`
+      *,
+      author:authors (author_name)
+    `)
+    .or(`title.ilike.%${query}%,isbn.ilike.%${query}%,author.author_name.ilike.%${query}%`);
+
+  if (error) {
+    console.log('Error fetching search results:', error.message);
+    return [];
+  }
+
+  return data;
+};
+
 
 
 /* 

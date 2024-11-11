@@ -1,4 +1,3 @@
-// src/components/common/BookCard.js
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHeart } from "react-icons/fa";

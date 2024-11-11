@@ -4,6 +4,7 @@ import { ShoppingCartIcon, HeartIcon, Bars3Icon, XMarkIcon } from '@heroicons/re
 import { chapter0logo } from '../../../assets';
 import CategoryLinks from './CategoryLinks';
 import LoginStatus from './LoginStatus';
+import SearchBar from "./Searchbar";
 
 const TopNavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,13 +21,7 @@ const TopNavBar = () => {
         </div>
 
         {/* Search Bar */}
-        <div className="hidden md:flex flex-grow mx-4">
-          <input
-            type="text"
-            placeholder="Search for books, categories, authors..."
-            className="w-full px-4 py-2 rounded-md text-gray-700 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#65aa92]"
-          />
-        </div>
+        <SearchBar/>
 
         {/* Icons and Hamburger Menu */}
         <div className="flex items-center space-x-4">

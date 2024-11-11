@@ -1,4 +1,3 @@
-// src/pages/AllBooksPage.js
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { getAllBooks, getGenres } from "../services/api";
