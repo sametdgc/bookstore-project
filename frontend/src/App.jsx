@@ -11,6 +11,7 @@ import {
   GenrePage
 } from "./pages";
 import { TopNavBar, SubscriptionBanner, Footer } from "./components";
+import SearchPage from "./pages/SearchPage";
 
 function App() {
   const location = useLocation();
@@ -28,6 +29,7 @@ function App() {
         <Routes>
           <Route path="/" element={<MainPage />} />
           <Route path="/all-books" element={<AllBooksPage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/books/:book_id" element={<BookDetailsPage />} />
