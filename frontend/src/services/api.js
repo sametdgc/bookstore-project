@@ -171,15 +171,19 @@ export const searchBooks = async (query) => {
       *,
       author:authors (author_name)
     `)
-    .or(`title.ilike.%${query}%,isbn.ilike.%${query}%,author.author_name.ilike.%${query}%`);
+    .ilike('title', `%${query}%`);  // Search in the title
+    //.or(`isbn.ilike.%${query}%,author.author_name.ilike.%${query}%`);  // Combine ISBN and author search
 
   if (error) {
     console.log('Error fetching search results:', error.message);
     return [];
   }
+  console.log(data);
 
   return data;
 };
+
+
 
 // GET a books by genre
 export const getBooksByGenre = async (genreId) => {

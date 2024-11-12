@@ -36,7 +36,7 @@ const LoginStatus = () => {
     <div className="flex items-center space-x-4">
       {user ? (
         <>
-          <span className="text-white">Hello, {user.email}</span>
+          <span className="text-white">Hello, {user.identities[0].identity_data.fullName}</span>
           <button 
             onClick={handleSignOut} 
             className="text-white hover:text-[#f5f5f5]"
