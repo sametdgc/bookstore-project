@@ -8,7 +8,9 @@ import {
   Wishlist,
   BookDetailsPage,
   AllBooksPage,
-  GenrePage
+  GenrePage,
+  AboutPage,
+  ReturnRefundPolicyPage,
 } from "./pages";
 import { TopNavBar, SubscriptionBanner, Footer } from "./components";
 import SearchPage from "./pages/SearchPage";
@@ -36,6 +38,8 @@ function App() {
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/cart" element={<ShoppingCart />} />
           <Route path="/genre/:genreName" element={<GenrePage />} />
+          <Route path="/about" element={<AboutPage />} /> {/* Add About route */}
+          <Route path="/return-refund-policy" element={<ReturnRefundPolicyPage />} /> {/* New Route */}
           <Route path="*" element={<MainPage />} />
         </Routes>
       </div>

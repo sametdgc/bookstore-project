@@ -6,6 +6,8 @@ import Wishlist from "./Wishlist";
 import AllBooksPage from "./AllBooksPage";
 import BookDetailsPage from "./BookDetailsPage";
 import GenrePage from "./GenrePage";
+import AboutPage from "./footerPages/AboutPage";
+import ReturnRefundPolicyPage from "./footerPages/ReturnRefundPolicyPage";
 
 export {
   LoginPage,
@@ -15,5 +17,7 @@ export {
   Wishlist,
   AllBooksPage,
   BookDetailsPage,
-  GenrePage
+  GenrePage,
+  AboutPage,
+  ReturnRefundPolicyPage
 };
