@@ -1,10 +1,9 @@
 // src/pages/BookDetailsPage.js
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar } from '@fortawesome/free-solid-svg-icons';
 import { FaHeart } from 'react-icons/fa';
-import { getBookDetailsById } from '../services/api';
+import { getBookDetailsById} from '../services/api';
+import ReviewWindow, {renderStars}   from '../components/ReviewWindow';
 
 const BookDetailsPage = () => {
   const { book_id } = useParams();
@@ -62,23 +61,6 @@ const BookDetailsPage = () => {
 
   if (!book) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
-  const renderStars = (rating) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      const fillPercentage = Math.min(Math.max(rating - i + 1, 0), 1) * 100;
-      stars.push(
-        <div key={i} className="relative inline-block text-gray-300" style={{ width: '1em', height: '1em' }}>
-          <FontAwesomeIcon icon={faStar} className="text-gray-300 absolute top-0 left-0" />
-          <FontAwesomeIcon
-            icon={faStar}
-            className="text-yellow-500 absolute top-0 left-0"
-            style={{ clipPath: `inset(0 ${100 - fillPercentage}% 0 0)` }}
-          />
-        </div>
-      );
-    }
-    return stars;
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -115,7 +97,7 @@ const BookDetailsPage = () => {
               <p><span className="font-semibold">ISBN:</span> {book.isbn}</p>
               <p><span className="font-semibold">Language:</span> {book.language.language_name}</p>
               <p><span className="font-semibold">Stock:</span> {book.available_quantity}</p>
-              <p className="flex items-center">
+              <span className="flex items-center">
                 <span className="font-semibold">Average Rating:</span>
                 <span className="ml-2 flex items-center">
                   {book.reviews.length > 0 ? (
@@ -127,7 +109,7 @@ const BookDetailsPage = () => {
                     <span className="text-gray-600">No ratings yet.</span>
                   )}
                 </span>
-              </p>
+              </span>
             </div>
           </div>
           <div className="md:w-1/4 flex flex-col items-center md:items-end justify-center space-y-4 self-stretch">
@@ -157,26 +139,8 @@ const BookDetailsPage = () => {
           </div>
         </div>
 
-        <div className="bg-white shadow-md rounded-md p-8 mt-8">
-          <h2 className="text-2xl font-semibold text-[#65aa92] mb-4">Reviews</h2>
-          {book.reviews.length > 0 ? (
-            book.reviews.map((review) => (
-              <div key={review.review_id} className="mb-4 p-4 bg-gray-100 rounded-md">
-                <p className="font-semibold">{review.user.full_name}</p>
-                <p className="text-gray-600">{review.comment}</p>
-                <div className="flex items-center">
-                  <span className="text-yellow-500 font-semibold mr-2">Rating:</span>
-                  <div className="flex items-center">
-                    {renderStars(review.rating)}
-                    <span className="ml-2 text-black">{review.rating} / 5</span>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-600 text-lg">No reviews yet!</p>
-          )}
-        </div>
+        <ReviewWindow book={book} />
+
       </div>
     </div>
   );
