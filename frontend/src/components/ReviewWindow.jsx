@@ -51,15 +51,14 @@ export const renderStars = (rating) => {
       const fetchUserData = async () => {
         const user = await getUserData();
         setUserRole(user.role_id);
-        setUserRole(2);
         setUserID(user.user_id);
       };
       fetchUserData();
     }, []);
   
     useEffect(() => {
-      if (userRole === 2) {
-        // Fetch comments with approval status false for role 2 users
+      if (userRole === 3 ) {
+        // Fetch comments with approval status false for role 3 users = product manager
         const fetchPendingReviews = async () => {
           const { data, error } = await supabase
             .from('reviews')
@@ -152,7 +151,7 @@ export const renderStars = (rating) => {
           </div>
         )}
   
-        {userRole === 2 && (
+        {userRole === 3 && (
           <div className="mt-4">
             <h3 className="text-xl font-semibold">Pending Reviews for Approval</h3>
             {pendingReviews.length > 0 ? (
