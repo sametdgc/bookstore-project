@@ -8,9 +8,12 @@ import {
   Wishlist,
   BookDetailsPage,
   AllBooksPage,
-  GenrePage
+  GenrePage,
+  AboutPage,
+  ReturnRefundPolicyPage,
 } from "./pages";
 import { TopNavBar, SubscriptionBanner, Footer } from "./components";
+import SearchPage from "./pages/SearchPage";
 
 function App() {
   const location = useLocation();
@@ -28,12 +31,15 @@ function App() {
         <Routes>
           <Route path="/" element={<MainPage />} />
           <Route path="/all-books" element={<AllBooksPage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/books/:book_id" element={<BookDetailsPage />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/cart" element={<ShoppingCart />} />
           <Route path="/genre/:genreName" element={<GenrePage />} />
+          <Route path="/about" element={<AboutPage />} /> {/* Add About route */}
+          <Route path="/return-refund-policy" element={<ReturnRefundPolicyPage />} /> {/* New Route */}
           <Route path="*" element={<MainPage />} />
         </Routes>
       </div>

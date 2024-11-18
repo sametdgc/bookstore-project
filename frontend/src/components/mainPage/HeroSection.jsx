@@ -1,8 +1,7 @@
-// src/components/mainPage/HeroSection.jsx
 import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
-import "../../styles/heroSection.css"; // Ensure custom styles are imported
+import "../../styles/heroSection.css"; 
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
