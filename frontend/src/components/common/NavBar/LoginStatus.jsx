@@ -58,7 +58,10 @@ const LoginStatus = () => {
     <div className="flex items-center space-x-4">
       {user ? (
         <>
-          <span className="text-white">Hello, {userName}</span>
+          <Link to="/profile" className="text-white hover:underline">
+            Hello, {userName}
+          </Link>
+
           <button 
             onClick={handleSignOut} 
             className="text-white hover:text-[#f5f5f5]"
