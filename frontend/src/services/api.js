@@ -281,6 +281,10 @@ export const getUserData = async () => {
         email,
         tax_id,
         phone_number,
+        created_at,
+        updated_at, 
+        role_id,
+        user_uuid,
         useraddresses (
           address_title,
           address:addresses (
