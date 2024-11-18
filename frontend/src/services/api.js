@@ -267,34 +267,34 @@ export const testSupabaseConnection = async () => {
   };
 
   // Function to get user data by user_id from the session
-// export const getUserData = async () => {
-//   try {
-//     // Get the current session
-//     const user = await fetchUser();
-//     // Extract the user_id from the session metadata
-//     const userId = user.user_metadata.custom_incremented_id;
-//     // Query the users table with the user_id
-//     const { data, error } = await supabase
-//       .from('users')  // Assuming your table is named 'users'
-//       .select('*')  // You can select specific fields if needed
-//       .eq('user_id', userId)  // Filter by the user_id from session
-//       .single();  // Assuming you expect one user record for that ID
-
-//     // Check for errors
-//     if (error) {
-//       console.error('Error fetching user data:', error.message);
-//       return null;
-//     }
-
-//     // Return the fetched user data
-//     return data;
-//   } catch (err) {
-//     console.error('Error in getUserData function:', err);
-//     return null;
-//   }
-// };
-
 export const getUserData = async () => {
+   try {
+     // Get the current session
+     const user = await fetchUser();
+     // Extract the user_id from the session metadata
+     const userId = user.user_metadata.custom_incremented_id;
+     // Query the users table with the user_id
+     const { data, error } = await supabase
+       .from('users')  // Assuming your table is named 'users'
+       .select('*')  // You can select specific fields if needed
+       .eq('user_id', userId)  // Filter by the user_id from session
+       .single();  // Assuming you expect one user record for that ID
+
+     // Check for errors
+     if (error) {
+       console.error('Error fetching user data:', error.message);
+       return null;
+     }
+     // Return the fetched user data
+     return data;
+   } catch (err) {
+     console.error('Error in getUserData function:', err);
+     return null;
+   }
+ };
+
+/*
+ export const getUserData = async () => {
   try {
     // Fetch the current user
     const user = await fetchUser();
@@ -325,7 +325,7 @@ export const getUserData = async () => {
     return null; // Return null if there's an unexpected error
   }
 };
-
+*/
 
 
 /*
