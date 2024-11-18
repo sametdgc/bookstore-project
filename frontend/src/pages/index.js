@@ -8,6 +8,7 @@ import BookDetailsPage from "./BookDetailsPage";
 import GenrePage from "./GenrePage";
 import AboutPage from "./footerPages/AboutPage";
 import ReturnRefundPolicyPage from "./footerPages/ReturnRefundPolicyPage";
+import MyProfilePage from "./MyProfilePage";
 
 export {
   LoginPage,
@@ -19,5 +20,6 @@ export {
   BookDetailsPage,
   GenrePage,
   AboutPage,
-  ReturnRefundPolicyPage
+  ReturnRefundPolicyPage,
+  MyProfilePage
 };

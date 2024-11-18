@@ -11,6 +11,7 @@ import {
   GenrePage,
   AboutPage,
   ReturnRefundPolicyPage,
+  MyProfilePage
 } from "./pages";
 import { TopNavBar, SubscriptionBanner, Footer } from "./components";
 import SearchPage from "./pages/SearchPage";
@@ -38,8 +39,9 @@ function App() {
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/cart" element={<ShoppingCart />} />
           <Route path="/genre/:genreName" element={<GenrePage />} />
-          <Route path="/about" element={<AboutPage />} /> {/* Add About route */}
-          <Route path="/return-refund-policy" element={<ReturnRefundPolicyPage />} /> {/* New Route */}
+          <Route path="/about" element={<AboutPage />} /> 
+          <Route path="/return-refund-policy" element={<ReturnRefundPolicyPage />} /> 
+          <Route path="/profile" element={<MyProfilePage />} />
           <Route path="*" element={<MainPage />} />
         </Routes>
       </div>
