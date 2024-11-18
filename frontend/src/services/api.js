@@ -81,36 +81,36 @@ export const updateBook = async (bookId, updates) => {
   return data;
 };
 
-// GET cart of a user
-export const getCartByUserId = async (userId) => {
-  const { data, error } = await supabase
-      .from('Cart')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-  if (error) console.log('Error fetching cart:', error.message);
-  return data;
-};
+// // GET cart of a user
+// export const getCartByUserId = async (userId) => {
+//   const { data, error } = await supabase
+//       .from('Cart')
+//       .select('*')
+//       .eq('user_id', userId)
+//       .single();
+//   if (error) console.log('Error fetching cart:', error.message);
+//   return data;
+// };
 
-// ADD an item to the cart
-export const addItemToCart = async (cartId, cartItem) => {
-  const { data, error } = await supabase
-      .from('CartItems')
-      .insert([{ cart_id: cartId, ...cartItem }]);
-  if (error) console.log('Error adding item to cart:', error.message);
-  return data;
-};
+// // ADD an item to the cart
+// export const addItemToCart = async (cartId, cartItem) => {
+//   const { data, error } = await supabase
+//       .from('CartItems')
+//       .insert([{ cart_id: cartId, ...cartItem }]);
+//   if (error) console.log('Error adding item to cart:', error.message);
+//   return data;
+// };
 
-// UPDATE an item's quantity in the cart
-export const updateCartItemQuantity = async (cartId, bookId, quantity) => {
-  const { data, error } = await supabase
-      .from('CartItems')
-      .update({ quantity })
-      .eq('cart_id', cartId)
-      .eq('book_id', bookId);
-  if (error) console.log('Error updating cart item:', error.message);
-  return data;
-};
+// // UPDATE an item's quantity in the cart
+// export const updateCartItemQuantity = async (cartId, bookId, quantity) => {
+//   const { data, error } = await supabase
+//       .from('CartItems')
+//       .update({ quantity })
+//       .eq('cart_id', cartId)
+//       .eq('book_id', bookId);
+//   if (error) console.log('Error updating cart item:', error.message);
+//   return data;
+// };
 
 // PLACE an order
 export const placeOrder = async (order) => {
@@ -217,6 +217,9 @@ export const getGenreIdByName = async (genreName) => {
 };
 
 
+
+
+
 /* 
 
   AUTHENTICATION SERVICES
@@ -264,30 +267,239 @@ export const testSupabaseConnection = async () => {
   };
 
   // Function to get user data by user_id from the session
+// export const getUserData = async () => {
+//   try {
+//     // Get the current session
+//     const user = await fetchUser();
+//     // Extract the user_id from the session metadata
+//     const userId = user.user_metadata.custom_incremented_id;
+//     // Query the users table with the user_id
+//     const { data, error } = await supabase
+//       .from('users')  // Assuming your table is named 'users'
+//       .select('*')  // You can select specific fields if needed
+//       .eq('user_id', userId)  // Filter by the user_id from session
+//       .single();  // Assuming you expect one user record for that ID
+
+//     // Check for errors
+//     if (error) {
+//       console.error('Error fetching user data:', error.message);
+//       return null;
+//     }
+
+//     // Return the fetched user data
+//     return data;
+//   } catch (err) {
+//     console.error('Error in getUserData function:', err);
+//     return null;
+//   }
+// };
+
 export const getUserData = async () => {
   try {
-    // Get the current session
+    // Fetch the current user
     const user = await fetchUser();
-    // Extract the user_id from the session metadata
-    const userId = user.user_metadata.custom_incremented_id;
-    // Query the users table with the user_id
-    const { data, error } = await supabase
-      .from('users')  // Assuming your table is named 'users'
-      .select('*')  // You can select specific fields if needed
-      .eq('user_id', userId)  // Filter by the user_id from session
-      .single();  // Assuming you expect one user record for that ID
 
-    // Check for errors
-    if (error) {
-      console.error('Error fetching user data:', error.message);
-      return null;
+    // Use the email field from the authenticated user object
+    const userEmail = user?.email;
+
+    if (!userEmail) {
+      console.error('User email is undefined or null. Check authentication.');
+      return null; // Return early if the email is invalid
     }
 
-    // Return the fetched user data
-    return data;
+    // Query the 'users' table with the user email
+    const { data, error } = await supabase
+      .from('users') // Ensure this table exists in your database
+      .select('*')   // Select all fields (or specify the fields you need)
+      .eq('email', userEmail) // Use 'email' as the filter field
+      .single(); // Expect a single record for the given email
+
+    if (error) {
+      console.error('Error fetching user data:', error.message);
+      return null; // Return null if the query fails
+    }
+
+    return data; // Return the fetched user data
   } catch (err) {
     console.error('Error in getUserData function:', err);
-    return null;
+    return null; // Return null if there's an unexpected error
   }
 };
 
+
+
+/*
+
+  cart services
+
+*/
+
+// Ensure a cart exists for a user, create it if not
+export const getOrCreateCartByUserId = async (userId) => {
+  // First, check if the cart exists
+  const { data: cart, error } = await supabase
+    .from('Cart')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+
+  if (error && error.code !== 'PGRST116') { // PGRST116: No rows returned
+    console.log('Error fetching cart:', error.message);
+    return null;
+  }
+
+  // If the cart exists, return it
+  if (cart) {
+    return cart;
+  }
+
+  // If the cart doesn't exist, create a new one
+  const { data: newCart, error: insertError } = await supabase
+    .from('Cart')
+    .insert([{ user_id: userId }])
+    .single();
+
+  if (insertError) {
+    console.log('Error creating cart:', insertError.message);
+    return null;
+  }
+
+  return newCart;
+};
+
+
+// Add an item to the cart, ensuring the cart exists
+export const addItemToCart = async (userId, bookId, quantity, price) => {
+  // Ensure the cart exists or create one
+  const cart = await getOrCreateCartByUserId(userId);
+
+  if (!cart) {
+    console.log('Unable to find or create cart for user:', userId);
+    return null;
+  }
+
+  const cartId = cart.cart_id;
+
+  // Check if the item already exists in the cart
+  const { data: existingItem, error: existingError } = await supabase
+    .from('CartItems')
+    .select('*')
+    .eq('cart_id', cartId)
+    .eq('book_id', bookId)
+    .single();
+
+  if (existingError && existingError.code !== 'PGRST116') {
+    console.log('Error checking cart item:', existingError.message);
+    return null;
+  }
+
+  if (existingItem) {
+    // If the item exists, update its quantity
+    const newQuantity = existingItem.quantity + quantity;
+    return await updateCartItemQuantity(cartId, bookId, newQuantity);
+  }
+
+  // If the item doesn't exist, insert it
+  const { data, error } = await supabase
+    .from('CartItems')
+    .insert([{ cart_id: cartId, book_id: bookId, quantity, price }]);
+
+  if (error) {
+    console.log('Error adding item to cart:', error.message);
+    return null;
+  }
+
+  return data;
+};
+
+
+export const updateCartItemQuantity = async (cartId, bookId, quantity) => {
+  const { data, error } = await supabase
+    .from('CartItems')
+    .update({ quantity })
+    .eq('cart_id', cartId)
+    .eq('book_id', bookId);
+
+  if (error) {
+    console.log('Error updating cart item:', error.message);
+    return null;
+  }
+
+  return data;
+};
+
+
+// Get all items in a user's cart
+export const getCartItems = async (userId) => {
+  // Ensure the cart exists
+  const cart = await getOrCreateCartByUserId(userId);
+
+  if (!cart) {
+    console.log('No cart found for user:', userId);
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from('CartItems')
+    .select(`
+      *,
+      book:books (
+        title,
+        image_url,
+        price
+      )
+    `)
+    .eq('cart_id', cart.cart_id);
+
+  if (error) {
+    console.log('Error fetching cart items:', error.message);
+    return [];
+  }
+
+  return data;
+};
+
+
+
+// Remove an item from the cart
+export const removeCartItem = async (cartId, bookId) => {
+  const { data, error } = await supabase
+    .from('CartItems')
+    .delete()
+    .eq('cart_id', cartId)
+    .eq('book_id', bookId);
+
+  if (error) {
+    console.log('Error removing cart item:', error.message);
+    return null;
+  }
+
+  return data;
+};
+
+
+// Add item to localStorage-based cart for anonymous users
+export const addItemToLocalCart = (bookId, quantity, price) => {
+  const cart = JSON.parse(localStorage.getItem('cart')) || [];
+  const existingItem = cart.find((item) => item.book_id === bookId);
+
+  if (existingItem) {
+    existingItem.quantity += quantity;
+  } else {
+    cart.push({ book_id: bookId, quantity, price });
+  }
+
+  localStorage.setItem('cart', JSON.stringify(cart));
+};
+
+// Get items from localStorage-based cart
+export const getLocalCartItems = () => {
+  return JSON.parse(localStorage.getItem('cart')) || [];
+};
+
+// Remove an item from localStorage-based cart
+export const removeItemFromLocalCart = (bookId) => {
+  const cart = JSON.parse(localStorage.getItem('cart')) || [];
+  const updatedCart = cart.filter((item) => item.book_id !== bookId);
+  localStorage.setItem('cart', JSON.stringify(updatedCart));
+};
