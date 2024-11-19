@@ -1,13 +1,12 @@
 import React, { useState } from "react";
-import { supabase } from "../../services/supabaseClient";
-import { getUserAddresses } from "../../services/api";
+import { addNewAddress, getUserAddresses } from "../../services/api";
 
 const AddressesWindow = ({ userId }) => {
   const [addresses, setAddresses] = useState([]);
-  const [showAddressForm, setShowAddressForm] = useState(false); // Show/Hide address form
-  const [newAddress, setNewAddress] = useState({ city: "", district: "", address_details: "", address_title: "" }); // New address form data
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [newAddress, setNewAddress] = useState({ city: "", district: "", address_details: "", address_title: "" });
 
-  // Fetch addresses (you can call this after adding a new address)
+  // Fetch addresses
   const fetchAddresses = async () => {
     const addressData = await getUserAddresses();
     setAddresses(addressData);
@@ -21,45 +20,19 @@ const AddressesWindow = ({ userId }) => {
 
   // Handle adding a new address
   const handleAddAddress = async () => {
-    try {
-      // Step 1: Add the new address to the `addresses` table
-      const { data: addressData, error: addressError } = await supabase
-        .from("addresses")
-        .insert([
-          {
-            city: newAddress.city,
-            district: newAddress.district,
-            address_details: newAddress.address_details,
-          },
-        ])
-        .select()
-        .single(); // Get the inserted address
-  
-      if (addressError) throw addressError;
-  
-      // Step 2: Link the new address to the user in the `useraddresses` table with the address_title
-      const { error: userAddressError } = await supabase
-        .from("useraddresses")
-        .insert([
-          {
-            user_id: userId,
-            address_id: addressData.address_id,
-            address_title: newAddress.address_title, // Save the title to the useraddresses table
-          },
-        ]);
-  
-      if (userAddressError) throw userAddressError;
-  
-      // Step 3: Refresh the address list
+    const result = await addNewAddress(userId, newAddress);
+
+    if (result.success) {
+      // Refresh the address list
       fetchAddresses();
-  
+
       // Reset the form
       setNewAddress({ city: "", district: "", address_details: "", address_title: "" });
       setShowAddressForm(false);
-    } catch (error) {
-      console.error("Error adding new address:", error.message);
+    } else {
+      console.error("Error adding address:", result.error);
     }
-  };  
+  };
 
   // Initial load of addresses
   React.useEffect(() => {

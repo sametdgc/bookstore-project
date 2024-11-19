@@ -413,6 +413,46 @@ export const getUserAddresses = async () => {
   }
 };
 
+// UPDATE user addresses
+// Add a new address for a user
+export const addNewAddress = async (userId, addressData) => {
+  try {
+    // Step 1: Add the new address to the `addresses` table
+    const { data: newAddress, error: addressError } = await supabase
+      .from("addresses")
+      .insert([
+        {
+          city: addressData.city,
+          district: addressData.district,
+          address_details: addressData.address_details,
+        },
+      ])
+      .select()
+      .single(); // Get the inserted address
+    
+    if (addressError) throw new Error("Error adding address: " + addressError.message);
+
+    // Step 2: Link the new address to the user in the `useraddresses` table
+    const { error: userAddressError } = await supabase
+      .from("useraddresses")
+      .insert([
+        {
+          user_id: userId,
+          address_id: newAddress.address_id, // Use the newly inserted address ID
+          address_title: addressData.address_title,
+        },
+      ]);
+
+    if (userAddressError) throw new Error("Error linking address to user: " + userAddressError.message);
+
+    return { success: true, newAddress };
+  } catch (error) {
+    console.error(error.message);
+    return { success: false, error: error.message };
+  }
+};
+
+
 // GET user orders
 export const getUserOrders = async () => {
   try {
