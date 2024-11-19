@@ -11,10 +11,12 @@ import {
   GenrePage,
   AboutPage,
   ReturnRefundPolicyPage,
-  MyProfilePage
+  MyProfilePage,
+  CheckoutPage
 } from "./pages";
 import { TopNavBar, SubscriptionBanner, Footer } from "./components";
 import SearchPage from "./pages/SearchPage";
+
 
 function App() {
   const location = useLocation();
@@ -43,6 +45,7 @@ function App() {
           <Route path="/return-refund-policy" element={<ReturnRefundPolicyPage />} /> 
           <Route path="/profile" element={<MyProfilePage />} />
           <Route path="*" element={<MainPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
         </Routes>
       </div>
       <SubscriptionBanner />

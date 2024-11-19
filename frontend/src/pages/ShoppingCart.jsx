@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 
 const ShoppingCart = () => {
   const [cart, setCart] = useState([]);
+  const navigate = useNavigate();
 
   // Load cart items from localStorage on initial load and aggregate duplicates
   useEffect(() => {
@@ -95,7 +98,7 @@ const ShoppingCart = () => {
           <button
             className="mt-6 px-4 py-2 bg-[#65aa92] text-white font-semibold rounded shadow hover:bg-[#579d7b] transition-colors"
             onClick={() => {
-              // Placeholder for navigation logic
+              navigate('/checkout')
               console.log('Complete purchase clicked');
             }}
           >
