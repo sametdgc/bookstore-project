@@ -45,7 +45,7 @@ const LoginForm = () => {
             value={email} 
             onChange={(e) => setEmail(e.target.value)} 
             required 
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#65aa92] focus:border-[#65aa92]"
           />
         </div>
 
@@ -57,7 +57,7 @@ const LoginForm = () => {
             value={password} 
             onChange={(e) => setPassword(e.target.value)} 
             required 
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#65aa92] focus:border-[#65aa92]"
           />
         </div>
 
@@ -67,13 +67,13 @@ const LoginForm = () => {
 
         <button 
           type="submit" 
-          className="w-full py-2 px-4 bg-orange-500 text-white font-semibold rounded-md shadow hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50"
+          className="w-full py-2 px-4 bg-[#65aa92] text-white font-semibold rounded-md shadow hover:bg-[#4e8a70] focus:outline-none focus:ring-2 focus:ring-[#65aa92] focus:ring-opacity-50"
         >
           Login
         </button>
       </form>
       <p className="text-center text-sm text-gray-600 mt-4">
-        Don’t have an account? <Link to="/register" className="text-orange-500 hover:underline">Register here</Link>
+        Don’t have an account? <Link to="/register"  className="text-[#65aa92] hover:underline">Register here</Link>
       </p>
     </div>
   );

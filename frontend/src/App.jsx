@@ -22,12 +22,12 @@ function App() {
   const location = useLocation();
 
   // Define paths where TopNavBar, SubscriptionBanner, and Footer should be hidden
-  const hideNavPaths = ["/login", "/register"];
+  //const hideNavPaths = ["/login", "/register"];
 
   return (
     <div className="App">
-      {/* Conditionally render TopNavBar based on the current path */}
-      {!hideNavPaths.includes(location.pathname) && <TopNavBar />}
+     
+      <TopNavBar />
 
       {/* Main Routes */}
       <div className="px-10 lg:px-20">
