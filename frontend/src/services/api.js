@@ -269,6 +269,32 @@ export const testSupabaseConnection = async () => {
 // GET all user data
 export const getUserData = async () => {
   try {
+    // Get the current session
+    const user = await fetchUser();
+    // Extract the user_id from the session metadata
+    const userId = user.user_metadata.custom_incremented_id;
+    // Query the users table with the user_id
+    const { data, error } = await supabase
+      .from('users')  // Assuming your table is named 'users'
+      .select('*')  // You can select specific fields if needed
+      .eq('user_id', userId)  // Filter by the user_id from session
+      .single();  // Assuming you expect one user record for that ID
+    // Check for errors
+    if (error) {
+      console.error('Error fetching user data:', error.message);
+      return null;
+    }
+    // Return the fetched user data
+    return data;
+  } catch (err) {
+    console.error('Error in getUserData function:', err);
+    return null;
+  }
+};
+
+/*
+export const getUserData = async () => {
+  try {
     const user = await fetchUser();
     if (!user) return null;
 
@@ -312,7 +338,6 @@ export const getUserData = async () => {
       return null;
     }
 
-    console.log("Fetched user data:", data);
     return data;
   } catch (err) {
     console.error("Error in getUserData function:", err);
@@ -320,7 +345,7 @@ export const getUserData = async () => {
   }
 };
 
-
+*/
   
 /*
  export const getUserData = async () => {
@@ -355,6 +380,113 @@ export const getUserData = async () => {
   }
 };
 */
+
+// GET user addresses
+export const getUserAddresses = async () => {
+  try {
+    const user = await fetchUser();
+    if (!user) return null;
+
+    const userId = user.user_metadata.custom_incremented_id;
+
+    const { data, error } = await supabase
+      .from('useraddresses')
+      .select(`
+        address_title,
+        address:addresses (
+          city,
+          district,
+          address_details
+        )
+      `)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error fetching user addresses:', error.message);
+      return [];
+    }
+
+    return data;
+  } catch (err) {
+    console.error('Error in getUserAddresses function:', err);
+    return [];
+  }
+};
+
+// UPDATE user addresses
+// Add a new address for a user
+export const addNewAddress = async (userId, addressData) => {
+  try {
+    // Step 1: Add the new address to the `addresses` table
+    const { data: newAddress, error: addressError } = await supabase
+      .from("addresses")
+      .insert([
+        {
+          city: addressData.city,
+          district: addressData.district,
+          address_details: addressData.address_details,
+        },
+      ])
+      .select()
+      .single(); // Get the inserted address
+    
+    if (addressError) throw new Error("Error adding address: " + addressError.message);
+
+    // Step 2: Link the new address to the user in the `useraddresses` table
+    const { error: userAddressError } = await supabase
+      .from("useraddresses")
+      .insert([
+        {
+          user_id: userId,
+          address_id: newAddress.address_id, // Use the newly inserted address ID
+          address_title: addressData.address_title,
+        },
+      ]);
+
+    if (userAddressError) throw new Error("Error linking address to user: " + userAddressError.message);
+
+    return { success: true, newAddress };
+  } catch (error) {
+    console.error(error.message);
+    return { success: false, error: error.message };
+  }
+};
+
+
+// GET user orders
+export const getUserOrders = async () => {
+  try {
+    const user = await fetchUser();
+    if (!user) return null;
+
+    const userId = user.user_metadata.custom_incremented_id;
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        order_id,
+        order_date,
+        total_price,
+        address:addresses (
+          city,
+          district,
+          address_details
+        )
+      `)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error fetching user orders:', error.message);
+      return [];
+    }
+
+    return data;
+  } catch (err) {
+    console.error('Error in getUserOrders function:', err);
+    return [];
+  }
+};
+
 
 /*
 
