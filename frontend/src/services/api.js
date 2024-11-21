@@ -620,7 +620,6 @@ export const getCartItems = async (userId) => {
 };
 
 
-
 // Remove an item from the cart
 export const removeCartItem = async (cartId, bookId) => {
   const { data, error } = await supabase
@@ -637,39 +636,12 @@ export const removeCartItem = async (cartId, bookId) => {
   return data;
 };
 
-/*
-// Get items from localStorage-based cart
-export const getLocalCartItems = () => {
-  return JSON.parse(localStorage.getItem('cart')) || [];
-};
-
-
-// Add item to localStorage-based cart for anonymous users
-export const addItemToLocalCart = (bookId, quantity, price) => {
-  const cart = getLocalCartItems();
-  const existingItem = cart.find((item) => item.book_id === bookId);
-
-  if (existingItem) {
-    existingItem.quantity += quantity;
-  } else {
-    cart.push({ book_id: bookId, quantity, price });
-  }
-
-  localStorage.setItem('cart', JSON.stringify(cart));
-};
-
-// Remove an item from localStorage-based cart
-export const removeItemFromLocalCart = (bookId) => {
-  const cart = getLocalCartItems();
-  const updatedCart = cart.filter((item) => item.book_id !== bookId);
-  localStorage.setItem('cart', JSON.stringify(updatedCart));
-};
-*/
 
 // Helper function to get items from localStorage-based cart
 export const getLocalCartItems = () => {
   return JSON.parse(localStorage.getItem('cart')) || [];
 };
+
 
 // Update quantity of an item in localStorage-based cart
 export const updateLocalCartItemQuantity = (bookId, newQuantity) => {
@@ -688,6 +660,7 @@ export const updateLocalCartItemQuantity = (bookId, newQuantity) => {
   return updatedCart;
 };
 
+
 // Add item to localStorage-based cart for anonymous users
 export const addItemToLocalCart = (bookId, quantity, price) => {
   const cart = getLocalCartItems();
@@ -701,6 +674,7 @@ export const addItemToLocalCart = (bookId, quantity, price) => {
 
   localStorage.setItem('cart', JSON.stringify(cart));
 };
+
 
 // Remove an item from localStorage-based cart
 export const removeItemFromLocalCart = (bookId) => {

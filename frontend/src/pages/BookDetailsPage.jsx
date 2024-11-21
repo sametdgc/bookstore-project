@@ -1,9 +1,13 @@
-// src/pages/BookDetailsPage.js
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { FaHeart } from 'react-icons/fa';
-import { getBookDetailsById} from '../services/api';
-import ReviewWindow, {renderStars}   from '../components/ReviewWindow';
+import { 
+  getBookDetailsById,
+  addItemToCart, 
+  addItemToLocalCart, 
+  fetchUser 
+} from '../services/api';
+import ReviewWindow, { renderStars } from '../components/ReviewWindow';
 
 const BookDetailsPage = () => {
   const { book_id } = useParams();
@@ -11,6 +15,7 @@ const BookDetailsPage = () => {
   const [wishlistMessage, setWishlistMessage] = useState('');
   const [cartMessage, setCartMessage] = useState('');
   const [isInWishlist, setIsInWishlist] = useState(false);
+  const [user, setUser] = useState(null); // Track the logged-in user
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -23,20 +28,36 @@ const BookDetailsPage = () => {
       }
     };
 
+    const fetchCurrentUser = async () => {
+      const currentUser = await fetchUser();
+      setUser(currentUser); // Update user state
+    };
+
     fetchBookDetails();
+    fetchCurrentUser();
 
     // Check if book is already in wishlist
     const existingWishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
     setIsInWishlist(existingWishlist.some((item) => item.book_id === parseInt(book_id)));
   }, [book_id]);
 
-  const handleAddToCart = () => {
-    const savedCart = JSON.parse(localStorage.getItem('cart')) || [];
-    const updatedCart = [...savedCart, book];
-    localStorage.setItem('cart', JSON.stringify(updatedCart));
+  const handleAddToCart = async () => {
+    if (!book) return;
+
+    const { book_id, price } = book;
+
+    if (user) {
+      // Logged-in user: Add item to database cart
+      const userId = user.user_metadata.custom_incremented_id;
+      await addItemToCart(userId, book_id, 1, price); // Add 1 quantity to cart
+      setCartMessage('Product is successfully added to your cart!');
+    } else {
+      // Anonymous user: Add item to localStorage cart
+      addItemToLocalCart(book_id, 1, price); // Add 1 quantity to local cart
+      setCartMessage('Product is successfully added to your cart!');
+    }
 
     // Display confirmation message
-    setCartMessage('Product is successfully added to your cart!');
     setTimeout(() => setCartMessage(''), 2000);
   };
 
@@ -60,7 +81,6 @@ const BookDetailsPage = () => {
   };
 
   if (!book) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-
 
   return (
     <div className="min-h-screen bg-gray-50">
