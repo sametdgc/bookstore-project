@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchUser, getCartItems, updateCartItemQuantity, removeCartItem, getOrCreateCartByUserId, 
+import { fetchUser, getCartItems, updateCartItemQuantity, removeCartItem, getOrCreateCartByUserId, getBookDetailsById,
   getLocalCartItems, updateLocalCartItemQuantity, removeItemFromLocalCart } from '../services/api';
 
 const ShoppingCart = () => {
@@ -14,7 +14,7 @@ const ShoppingCart = () => {
     const loadCart = async () => {
       const currentUser = await fetchUser(); // Get the current user (logged in or null)
       setUser(currentUser);
-
+  
       if (currentUser) {
         // Logged-in user: Fetch their cart from the database
         const userCartItems = await getCartItems(currentUser.user_metadata.custom_incremented_id);
@@ -22,13 +22,25 @@ const ShoppingCart = () => {
       } else {
         // Anonymous user: Load the cart from localStorage
         const savedCart = getLocalCartItems();
-        const aggregatedCart = aggregateCart(savedCart);
-        setCart(aggregatedCart);
+  
+        // Fetch book details for each item in the cart
+        const enrichedCart = await Promise.all(
+          savedCart.map(async (item) => {
+            const bookDetails = await getBookDetailsById(item.book_id);
+            return {
+              ...item,
+              ...bookDetails, // Merge the book details into the item
+            };
+          })
+        );
+  
+        setCart(enrichedCart);
       }
     };
-
+  
     loadCart();
   }, []);
+  
 
   // Helper function to aggregate items in the cart by quantity
   const aggregateCart = (cartItems) => {
@@ -115,23 +127,27 @@ const ShoppingCart = () => {
             </thead>
             <tbody>
               {cart.map((item) => {
-                const { book } = item; // Extract book details from the nested field
+                // Dynamically handle book details for logged-in vs. anonymous users
+                const title = item.book?.title || item.title || 'Unknown Title';
+                const imageUrl = item.book?.image_url || item.image_url || 'https://via.placeholder.com/50x75';
+                const price = item.book?.price || item.price || 0;
+
                 return (
                   <tr key={item.book_id} className="border-b">
                     <td className="flex items-center">
                       <img
-                        src={book?.image_url || 'https://via.placeholder.com/50x75'}
-                        alt={`${book?.title || 'Unknown Title'} cover`}
+                        src={imageUrl}
+                        alt={`${title} cover`}
                         className="w-12 h-16 object-cover mr-4 rounded"
                       />
                       <span
                         className="font-semibold text-[#65aa92] hover:underline cursor-pointer"
                         onClick={() => navigate(`/books/${item.book_id}`)}
                       >
-                        {book?.title || 'Unknown Title'}
+                        {title}
                       </span>
                     </td>
-                    <td>${(book?.price || 0).toFixed(2)}</td>
+                    <td>${price.toFixed(2)}</td>
                     <td>
                       <div className="flex items-center">
                         <button
@@ -149,7 +165,7 @@ const ShoppingCart = () => {
                         </button>
                       </div>
                     </td>
-                    <td>${calculateItemSubtotal({ ...item, price: book?.price || 0 })}</td>
+                    <td>${calculateItemSubtotal({ ...item, price })}</td>
                     <td>
                       <button
                         onClick={() => handleRemove(item.book_id)}
