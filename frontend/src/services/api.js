@@ -498,7 +498,7 @@ export const getUserOrders = async () => {
 export const getOrCreateCartByUserId = async (userId) => {
   // First, check if the cart exists
   const { data: cart, error } = await supabase
-    .from('Cart')
+    .from('cart')
     .select('*')
     .eq('user_id', userId)
     .single();
@@ -515,7 +515,7 @@ export const getOrCreateCartByUserId = async (userId) => {
 
   // If the cart doesn't exist, create a new one
   const { data: newCart, error: insertError } = await supabase
-    .from('Cart')
+    .from('cart')
     .insert([{ user_id: userId }])
     .single();
 
@@ -542,7 +542,7 @@ export const addItemToCart = async (userId, bookId, quantity, price) => {
 
   // Check if the item already exists in the cart
   const { data: existingItem, error: existingError } = await supabase
-    .from('CartItems')
+    .from('cartitems')
     .select('*')
     .eq('cart_id', cartId)
     .eq('book_id', bookId)
@@ -561,7 +561,7 @@ export const addItemToCart = async (userId, bookId, quantity, price) => {
 
   // If the item doesn't exist, insert it
   const { data, error } = await supabase
-    .from('CartItems')
+    .from('cartitems')
     .insert([{ cart_id: cartId, book_id: bookId, quantity, price }]);
 
   if (error) {
@@ -575,7 +575,7 @@ export const addItemToCart = async (userId, bookId, quantity, price) => {
 
 export const updateCartItemQuantity = async (cartId, bookId, quantity) => {
   const { data, error } = await supabase
-    .from('CartItems')
+    .from('cartitems')
     .update({ quantity })
     .eq('cart_id', cartId)
     .eq('book_id', bookId);
@@ -600,7 +600,7 @@ export const getCartItems = async (userId) => {
   }
 
   const { data, error } = await supabase
-    .from('CartItems')
+    .from('cartitems')
     .select(`
       *,
       book:books (
@@ -624,7 +624,7 @@ export const getCartItems = async (userId) => {
 // Remove an item from the cart
 export const removeCartItem = async (cartId, bookId) => {
   const { data, error } = await supabase
-    .from('CartItems')
+    .from('cartitems')
     .delete()
     .eq('cart_id', cartId)
     .eq('book_id', bookId);
@@ -637,10 +637,16 @@ export const removeCartItem = async (cartId, bookId) => {
   return data;
 };
 
+/*
+// Get items from localStorage-based cart
+export const getLocalCartItems = () => {
+  return JSON.parse(localStorage.getItem('cart')) || [];
+};
+
 
 // Add item to localStorage-based cart for anonymous users
 export const addItemToLocalCart = (bookId, quantity, price) => {
-  const cart = JSON.parse(localStorage.getItem('cart')) || [];
+  const cart = getLocalCartItems();
   const existingItem = cart.find((item) => item.book_id === bookId);
 
   if (existingItem) {
@@ -652,14 +658,60 @@ export const addItemToLocalCart = (bookId, quantity, price) => {
   localStorage.setItem('cart', JSON.stringify(cart));
 };
 
-// Get items from localStorage-based cart
+// Remove an item from localStorage-based cart
+export const removeItemFromLocalCart = (bookId) => {
+  const cart = getLocalCartItems();
+  const updatedCart = cart.filter((item) => item.book_id !== bookId);
+  localStorage.setItem('cart', JSON.stringify(updatedCart));
+};
+*/
+
+// Helper function to get items from localStorage-based cart
 export const getLocalCartItems = () => {
   return JSON.parse(localStorage.getItem('cart')) || [];
 };
 
+// Update quantity of an item in localStorage-based cart
+export const updateLocalCartItemQuantity = (bookId, newQuantity) => {
+  const cart = getLocalCartItems();
+
+  // Update the quantity or remove the item if quantity <= 0
+  const updatedCart = cart
+    .map((item) =>
+      item.book_id === bookId
+        ? { ...item, quantity: newQuantity }
+        : item
+    )
+    .filter((item) => item.quantity > 0); 
+  
+  localStorage.setItem('cart', JSON.stringify(updatedCart));
+  return updatedCart;
+};
+
+// Add item to localStorage-based cart for anonymous users
+export const addItemToLocalCart = (bookId, quantity, price) => {
+  const cart = getLocalCartItems();
+  const existingItem = cart.find((item) => item.book_id === bookId);
+
+  if (existingItem) {
+    existingItem.quantity += quantity;
+  } else {
+    cart.push({ book_id: bookId, quantity, price });
+  }
+
+  localStorage.setItem('cart', JSON.stringify(cart));
+};
+
 // Remove an item from localStorage-based cart
 export const removeItemFromLocalCart = (bookId) => {
-  const cart = JSON.parse(localStorage.getItem('cart')) || [];
+  const cart = getLocalCartItems();
   const updatedCart = cart.filter((item) => item.book_id !== bookId);
+
   localStorage.setItem('cart', JSON.stringify(updatedCart));
+
+  console.log(`Removed item with bookId ${bookId} from local cart.`);
+  console.log('Updated local cart:', updatedCart);
+
+  return updatedCart;
 };
+

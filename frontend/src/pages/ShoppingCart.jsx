@@ -1,23 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fetchUser, getCartItems, updateCartItemQuantity, removeCartItem, getOrCreateCartByUserId, 
+  getLocalCartItems, updateLocalCartItemQuantity, removeItemFromLocalCart } from '../services/api';
 
 const ShoppingCart = () => {
   const [cart, setCart] = useState([]);
-  const [shippingCost, setShippingCost] = useState(10.00); // Default shipping cost
+  const [shippingCost, setShippingCost] = useState(10.0); // Default shipping cost
+  const [user, setUser] = useState(null); // Track the logged-in user
   const navigate = useNavigate();
 
-  // Load cart items from localStorage on initial load and aggregate duplicates
+  // Fetch user and load their cart on mount
   useEffect(() => {
-    const savedCart = JSON.parse(localStorage.getItem('cart')) || [];
-    const aggregatedCart = aggregateCart(savedCart);
-    setCart(aggregatedCart);
+    const loadCart = async () => {
+      const currentUser = await fetchUser(); // Get the current user (logged in or null)
+      setUser(currentUser);
+
+      if (currentUser) {
+        // Logged-in user: Fetch their cart from the database
+        const userCartItems = await getCartItems(currentUser.user_metadata.custom_incremented_id);
+        setCart(userCartItems || []);
+      } else {
+        // Anonymous user: Load the cart from localStorage
+        const savedCart = getLocalCartItems();
+        const aggregatedCart = aggregateCart(savedCart);
+        setCart(aggregatedCart);
+      }
+    };
+
+    loadCart();
   }, []);
 
   // Helper function to aggregate items in the cart by quantity
   const aggregateCart = (cartItems) => {
     const cartMap = {};
 
-    cartItems.forEach(item => {
+    cartItems.forEach((item) => {
       if (cartMap[item.book_id]) {
         cartMap[item.book_id].quantity += 1;
       } else {
@@ -43,35 +60,39 @@ const ShoppingCart = () => {
   };
 
   // Function to update quantity of an item
-  const updateQuantity = (bookId, newQuantity) => {
-    const updatedCart = cart.map(item =>
-      item.book_id === bookId
-        ? { ...item, quantity: newQuantity }
-        : item
-    ).filter(item => item.quantity > 0); // Remove items with quantity <= 0
+  const updateQuantity = async (bookId, newQuantity) => {
+    if (user) {
+      // Logged-in user: Update quantity in the database
+      const userId = user.user_metadata.custom_incremented_id;
+      const cartData = await getOrCreateCartByUserId(userId);
+      await updateCartItemQuantity(cartData.cart_id, bookId, newQuantity);
 
-    setCart(updatedCart);
-    localStorage.setItem('cart', JSON.stringify(expandCart(updatedCart)));
+      // Reload the cart from the database
+      const updatedCart = await getCartItems(userId);
+      setCart(updatedCart);
+    } else {
+      // Anonymous user: Update quantity in localStorage using API function
+      const updatedCart = updateLocalCartItemQuantity(bookId, newQuantity);
+      setCart(updatedCart);
+    }
   };
 
   // Function to remove an item
-  const handleRemove = (bookId) => {
-    const updatedCart = cart.filter(item => item.book_id !== bookId);
-    setCart(updatedCart);
-    localStorage.setItem('cart', JSON.stringify(expandCart(updatedCart)));
-  };
-
-  // Helper function to expand aggregated cart back into a list for localStorage
-  const expandCart = (cartItems) => {
-    const expandedCart = [];
-
-    cartItems.forEach(item => {
-      for (let i = 0; i < item.quantity; i++) {
-        expandedCart.push({ ...item, quantity: 1 });
-      }
-    });
-
-    return expandedCart;
+  const handleRemove = async (bookId) => {
+    if (user) {
+      // Logged-in user: Remove item from the database
+      const userId = user.user_metadata.custom_incremented_id;
+      const cartData = await getOrCreateCartByUserId(userId);
+      await removeCartItem(cartData.cart_id, bookId);
+  
+      // Reload the cart from the database
+      const updatedCart = await getCartItems(userId);
+      setCart(updatedCart);
+    } else {
+      // Anonymous user: Remove item using the API function
+      const updatedCart = removeItemFromLocalCart(bookId);
+      setCart(updatedCart); // Update the state
+    }
   };
 
   return (
@@ -93,51 +114,53 @@ const ShoppingCart = () => {
               </tr>
             </thead>
             <tbody>
-              {cart.map((item) => (
-                <tr key={item.book_id} className="border-b">
-                  <td className="flex items-center">
-                    <img
-                      src={item.image_url || 'https://via.placeholder.com/50x75'}
-                      alt={`${item.title} cover`}
-                      className="w-12 h-16 object-cover mr-4 rounded"
-                    />
-                    {/* Make the title clickable */}
-                    <span
-                      className="font-semibold text-[#65aa92] hover:underline cursor-pointer"
-                      onClick={() => navigate(`/books/${item.book_id}`)}
-                    >
-                      {item.title}
-                    </span>
-                  </td>
-                  <td>${item.price.toFixed(2)}</td>
-                  <td>
-                    <div className="flex items-center">
-                      <button
-                        className="px-2 py-1 bg-gray-200 rounded-l"
-                        onClick={() => updateQuantity(item.book_id, item.quantity - 1)}
+              {cart.map((item) => {
+                const { book } = item; // Extract book details from the nested field
+                return (
+                  <tr key={item.book_id} className="border-b">
+                    <td className="flex items-center">
+                      <img
+                        src={book?.image_url || 'https://via.placeholder.com/50x75'}
+                        alt={`${book?.title || 'Unknown Title'} cover`}
+                        className="w-12 h-16 object-cover mr-4 rounded"
+                      />
+                      <span
+                        className="font-semibold text-[#65aa92] hover:underline cursor-pointer"
+                        onClick={() => navigate(`/books/${item.book_id}`)}
                       >
-                        -
-                      </button>
-                      <span className="px-4">{item.quantity}</span>
+                        {book?.title || 'Unknown Title'}
+                      </span>
+                    </td>
+                    <td>${(book?.price || 0).toFixed(2)}</td>
+                    <td>
+                      <div className="flex items-center">
+                        <button
+                          className="px-2 py-1 bg-gray-200 rounded-l"
+                          onClick={() => updateQuantity(item.book_id, item.quantity - 1)}
+                        >
+                          -
+                        </button>
+                        <span className="px-4">{item.quantity}</span>
+                        <button
+                          className="px-2 py-1 bg-gray-200 rounded-r"
+                          onClick={() => updateQuantity(item.book_id, item.quantity + 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </td>
+                    <td>${calculateItemSubtotal({ ...item, price: book?.price || 0 })}</td>
+                    <td>
                       <button
-                        className="px-2 py-1 bg-gray-200 rounded-r"
-                        onClick={() => updateQuantity(item.book_id, item.quantity + 1)}
+                        onClick={() => handleRemove(item.book_id)}
+                        className="text-red-500 hover:underline"
                       >
-                        +
+                        Remove
                       </button>
-                    </div>
-                  </td>
-                  <td>${calculateItemSubtotal(item)}</td>
-                  <td>
-                    <button
-                      onClick={() => handleRemove(item.book_id)}
-                      className="text-red-500 hover:underline"
-                    >
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
@@ -161,8 +184,11 @@ const ShoppingCart = () => {
           <button
             className="mt-6 px-4 py-2 bg-[#65aa92] text-white font-semibold rounded shadow hover:bg-[#579d7b] transition-colors"
             onClick={() => {
-              navigate('/checkout');
-              console.log('Complete purchase clicked');
+              if (user) {
+                navigate('/checkout');
+              } else {
+                alert('Please log in to complete your purchase.');
+              }
             }}
           >
             Complete Purchase
