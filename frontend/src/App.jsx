@@ -1,5 +1,10 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import {
   LoginPage,
   RegisterPage,
@@ -12,21 +17,17 @@ import {
   AboutPage,
   ReturnRefundPolicyPage,
   MyProfilePage,
-  CheckoutPage
+  CheckoutPage,
 } from "./pages";
 import { TopNavBar, SubscriptionBanner, Footer } from "./components";
 import SearchPage from "./pages/SearchPage";
-
+import HelpAndSupportPage from "./pages/HelpAndSupportPage"; // Import the page
 
 function App() {
   const location = useLocation();
 
-  // Define paths where TopNavBar, SubscriptionBanner, and Footer should be hidden
-  //const hideNavPaths = ["/login", "/register"];
-
   return (
     <div className="App">
-     
       <TopNavBar />
 
       {/* Main Routes */}
@@ -41,11 +42,19 @@ function App() {
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/cart" element={<ShoppingCart />} />
           <Route path="/genre/:genreName" element={<GenrePage />} />
-          <Route path="/about" element={<AboutPage />} /> 
-          <Route path="/return-refund-policy" element={<ReturnRefundPolicyPage />} /> 
+          <Route path="/about" element={<AboutPage />} />
+          <Route
+            path="/return-refund-policy"
+            element={<ReturnRefundPolicyPage />}
+          />
           <Route path="/profile" element={<MyProfilePage />} />
-          <Route path="*" element={<MainPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route
+            path="/help-and-support"
+            element={<HelpAndSupportPage />}
+          />{" "}
+          {/* New Route */}
+          <Route path="*" element={<MainPage />} />
         </Routes>
       </div>
       <SubscriptionBanner />
