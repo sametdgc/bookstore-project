@@ -40,22 +40,6 @@ const ShoppingCart = () => {
   
     loadCart();
   }, []);
-  
-
-  // Helper function to aggregate items in the cart by quantity
-  const aggregateCart = (cartItems) => {
-    const cartMap = {};
-
-    cartItems.forEach((item) => {
-      if (cartMap[item.book_id]) {
-        cartMap[item.book_id].quantity += 1;
-      } else {
-        cartMap[item.book_id] = { ...item, quantity: 1 };
-      }
-    });
-
-    return Object.values(cartMap);
-  };
 
   // Function to calculate subtotal for each item
   const calculateItemSubtotal = (item) => (item.price * item.quantity).toFixed(2);
@@ -72,22 +56,29 @@ const ShoppingCart = () => {
   };
 
   // Function to update quantity of an item
-  const updateQuantity = async (bookId, newQuantity) => {
-    if (user) {
-      // Logged-in user: Update quantity in the database
-      const userId = user.user_metadata.custom_incremented_id;
-      const cartData = await getOrCreateCartByUserId(userId);
-      await updateCartItemQuantity(cartData.cart_id, bookId, newQuantity);
+  // Function to update quantity of an item
+const updateQuantity = async (bookId, newQuantity) => {
+  if (newQuantity <= 0) {
+    // If the new quantity is 0 or less, remove the item
+    await handleRemove(bookId);
+    return;
+  }
 
-      // Reload the cart from the database
-      const updatedCart = await getCartItems(userId);
-      setCart(updatedCart);
-    } else {
-      // Anonymous user: Update quantity in localStorage using API function
-      const updatedCart = updateLocalCartItemQuantity(bookId, newQuantity);
-      setCart(updatedCart);
-    }
-  };
+  if (user) {
+    // Logged-in user: Update quantity in the database
+    const userId = user.user_metadata.custom_incremented_id;
+    const cartData = await getOrCreateCartByUserId(userId);
+    await updateCartItemQuantity(cartData.cart_id, bookId, newQuantity);
+
+    // Reload the cart from the database
+    const updatedCart = await getCartItems(userId);
+    setCart(updatedCart);
+  } else {
+    // Anonymous user: Update quantity in localStorage using API function
+    const updatedCart = updateLocalCartItemQuantity(bookId, newQuantity);
+    setCart(updatedCart);
+  }
+};
 
   // Function to remove an item
   const handleRemove = async (bookId) => {
@@ -106,7 +97,7 @@ const ShoppingCart = () => {
       setCart(updatedCart); // Update the state
     }
   };
-
+  
   return (
     <div className="container mx-auto py-16 text-center">
       <h1 className="text-4xl font-semibold text-[#65aa92]">Shopping Cart</h1>

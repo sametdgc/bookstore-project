@@ -687,6 +687,57 @@ export const removeItemFromLocalCart = (bookId) => {
   return updatedCart;
 };
 
+export const syncLocalCartToDatabase = async (localCart, userId) => {
+  try {
+    // Fetch or create the user's database cart
+    const userCart = await getOrCreateCartByUserId(userId); 
+    const cartId = userCart.cart_id; 
+    const userCartItems = await getCartItems(userId);
+
+    // Create a map of existing database cart items by book_id
+    const userCartMap = {};
+    userCartItems.forEach((item) => {
+      userCartMap[item.book_id] = item; // { book_id: item }
+    });
+
+    for (const localItem of localCart) {
+      const { book_id, quantity, price } = localItem;
+
+      // Check if the book exists in the user's database cart
+      const { data: existingCartItem, error: cartError } = await supabase
+        .from('cartitems')
+        .select('*')
+        .eq('cart_id', cartId) 
+        .eq('book_id', book_id)
+        .single();
+
+      if (cartError && cartError.code !== 'PGRST116') {
+        console.error(`Error checking book with ID ${book_id}:`, cartError.message);
+        continue; // Skip to the next item
+      }
+
+      if (!existingCartItem) {
+        // No rows returned, meaning the book is not yet in the user's cart
+        console.log(`Book with ID ${book_id} is not in the user's cart. Adding...`);
+        await addItemToCart(userId, book_id, quantity, price);
+      } else {
+        // If the book exists, update its quantity
+        const updatedQuantity = existingCartItem.quantity + quantity;
+        await updateCartItemQuantity(cartId, book_id, updatedQuantity);
+      }
+    }
+
+    // Clear the localStorage cart
+    localStorage.removeItem('cart');
+
+    return await getCartItems(userId);
+  } catch (error) {
+    console.error('Error syncing local cart to database:', error);
+    return [];
+  }
+};
+
+
 // Subtract items from stock when a purchase is made
 export const subtractItemsFromStock = async (bookId, quantity) => {
   const { data, error } = await supabase
