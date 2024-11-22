@@ -115,7 +115,7 @@ export const updateBook = async (bookId, updates) => {
 
 // PLACE an order
 export const placeOrder = async (order) => {
-  const { data, error } = await supabase.from("Orders").insert([order]);
+  const { data, error } = await supabase.from("orders").insert([order]);
   if (error) console.log("Error placing order:", error.message);
   return data;
 };
@@ -124,7 +124,7 @@ export const placeOrder = async (order) => {
 
 // ADD a new review
 export const addReview = async (review) => {
-  const { data, error } = await supabase.from("Reviews").insert([review]);
+  const { data, error } = await supabase.from("reviews").insert([review]);
   if (error) console.log("Error adding review:", error.message);
   return data;
 };
@@ -132,7 +132,7 @@ export const addReview = async (review) => {
 // GET all reviews of a book
 export const getReviewsForBook = async (bookId) => {
   const { data, error } = await supabase
-    .from("Reviews")
+    .from("reviews")
     .select("*")
     .eq("book_id", bookId);
   if (error) console.log("Error fetching reviews:", error.message);
@@ -142,7 +142,7 @@ export const getReviewsForBook = async (bookId) => {
 // ADD a book to the wishlist
 export const addBookToWishlist = async (userId, bookId) => {
   const { data, error } = await supabase
-    .from("Wishlist")
+    .from("wishlist")
     .insert([{ user_id: userId, book_id: bookId }]);
   if (error) console.log("Error adding book to wishlist:", error.message);
   return data;
@@ -151,7 +151,7 @@ export const addBookToWishlist = async (userId, bookId) => {
 // GET the wishlist of a user
 export const getWishlistByUserId = async (userId) => {
   const { data, error } = await supabase
-    .from("Wishlist")
+    .from("wishlist")
     .select("*")
     .eq("user_id", userId);
   if (error) console.log("Error fetching wishlist:", error.message);
@@ -286,61 +286,6 @@ export const getUserData = async () => {
 };
 
 /*
-export const getUserData = async () => {
-  try {
-    const user = await fetchUser();
-    if (!user) return null;
-
-    const userId = user.user_metadata.custom_incremented_id;
-
-    const { data, error } = await supabase
-      .from("users")
-      .select(`
-        full_name,
-        email,
-        tax_id,
-        phone_number,
-        created_at,
-        updated_at, 
-        role_id,
-        user_uuid,
-        useraddresses (
-          address_title,
-          address:addresses (
-            city,
-            district,
-            address_details
-          )
-        ),
-        orders (
-          order_id,
-          order_date,
-          total_price,
-          address:addresses (
-            city,
-            district,
-            address_details
-          )
-        )
-      `)
-      .eq("user_id", userId)
-      .single();
-
-    if (error) {
-      console.error("Error fetching user data:", error.message);
-      return null;
-    }
-
-    return data;
-  } catch (err) {
-    console.error("Error in getUserData function:", err);
-    return null;
-  }
-};
-
-*/
-
-/*
  export const getUserData = async () => {
   try {
     // Fetch the current user
@@ -412,7 +357,6 @@ export const getUserAddresses = async () => {
 // Add a new address for a user
 export const addNewAddress = async (userId, addressData) => {
   try {
-    // Step 1: Add the new address to the `addresses` table
     const { data: newAddress, error: addressError } = await supabase
       .from("addresses")
       .insert([
@@ -423,18 +367,17 @@ export const addNewAddress = async (userId, addressData) => {
         },
       ])
       .select()
-      .single(); // Get the inserted address
+      .single(); 
 
     if (addressError)
       throw new Error("Error adding address: " + addressError.message);
 
-    // Step 2: Link the new address to the user in the `useraddresses` table
     const { error: userAddressError } = await supabase
       .from("useraddresses")
       .insert([
         {
           user_id: userId,
-          address_id: newAddress.address_id, // Use the newly inserted address ID
+          address_id: newAddress.address_id, 
           address_title: addressData.address_title,
         },
       ]);
@@ -742,7 +685,7 @@ export const syncLocalCartToDatabase = async (localCart, userId) => {
 export const subtractItemsFromStock = async (bookId, quantity) => {
   const { data, error } = await supabase
     .from("books")
-    .update({ stock: supabase.raw("stock - ?", [quantity]) })
+    .update({ available_quantity: supabase.raw("available_quantity - ?", [quantity]) })
     .eq("book_id", bookId);
 
   if (error) {

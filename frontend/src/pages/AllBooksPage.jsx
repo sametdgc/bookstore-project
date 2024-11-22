@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { getAllBooks, getGenres } from "../services/api";
+import { getAllBooks, getGenres, fetchUser, addItemToCart, addItemToLocalCart } from "../services/api";
 import BookCard from "../components/common/BookCard";
 
 const AllBooksPage = () => {
@@ -11,18 +11,22 @@ const AllBooksPage = () => {
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
-  const [cartMessage, setCartMessage] = useState(""); // Popup state
+  const [cartMessage, setCartMessage] = useState(""); 
+  const [user, setUser] = useState(null); 
   const pageSize = parseInt(searchParams.get("pageSize")) || 10;
   const pageNum = parseInt(searchParams.get("pageNum")) || 1;
 
+  // Fetch books, genres, and current user on component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         const booksData = await getAllBooks(pageSize, (pageNum - 1) * pageSize);
         const genresData = await getGenres();
+        const currentUser = await fetchUser(); 
         setBooks(booksData);
         setGenres(genresData);
         setFilteredBooks(booksData);
+        setUser(currentUser); 
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -30,6 +34,7 @@ const AllBooksPage = () => {
     fetchData();
   }, [pageSize, pageNum]);
 
+  // Apply filters for genres, price, and search query
   const handleGenreChange = (event) => {
     const selected = event.target.value;
     setSelectedGenre(selected);
@@ -67,6 +72,7 @@ const AllBooksPage = () => {
     setFilteredBooks(filtered);
   };
 
+  // Pagination handlers
   const handlePageSizeChange = (event) => {
     const newPageSize = Number(event.target.value);
     setSearchParams({ pageSize: newPageSize, pageNum: 1 });
@@ -86,13 +92,19 @@ const AllBooksPage = () => {
   };
 
   // Add to Cart function
-  const handleAddToCart = (book) => {
-    const existingCart = JSON.parse(localStorage.getItem("cart")) || [];
-    const updatedCart = [...existingCart, book];
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
+  const handleAddToCart = async (book) => {
+    const { book_id, price } = book;
 
-    // Display confirmation message
-    setCartMessage("Product is successfully added to your cart!");
+    if (user) {
+      // Logged-in user: Add to the database cart
+      const userId = user.user_metadata.custom_incremented_id;
+      await addItemToCart(userId, book_id, 1, price); // Add 1 quantity to the database cart
+    } else {
+      // Anonymous user: Add to the localStorage cart
+      addItemToLocalCart(book_id, 1, price);
+    }
+
+    setCartMessage(`Product is successfully added to your cart!`);
     setTimeout(() => setCartMessage(""), 2000);
   };
 
