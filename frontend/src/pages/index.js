@@ -10,6 +10,8 @@ import AboutPage from "./footerPages/AboutPage";
 import ReturnRefundPolicyPage from "./footerPages/ReturnRefundPolicyPage";
 import MyProfilePage from "./MyProfilePage";
 import CheckoutPage from "./CheckoutPage";
+import HelpAndSupportPage from "./HelpAndSupportPage";
+import ContactPage from "./footerPages/ContactPage";
 
 export {
   LoginPage,
@@ -23,5 +25,7 @@ export {
   AboutPage,
   ReturnRefundPolicyPage,
   MyProfilePage,
-  CheckoutPage
+  CheckoutPage,
+  HelpAndSupportPage,
+  ContactPage,
 };
