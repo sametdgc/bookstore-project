@@ -85,22 +85,44 @@ const Footer = () => (
       <div>
         <h2 className="font-bold text-lg mb-2">Secure Payment</h2>
         <div className="flex space-x-4 mt-4">
-          <img src={visaLogo} alt="Visa" className="h-8 object-contain" />
-          <img
-            src={mastercardLogo}
-            alt="Mastercard"
-            className="h-8 object-contain"
-          />
-          <img src={troyLogo} alt="Troy" className="h-8 object-contain" />
-          <img
-            src={bkmExpressLogo}
-            alt="BKM Express"
-            className="h-8 object-contain"
-          />
+          <a
+            href="https://www.visa.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img src={visaLogo} alt="Visa" className="h-8 object-contain" />
+          </a>
+          <a
+            href="https://www.mastercard.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src={mastercardLogo}
+              alt="Mastercard"
+              className="h-8 object-contain"
+            />
+          </a>
+          <a
+            href="https://www.troyodeme.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img src={troyLogo} alt="Troy" className="h-8 object-contain" />
+          </a>
+          <a
+            href="https://www.bkmexpress.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src={bkmExpressLogo}
+              alt="BKM Express"
+              className="h-8 object-contain"
+            />
+          </a>
         </div>
       </div>
-
-      {/* Download Our App */}
       <div>
         <h2 className="font-bold text-lg mb-2">Download Our App</h2>
         <div className="flex space-x-4 mt-4">
