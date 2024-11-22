@@ -25,7 +25,7 @@ const Footer = () => (
             <Link to="/about" className="text-gray-300 hover:text-white">
               About
             </Link>
-          </li>{" "}
+          </li>
           {/* Updated to Link */}
           <li>
             <a href="#" className="text-gray-300 hover:text-white">
@@ -38,7 +38,10 @@ const Footer = () => (
             </a>
           </li>
           <li>
-            <a href="#" className="text-gray-300 hover:text-white">
+            <a
+              href="http://localhost:5173/contact"
+              className="text-gray-300 hover:text-white"
+            >
               Contact
             </a>
           </li>

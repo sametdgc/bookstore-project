@@ -18,10 +18,11 @@ import {
   ReturnRefundPolicyPage,
   MyProfilePage,
   CheckoutPage,
+  ContactPage,
 } from "./pages";
 import { TopNavBar, SubscriptionBanner, Footer } from "./components";
 import SearchPage from "./pages/SearchPage";
-import HelpAndSupportPage from "./pages/HelpAndSupportPage"; // Import the page
+import HelpAndSupportPage from "./pages/HelpAndSupportPage";
 
 function App() {
   const location = useLocation();
@@ -49,11 +50,9 @@ function App() {
           />
           <Route path="/profile" element={<MyProfilePage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
-          <Route
-            path="/help-and-support"
-            element={<HelpAndSupportPage />}
-          />{" "}
-          {/* New Route */}
+          <Route path="/help-and-support" element={<HelpAndSupportPage />} />
+          <Route path="/contact" element={<ContactPage />} />{" "}
+          {/* <-- Add this route */}
           <Route path="*" element={<MainPage />} />
         </Routes>
       </div>
