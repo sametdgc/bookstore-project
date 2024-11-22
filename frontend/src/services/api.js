@@ -1,26 +1,24 @@
-import {supabase} from './supabaseClient'
+import { supabase } from "./supabaseClient";
 
 // Fetch all genres
 export const getGenres = async () => {
-    const { data, error } = await supabase
-        .from('genres')
-        .select('*');
-    if (error) {
-        console.log('Error fetching genres:', error.message);
-        return []; 
-    }
-    return data; 
+  const { data, error } = await supabase.from("genres").select("*");
+  if (error) {
+    console.log("Error fetching genres:", error.message);
+    return [];
+  }
+  return data;
 };
 
 // GET all books with pagination
 export const getAllBooks = async (limit, offset) => {
   const { data, error } = await supabase
-    .from('books')
-    .select('*')
-    .range(offset, offset + limit - 1); 
+    .from("books")
+    .select("*")
+    .range(offset, offset + limit - 1);
 
   if (error) {
-    console.log('Error fetching books:', error.message);
+    console.log("Error fetching books:", error.message);
   }
 
   return data;
@@ -29,8 +27,9 @@ export const getAllBooks = async (limit, offset) => {
 // GET a book with genre, author, language, and reviews
 export const getBookDetailsById = async (bookId) => {
   const { data, error } = await supabase
-    .from('books')
-    .select(`
+    .from("books")
+    .select(
+      `
       *,
       author:authors (author_name),
       genre:genres (genre_name),
@@ -42,42 +41,44 @@ export const getBookDetailsById = async (bookId) => {
         comment,
         approval_status
       )
-    `)
-    .eq('book_id', bookId)
+    `
+    )
+    .eq("book_id", bookId)
     .single();
 
   if (error) {
-    console.log('Error fetching book details:', error.message);
+    console.log("Error fetching book details:", error.message);
     return null;
   }
 
   // Filter only approved reviews
   if (data.reviews) {
-    data.reviews = data.reviews.filter((review) => review.approval_status === true);
+    data.reviews = data.reviews.filter(
+      (review) => review.approval_status === true
+    );
   }
 
   return data;
 };
 
-
 // GET books by id
 export const getBookById = async (bookId) => {
   const { data, error } = await supabase
-      .from('books')
-      .select('*')
-      .eq('book_id', bookId)
-      .single();
-  if (error) console.log('Error fetching book:', error.message);
+    .from("books")
+    .select("*")
+    .eq("book_id", bookId)
+    .single();
+  if (error) console.log("Error fetching book:", error.message);
   return data;
 };
 
 // UPDATE a book
 export const updateBook = async (bookId, updates) => {
   const { data, error } = await supabase
-      .from('books')
-      .update(updates)
-      .eq('book_id', bookId);
-  if (error) console.log('Error updating book:', error.message);
+    .from("books")
+    .update(updates)
+    .eq("book_id", bookId);
+  if (error) console.log("Error updating book:", error.message);
   return data;
 };
 
@@ -114,68 +115,64 @@ export const updateBook = async (bookId, updates) => {
 
 // PLACE an order
 export const placeOrder = async (order) => {
-  const { data, error } = await supabase
-      .from('Orders')
-      .insert([order]);
-  if (error) console.log('Error placing order:', error.message);
+  const { data, error } = await supabase.from("Orders").insert([order]);
+  if (error) console.log("Error placing order:", error.message);
   return data;
 };
 
 // GET all orders of a user
 
-
-
 // ADD a new review
 export const addReview = async (review) => {
-  const { data, error } = await supabase
-      .from('Reviews')
-      .insert([review]);
-  if (error) console.log('Error adding review:', error.message);
+  const { data, error } = await supabase.from("Reviews").insert([review]);
+  if (error) console.log("Error adding review:", error.message);
   return data;
 };
 
 // GET all reviews of a book
 export const getReviewsForBook = async (bookId) => {
   const { data, error } = await supabase
-      .from('Reviews')
-      .select('*')
-      .eq('book_id', bookId);
-  if (error) console.log('Error fetching reviews:', error.message);
+    .from("Reviews")
+    .select("*")
+    .eq("book_id", bookId);
+  if (error) console.log("Error fetching reviews:", error.message);
   return data;
 };
 
 // ADD a book to the wishlist
 export const addBookToWishlist = async (userId, bookId) => {
   const { data, error } = await supabase
-      .from('Wishlist')
-      .insert([{ user_id: userId, book_id: bookId }]);
-  if (error) console.log('Error adding book to wishlist:', error.message);
+    .from("Wishlist")
+    .insert([{ user_id: userId, book_id: bookId }]);
+  if (error) console.log("Error adding book to wishlist:", error.message);
   return data;
 };
 
 // GET the wishlist of a user
 export const getWishlistByUserId = async (userId) => {
   const { data, error } = await supabase
-      .from('Wishlist')
-      .select('*')
-      .eq('user_id', userId);
-  if (error) console.log('Error fetching wishlist:', error.message);
+    .from("Wishlist")
+    .select("*")
+    .eq("user_id", userId);
+  if (error) console.log("Error fetching wishlist:", error.message);
   return data;
 };
 
 // SEARCH for books by title, ISBN, or author
 export const searchBooks = async (query) => {
   const { data, error } = await supabase
-    .from('books')
-    .select(`
+    .from("books")
+    .select(
+      `
       *,
       author:authors (author_name)
-    `)
-    .ilike('title', `%${query}%`);  // Search in the title
-    //.or(`isbn.ilike.%${query}%,authors.author_name.ilike.%${query}%`);  // Combine ISBN and author search
+    `
+    )
+    .ilike("title", `%${query}%`); // Search in the title
+  //.or(`isbn.ilike.%${query}%,authors.author_name.ilike.%${query}%`);  // Combine ISBN and author search
 
   if (error) {
-    console.log('Error fetching search results:', error.message);
+    console.log("Error fetching search results:", error.message);
     return [];
   }
   console.log(data);
@@ -183,42 +180,36 @@ export const searchBooks = async (query) => {
   return data;
 };
 
-
-
 // GET a books by genre
 export const getBooksByGenre = async (genreId) => {
   const { data, error } = await supabase
-    .from('books')
-    .select('*')
-    .eq('genre_id', genreId);
+    .from("books")
+    .select("*")
+    .eq("genre_id", genreId);
 
   if (error) {
-    console.log('Error fetching books by genre:', error.message);
+    console.log("Error fetching books by genre:", error.message);
     return [];
   }
 
   return data;
-}
+};
 
 // GET genre id by name
 export const getGenreIdByName = async (genreName) => {
   const { data, error } = await supabase
-    .from('genres')
-    .select('genre_id')
-    .ilike('genre_name', `%${genreName}%`)
+    .from("genres")
+    .select("genre_id")
+    .ilike("genre_name", `%${genreName}%`)
     .single();
 
   if (error) {
-    console.log('Error fetching genre ID:', error.message);
+    console.log("Error fetching genre ID:", error.message);
     return null;
   }
 
   return data.genre_id;
 };
-
-
-
-
 
 /* 
 
@@ -226,45 +217,47 @@ export const getGenreIdByName = async (genreName) => {
 
 */
 
-
 // Fetch the current user
 export const fetchUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    return user;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
 };
 
 // Listen for authentication state changes
 export const onAuthStateChange = (callback) => {
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-        callback(session?.user || null);
-    });
-    return authListener;
+  const { data: authListener } = supabase.auth.onAuthStateChange(
+    (event, session) => {
+      callback(session?.user || null);
+    }
+  );
+  return authListener;
 };
 
 // Sign out the user
 export const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-        console.error("Error signing out:", error.message);
-    }
-    return error;
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.error("Error signing out:", error.message);
+  }
+  return error;
 };
-
 
 //test wheter you are connected to the api or not
 export const testSupabaseConnection = async () => {
-    try {
-      const { data, error } = await supabase.auth.getSession();
-  
-      if (error) {
-        console.error('Error connecting to Supabase:', error);
-      } else {
-        console.log('Connection successful:', data);
-      }
-    } catch (err) {
-      console.error('Unexpected error:', err);
+  try {
+    const { data, error } = await supabase.auth.getSession();
+
+    if (error) {
+      console.error("Error connecting to Supabase:", error);
+    } else {
+      console.log("Connection successful:", data);
     }
-  };
+  } catch (err) {
+    console.error("Unexpected error:", err);
+  }
+};
 
 // GET all user data
 export const getUserData = async () => {
@@ -275,19 +268,19 @@ export const getUserData = async () => {
     const userId = user.user_metadata.custom_incremented_id;
     // Query the users table with the user_id
     const { data, error } = await supabase
-      .from('users')  // Assuming your table is named 'users'
-      .select('*')  // You can select specific fields if needed
-      .eq('user_id', userId)  // Filter by the user_id from session
-      .single();  // Assuming you expect one user record for that ID
+      .from("users") // Assuming your table is named 'users'
+      .select("*") // You can select specific fields if needed
+      .eq("user_id", userId) // Filter by the user_id from session
+      .single(); // Assuming you expect one user record for that ID
     // Check for errors
     if (error) {
-      console.error('Error fetching user data:', error.message);
+      console.error("Error fetching user data:", error.message);
       return null;
     }
     // Return the fetched user data
     return data;
   } catch (err) {
-    console.error('Error in getUserData function:', err);
+    console.error("Error in getUserData function:", err);
     return null;
   }
 };
@@ -346,7 +339,7 @@ export const getUserData = async () => {
 };
 
 */
-  
+
 /*
  export const getUserData = async () => {
   try {
@@ -390,25 +383,27 @@ export const getUserAddresses = async () => {
     const userId = user.user_metadata.custom_incremented_id;
 
     const { data, error } = await supabase
-      .from('useraddresses')
-      .select(`
+      .from("useraddresses")
+      .select(
+        `
         address_title,
         address:addresses (
           city,
           district,
           address_details
         )
-      `)
-      .eq('user_id', userId);
+      `
+      )
+      .eq("user_id", userId);
 
     if (error) {
-      console.error('Error fetching user addresses:', error.message);
+      console.error("Error fetching user addresses:", error.message);
       return [];
     }
 
     return data;
   } catch (err) {
-    console.error('Error in getUserAddresses function:', err);
+    console.error("Error in getUserAddresses function:", err);
     return [];
   }
 };
@@ -429,8 +424,9 @@ export const addNewAddress = async (userId, addressData) => {
       ])
       .select()
       .single(); // Get the inserted address
-    
-    if (addressError) throw new Error("Error adding address: " + addressError.message);
+
+    if (addressError)
+      throw new Error("Error adding address: " + addressError.message);
 
     // Step 2: Link the new address to the user in the `useraddresses` table
     const { error: userAddressError } = await supabase
@@ -443,7 +439,10 @@ export const addNewAddress = async (userId, addressData) => {
         },
       ]);
 
-    if (userAddressError) throw new Error("Error linking address to user: " + userAddressError.message);
+    if (userAddressError)
+      throw new Error(
+        "Error linking address to user: " + userAddressError.message
+      );
 
     return { success: true, newAddress };
   } catch (error) {
@@ -451,7 +450,6 @@ export const addNewAddress = async (userId, addressData) => {
     return { success: false, error: error.message };
   }
 };
-
 
 // GET user orders
 export const getUserOrders = async () => {
@@ -462,8 +460,9 @@ export const getUserOrders = async () => {
     const userId = user.user_metadata.custom_incremented_id;
 
     const { data, error } = await supabase
-      .from('orders')
-      .select(`
+      .from("orders")
+      .select(
+        `
         order_id,
         order_date,
         total_price,
@@ -472,21 +471,21 @@ export const getUserOrders = async () => {
           district,
           address_details
         )
-      `)
-      .eq('user_id', userId);
+      `
+      )
+      .eq("user_id", userId);
 
     if (error) {
-      console.error('Error fetching user orders:', error.message);
+      console.error("Error fetching user orders:", error.message);
       return [];
     }
 
     return data;
   } catch (err) {
-    console.error('Error in getUserOrders function:', err);
+    console.error("Error in getUserOrders function:", err);
     return [];
   }
 };
-
 
 /*
 
@@ -498,13 +497,14 @@ export const getUserOrders = async () => {
 export const getOrCreateCartByUserId = async (userId) => {
   // First, check if the cart exists
   const { data: cart, error } = await supabase
-    .from('Cart')
-    .select('*')
-    .eq('user_id', userId)
+    .from("Cart")
+    .select("*")
+    .eq("user_id", userId)
     .single();
 
-  if (error && error.code !== 'PGRST116') { // PGRST116: No rows returned
-    console.log('Error fetching cart:', error.message);
+  if (error && error.code !== "PGRST116") {
+    // PGRST116: No rows returned
+    console.log("Error fetching cart:", error.message);
     return null;
   }
 
@@ -515,18 +515,17 @@ export const getOrCreateCartByUserId = async (userId) => {
 
   // If the cart doesn't exist, create a new one
   const { data: newCart, error: insertError } = await supabase
-    .from('Cart')
+    .from("Cart")
     .insert([{ user_id: userId }])
     .single();
 
   if (insertError) {
-    console.log('Error creating cart:', insertError.message);
+    console.log("Error creating cart:", insertError.message);
     return null;
   }
 
   return newCart;
 };
-
 
 // Add an item to the cart, ensuring the cart exists
 export const addItemToCart = async (userId, bookId, quantity, price) => {
@@ -534,7 +533,7 @@ export const addItemToCart = async (userId, bookId, quantity, price) => {
   const cart = await getOrCreateCartByUserId(userId);
 
   if (!cart) {
-    console.log('Unable to find or create cart for user:', userId);
+    console.log("Unable to find or create cart for user:", userId);
     return null;
   }
 
@@ -542,14 +541,14 @@ export const addItemToCart = async (userId, bookId, quantity, price) => {
 
   // Check if the item already exists in the cart
   const { data: existingItem, error: existingError } = await supabase
-    .from('CartItems')
-    .select('*')
-    .eq('cart_id', cartId)
-    .eq('book_id', bookId)
+    .from("CartItems")
+    .select("*")
+    .eq("cart_id", cartId)
+    .eq("book_id", bookId)
     .single();
 
-  if (existingError && existingError.code !== 'PGRST116') {
-    console.log('Error checking cart item:', existingError.message);
+  if (existingError && existingError.code !== "PGRST116") {
+    console.log("Error checking cart item:", existingError.message);
     return null;
   }
 
@@ -561,33 +560,31 @@ export const addItemToCart = async (userId, bookId, quantity, price) => {
 
   // If the item doesn't exist, insert it
   const { data, error } = await supabase
-    .from('CartItems')
+    .from("CartItems")
     .insert([{ cart_id: cartId, book_id: bookId, quantity, price }]);
 
   if (error) {
-    console.log('Error adding item to cart:', error.message);
+    console.log("Error adding item to cart:", error.message);
     return null;
   }
 
   return data;
 };
-
 
 export const updateCartItemQuantity = async (cartId, bookId, quantity) => {
   const { data, error } = await supabase
-    .from('CartItems')
+    .from("CartItems")
     .update({ quantity })
-    .eq('cart_id', cartId)
-    .eq('book_id', bookId);
+    .eq("cart_id", cartId)
+    .eq("book_id", bookId);
 
   if (error) {
-    console.log('Error updating cart item:', error.message);
+    console.log("Error updating cart item:", error.message);
     return null;
   }
 
   return data;
 };
-
 
 // Get all items in a user's cart
 export const getCartItems = async (userId) => {
@@ -595,52 +592,51 @@ export const getCartItems = async (userId) => {
   const cart = await getOrCreateCartByUserId(userId);
 
   if (!cart) {
-    console.log('No cart found for user:', userId);
+    console.log("No cart found for user:", userId);
     return [];
   }
 
   const { data, error } = await supabase
-    .from('CartItems')
-    .select(`
+    .from("CartItems")
+    .select(
+      `
       *,
       book:books (
         title,
         image_url,
         price
       )
-    `)
-    .eq('cart_id', cart.cart_id);
+    `
+    )
+    .eq("cart_id", cart.cart_id);
 
   if (error) {
-    console.log('Error fetching cart items:', error.message);
+    console.log("Error fetching cart items:", error.message);
     return [];
   }
 
   return data;
 };
 
-
-
 // Remove an item from the cart
 export const removeCartItem = async (cartId, bookId) => {
   const { data, error } = await supabase
-    .from('CartItems')
+    .from("CartItems")
     .delete()
-    .eq('cart_id', cartId)
-    .eq('book_id', bookId);
+    .eq("cart_id", cartId)
+    .eq("book_id", bookId);
 
   if (error) {
-    console.log('Error removing cart item:', error.message);
+    console.log("Error removing cart item:", error.message);
     return null;
   }
 
   return data;
 };
 
-
 // Add item to localStorage-based cart for anonymous users
 export const addItemToLocalCart = (bookId, quantity, price) => {
-  const cart = JSON.parse(localStorage.getItem('cart')) || [];
+  const cart = JSON.parse(localStorage.getItem("cart")) || [];
   const existingItem = cart.find((item) => item.book_id === bookId);
 
   if (existingItem) {
@@ -649,17 +645,32 @@ export const addItemToLocalCart = (bookId, quantity, price) => {
     cart.push({ book_id: bookId, quantity, price });
   }
 
-  localStorage.setItem('cart', JSON.stringify(cart));
+  localStorage.setItem("cart", JSON.stringify(cart));
 };
 
 // Get items from localStorage-based cart
 export const getLocalCartItems = () => {
-  return JSON.parse(localStorage.getItem('cart')) || [];
+  return JSON.parse(localStorage.getItem("cart")) || [];
 };
 
 // Remove an item from localStorage-based cart
 export const removeItemFromLocalCart = (bookId) => {
-  const cart = JSON.parse(localStorage.getItem('cart')) || [];
+  const cart = JSON.parse(localStorage.getItem("cart")) || [];
   const updatedCart = cart.filter((item) => item.book_id !== bookId);
-  localStorage.setItem('cart', JSON.stringify(updatedCart));
+  localStorage.setItem("cart", JSON.stringify(updatedCart));
+};
+
+// Subtract items from stock when a purchase is made
+export const subtractItemsFromStock = async (bookId, quantity) => {
+  const { data, error } = await supabase
+    .from("books")
+    .update({ stock: supabase.raw("stock - ?", [quantity]) })
+    .eq("book_id", bookId);
+
+  if (error) {
+    console.log("Error updating stock:", error.message);
+    return null;
+  }
+
+  return data;
 };
