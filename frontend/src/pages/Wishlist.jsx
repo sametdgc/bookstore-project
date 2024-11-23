@@ -1,20 +1,53 @@
-// src/pages/WishlistPage.js
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  fetchUser,
+  getLocalWishlistItems,
+  removeItemFromLocalWishlist,
+  getWishlistByUserId,
+  removeBookFromWishlist,
+  syncLocalWishlistToDatabase,
+} from "../services/api";
 
 const WishlistPage = () => {
   const [wishlist, setWishlist] = useState([]);
+  const [user, setUser] = useState(null); 
   const navigate = useNavigate();
 
   useEffect(() => {
-    const savedWishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
-    setWishlist(savedWishlist);
+    const fetchWishlist = async () => {
+      const currentUser = await fetchUser();  
+      setUser(currentUser);
+
+      if (currentUser) {
+        // Logged-in user: Sync local wishlist to database, then fetch
+        const userId = currentUser.user_metadata.custom_incremented_id;
+        const localWishlist = getLocalWishlistItems();
+        await syncLocalWishlistToDatabase(localWishlist, userId); 
+        const userWishlist = await getWishlistByUserId(userId); 
+        setWishlist(userWishlist || []);
+      } else {
+        // Anonymous user: Load wishlist from localStorage
+        const localWishlist = getLocalWishlistItems();
+        setWishlist(localWishlist);
+      }
+    };
+
+    fetchWishlist();
   }, []);
 
-  const handleRemoveFromWishlist = (bookId) => {
-    const updatedWishlist = wishlist.filter((item) => item.book_id !== bookId);
-    setWishlist(updatedWishlist);
-    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+  const handleRemoveFromWishlist = async (bookId) => {
+    if (user) {
+      // Remove from database wishlist for logged-in users
+      const userId = user.user_metadata.custom_incremented_id;
+      await removeBookFromWishlist(userId, bookId);
+      const updatedWishlist = await getWishlistByUserId(userId);
+      setWishlist(updatedWishlist || []);
+    } else {
+      // Remove from localStorage wishlist for anonymous users
+      const updatedWishlist = removeItemFromLocalWishlist(bookId);
+      setWishlist(updatedWishlist);
+    }
   };
 
   const handleBookClick = (bookId) => {
@@ -23,7 +56,9 @@ const WishlistPage = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-5xl font-bold mb-12 text-center text-[#65aa92]">Wishlist</h1>
+      <h1 className="text-5xl font-bold mb-12 text-center text-[#65aa92]">
+        Wishlist
+      </h1>
       <div className="bg-white shadow-lg rounded-lg p-6">
         {wishlist.length > 0 ? (
           wishlist.map((book) => (
@@ -40,12 +75,12 @@ const WishlistPage = () => {
               />
 
               {/* Book Title */}
-              <p
-                className="text-lg font-semibold text-gray-800 cursor-pointer flex-1 ml-4"
+              <span
+                className="text-lg font-semibold text-[#65aa92] hover:underline cursor-pointer flex-1 ml-4"
                 onClick={() => handleBookClick(book.book_id)}
               >
                 {book.title}
-              </p>
+              </span>
 
               {/* Remove Button */}
               <button
@@ -57,7 +92,9 @@ const WishlistPage = () => {
             </div>
           ))
         ) : (
-          <p className="text-center text-gray-600 text-lg">Your wishlist is empty!</p>
+          <p className="text-center text-gray-600 text-lg">
+            Your wishlist is empty!
+          </p>
         )}
       </div>
     </div>

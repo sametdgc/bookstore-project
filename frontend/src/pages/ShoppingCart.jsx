@@ -15,13 +15,13 @@ import {
 const ShoppingCart = () => {
   const [cart, setCart] = useState([]);
   const [shippingCost, setShippingCost] = useState(10.0); // Default shipping cost
-  const [user, setUser] = useState(null); // Track the logged-in user
+  const [user, setUser] = useState(null); 
   const navigate = useNavigate();
 
   // Fetch user and load their cart on mount
   useEffect(() => {
     const loadCart = async () => {
-      const currentUser = await fetchUser(); // Get the current user (logged in or null)
+      const currentUser = await fetchUser(); 
       setUser(currentUser);
 
       if (currentUser) {
@@ -38,7 +38,7 @@ const ShoppingCart = () => {
             const bookDetails = await getBookDetailsById(item.book_id);
             return {
               ...item,
-              ...bookDetails, // Merge the book details into the item
+              ...bookDetails, 
             };
           })
         );
