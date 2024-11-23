@@ -268,16 +268,14 @@ export const getUserData = async () => {
     const userId = user.user_metadata.custom_incremented_id;
     // Query the users table with the user_id
     const { data, error } = await supabase
-      .from("users") // Assuming your table is named 'users'
-      .select("*") // You can select specific fields if needed
-      .eq("user_id", userId) // Filter by the user_id from session
-      .single(); // Assuming you expect one user record for that ID
-    // Check for errors
+      .from("users") 
+      .select("*") 
+      .eq("user_id", userId) 
+      .single(); 
     if (error) {
       console.error("Error fetching user data:", error.message);
       return null;
     }
-    // Return the fetched user data
     return data;
   } catch (err) {
     console.error("Error in getUserData function:", err);
@@ -443,7 +441,7 @@ export const getOrCreateCartByUserId = async (userId) => {
     .from('cart')
     .select('*')
     .eq('user_id', userId)
-    .single();
+    .maybeSingle(); // Avoids throwing an error for non-existent rows
 
   if (error && error.code !== "PGRST116") {
     // PGRST116: No rows returned
@@ -488,7 +486,7 @@ export const addItemToCart = async (userId, bookId, quantity, price) => {
     .select('*')
     .eq('cart_id', cartId)
     .eq('book_id', bookId)
-    .single();
+    .maybeSingle(); // Avoids throwing an error for non-existent rows;
 
   if (existingError && existingError.code !== "PGRST116") {
     console.log("Error checking cart item:", existingError.message);
@@ -552,7 +550,7 @@ export const getCartItems = async (userId) => {
     )
     .eq("cart_id", cart.cart_id);
 
-  if (error) {
+  if (error && error.code !== "PGRST116") {
     console.log("Error fetching cart items:", error.message);
     return [];
   }
@@ -652,7 +650,7 @@ export const syncLocalCartToDatabase = async (localCart, userId) => {
         .select('*')
         .eq('cart_id', cartId) 
         .eq('book_id', book_id)
-        .single();
+        .maybeSingle(); // Avoids throwing an error for non-existent rows
 
       if (cartError && cartError.code !== 'PGRST116') {
         console.error(`Error checking book with ID ${book_id}:`, cartError.message);
