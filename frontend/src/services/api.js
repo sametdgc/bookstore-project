@@ -264,6 +264,34 @@ export const getUserData = async () => {
   }
 };
 
+// UPDATE user data
+export const updateUserData = async (updatedData) => {
+  const { full_name, phone_number, tax_id } = updatedData;
+
+  try {
+    const user = await fetchUser();
+    if (!user) {
+      throw new Error("User is not logged in.");
+    }
+
+    const userId = user.user_metadata.custom_incremented_id;
+
+    const { data, error } = await supabase
+      .from("users") 
+      .update({ full_name, phone_number, tax_id })
+      .eq("user_id", userId);
+
+    if (error) {
+      throw new Error("Error updating user data: " + error.message);
+    }
+
+    return data;
+  } catch (error) {
+    console.error(error.message);
+    throw error;
+  }
+};
+
 /*
  export const getUserData = async () => {
   try {
@@ -310,6 +338,7 @@ export const getUserAddresses = async () => {
       .from("useraddresses")
       .select(
         `
+        address_id,
         address_title,
         address:addresses (
           city,
@@ -332,8 +361,7 @@ export const getUserAddresses = async () => {
   }
 };
 
-// UPDATE user addresses
-// Add a new address for a user
+// ADD a new address for a user
 export const addNewAddress = async (userId, addressData) => {
   try {
     const { data: newAddress, error: addressError } = await supabase
@@ -372,6 +400,65 @@ export const addNewAddress = async (userId, addressData) => {
     return { success: false, error: error.message };
   }
 };
+
+// UPDATE an existing address for a user
+export const updateAddressDetails = async (userId, addressId, updatedAddressData) => {
+  try {
+    // Update the `addresses` table with the new details (city, district, address_details)
+    const { error: addressError } = await supabase
+      .from("addresses")
+      .update({
+        city: updatedAddressData.city,
+        district: updatedAddressData.district,
+        address_details: updatedAddressData.address_details,
+      })
+      .eq("address_id", addressId); // Match the address_id
+
+    if (addressError) {
+      throw new Error("Error updating address details: " + addressError.message);
+    }
+
+    // Update the `address_title` in the `useraddresses` table if provided
+    const { error: userAddressError } = await supabase
+      .from("useraddresses")
+      .update({
+        address_title: updatedAddressData.address_title,
+      })
+      .eq("user_id", userId) // Match the user_id
+      .eq("address_id", addressId); // Match the address_id
+
+    if (userAddressError) {
+      throw new Error("Error updating address title: " + userAddressError.message);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error(error.message);
+    return { success: false, error: error.message };
+  }
+};
+
+// DELETE an address for a user
+export const deleteAddress = async (addressId) => {
+  try {
+    // Delete the address from the `addresses` table
+    const { error } = await supabase
+      .from("addresses")
+      .delete()
+      .eq("address_id", addressId);
+
+    if (error) {
+      throw new Error("Error deleting address: " + error.message);
+    }
+
+    // Return success
+    return { success: true };
+  } catch (error) {
+    console.error(error.message);
+    return { success: false, error: error.message };
+  }
+};
+
 
 // GET user orders
 export const getUserOrders = async () => {

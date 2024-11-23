@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { getUserData, getUserOrders, fetchUser } from "../services/api";
+import { getUserData, getUserOrders, fetchUser, updateUserData } from "../services/api";
 import AddressesWindow from "../components/profilePage/AddressesWindow";
+import PersonalDetailsWindow from "../components/profilePage/PersonalDetailsWindow";
 import { Link } from "react-router-dom";
 
 const MyProfilePage = () => {
@@ -8,6 +9,7 @@ const MyProfilePage = () => {
   const [userData, setUserData] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -35,6 +37,16 @@ const MyProfilePage = () => {
     fetchProfileData();
   }, []);
 
+  const handleSaveChanges = async (updatedData) => {
+    await updateUserData(updatedData);
+    setUserData(updatedData);
+    setIsEditing(false);
+  };
+
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -60,27 +72,20 @@ const MyProfilePage = () => {
       </div>
 
       <div className="container mx-auto space-y-12">
-        <div className="bg-white shadow-lg rounded-lg p-8">
-          <h2 className="text-2xl font-semibold text-[#65aa92] mb-4">Personal Information</h2>
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-4 text-gray-700 font-semibold">
-              <p>Full Name:</p>
-              <p>Email:</p>
-              <p>Phone Number:</p>
-              <p>Tax ID:</p>
-            </div>
-            <div className="space-y-4 text-gray-700">
-              <p>{userData?.full_name || "N/A"}</p>
-              <p>{user?.email || "N/A"}</p>
-              <p>{userData?.phone_number || "N/A"}</p>
-              <p>{userData?.tax_id || "N/A"}</p>
-            </div>
-          </div>
-        </div>
+        {/* Personal Details */}
+        <PersonalDetailsWindow
+          userData={userData}
+          userEmail={user?.email}
+          isEditing={isEditing}
+          onSaveChanges={handleSaveChanges}
+          onEditToggle={handleEditToggle}
+          onCancel={handleEditToggle}
+        />
 
-        {/* Addresses Window */}
+        {/* Addresses */}
         <AddressesWindow userId={user?.user_metadata?.custom_incremented_id} />
 
+        {/* Order History */}
         <div className="bg-white shadow-lg rounded-lg p-8">
           <h2 className="text-2xl font-semibold text-[#65aa92] mb-4">Order History</h2>
           <div className="space-y-4">
@@ -91,7 +96,7 @@ const MyProfilePage = () => {
                   <p className="text-gray-700"><strong>Order Date:</strong> {new Date(order.order_date).toLocaleDateString()}</p>
                   <p className="text-gray-700"><strong>Total Price:</strong> ${order.total_price.toFixed(2)}</p>
                   <p className="text-gray-700">
-                    <strong>Delivery Address:</strong> 
+                    <strong>Delivery Address:</strong>
                     {order.address ? (
                       <>
                         <span> {order.address.city}, {order.address.district}</span>
