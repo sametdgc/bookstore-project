@@ -83,11 +83,18 @@ const BookCard = ({ book, onAddToCart, onAddToWishlist }) => {
         <button
           onClick={(e) => {
             e.stopPropagation(); // Prevents navigating when clicking "Add to Cart"
-            onAddToCart(book);
+            if (book.available_quantity > 0) {
+              onAddToCart(book);
+            }
           }}
-          className="w-full bg-[#65aa92] text-white px-4 py-2 rounded hover:bg-[#4a886e] transition"
+          className={`w-full px-4 py-2 rounded font-semibold text-center transition ${
+            book.available_quantity > 0
+              ? "bg-[#65aa92] text-white hover:bg-[#4a886e] cursor-pointer"
+              : "bg-red-500 text-white cursor-not-allowed"
+          }`}
+          disabled={book.available_quantity === 0}
         >
-          Add to Cart
+          {book.available_quantity > 0 ? "Add to Cart" : "Out of Stock"}
         </button>
       </div>
     </div>
