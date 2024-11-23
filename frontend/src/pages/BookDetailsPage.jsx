@@ -19,35 +19,45 @@ const BookDetailsPage = () => {
   const { book_id } = useParams();
   const [book, setBook] = useState(null);
   const [wishlistMessage, setWishlistMessage] = useState("");
-  const [wishlistMessageColor, setWishlistMessageColor] = useState("");  
+  const [wishlistMessageColor, setWishlistMessageColor] = useState("");
   const [cartMessage, setCartMessage] = useState("");
   const [isInWishlist, setIsInWishlist] = useState(false);
-  const [user, setUser] = useState(null); 
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const fetchBookDetails = async () => {
       const bookData = await getBookDetailsById(book_id);
       if (bookData) {
         // Calculate average rating if reviews are available
-        const totalRating = bookData.reviews.reduce((sum, review) => sum + review.rating, 0);
-        const averageRating = bookData.reviews.length > 0 ? totalRating / bookData.reviews.length : 0;
+        const totalRating = bookData.reviews.reduce(
+          (sum, review) => sum + review.rating,
+          0
+        );
+        const averageRating =
+          bookData.reviews.length > 0
+            ? totalRating / bookData.reviews.length
+            : 0;
         setBook({ ...bookData, ratings: averageRating });
       }
     };
 
     const fetchCurrentUser = async () => {
       const currentUser = await fetchUser();
-      setUser(currentUser); 
+      setUser(currentUser);
 
       if (currentUser) {
         // If logged in, fetch the wishlist from the database
         const userId = currentUser.user_metadata.custom_incremented_id;
         const wishlist = await getWishlistByUserId(userId);
-        setIsInWishlist(wishlist.some((item) => item.book_id === parseInt(book_id)));
+        setIsInWishlist(
+          wishlist.some((item) => item.book_id === parseInt(book_id))
+        );
       } else {
         // Otherwise, check the local wishlist
         const existingWishlist = getLocalWishlistItems();
-        setIsInWishlist(existingWishlist.some((item) => item.book_id === parseInt(book_id)));
+        setIsInWishlist(
+          existingWishlist.some((item) => item.book_id === parseInt(book_id))
+        );
       }
     };
 
@@ -66,7 +76,7 @@ const BookDetailsPage = () => {
       await addItemToCart(userId, book_id, 1, price);
     } else {
       // Anonymous user: Add item to localStorage cart
-      addItemToLocalCart(book_id, 1, price); 
+      addItemToLocalCart(book_id, 1, price);
     }
 
     setCartMessage("Product is successfully added to your cart!");
@@ -85,13 +95,17 @@ const BookDetailsPage = () => {
       if (isInWishlist) {
         // Remove the book from the database wishlist
         await removeBookFromWishlist(userId, book_id);
-        setWishlistMessage("The product is successfully removed from your wishlist.");
-        setWishlistMessageColor("bg-gray-300"); 
+        setWishlistMessage(
+          "The product is successfully removed from your wishlist."
+        );
+        setWishlistMessageColor("bg-gray-300");
       } else {
         // Add the book to the database wishlist
         await addBookToWishlist(userId, book_id);
-        setWishlistMessage("The product is successfully added to your wishlist!");
-        setWishlistMessageColor("bg-red-500"); 
+        setWishlistMessage(
+          "The product is successfully added to your wishlist!"
+        );
+        setWishlistMessageColor("bg-red-500");
       }
     } else {
       // Anonymous user: Update the local wishlist
@@ -100,13 +114,17 @@ const BookDetailsPage = () => {
       if (isInWishlist) {
         // Remove from local wishlist
         const updatedWishlist = removeItemFromLocalWishlist(book_id);
-        setWishlistMessage("The product is successfully removed from your wishlist.");
+        setWishlistMessage(
+          "The product is successfully removed from your wishlist."
+        );
         setWishlistMessageColor("bg-gray-300");
       } else {
         // Add to local wishlist
         const newItem = { book_id, title, image_url };
         addItemToLocalWishlist(newItem);
-        setWishlistMessage("The product is successfully added to your wishlist!");
+        setWishlistMessage(
+          "The product is successfully added to your wishlist!"
+        );
         setWishlistMessageColor("bg-red-500");
       }
     }
@@ -116,7 +134,12 @@ const BookDetailsPage = () => {
     setTimeout(() => setWishlistMessage(""), 2000);
   };
 
-  if (!book) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (!book)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -124,7 +147,7 @@ const BookDetailsPage = () => {
         {/* Wishlist success message */}
         {wishlistMessage && (
           <div
-            className={`fixed top-0 left-1/2 transform -translate-x-1/2 ${wishlistMessageColor} text-white p-2 rounded-lg shadow-md z-50`}
+            className={`absolute top-2 left-1/2 transform -translate-x-1/2 ${wishlistMessageColor} text-white px-4 py-2 rounded-lg shadow-md z-50 inline-block`}
           >
             {wishlistMessage}
           </div>
@@ -132,7 +155,9 @@ const BookDetailsPage = () => {
 
         {/* Cart success message */}
         {cartMessage && (
-          <div className="fixed top-0 left-1/2 transform -translate-x-1/2 bg-[#383838] text-white p-2 rounded-lg shadow-md z-50">
+          <div
+            className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-[#65aa92] shadow-md text-white px-4 py-2 rounded-lg shadow-md z-50 inline-block"
+          >
             {cartMessage}
           </div>
         )}
@@ -164,19 +189,23 @@ const BookDetailsPage = () => {
             <p className="text-md text-gray-600 mt-2">{book.description}</p>
             <div className="text-md text-gray-500 space-y-1">
               <p>
-                <span className="font-semibold">Genre:</span> {book.genre.genre_name}
+                <span className="font-semibold">Genre:</span>{" "}
+                {book.genre.genre_name}
               </p>
               <p>
-                <span className="font-semibold">Publisher:</span> {book.publisher}
+                <span className="font-semibold">Publisher:</span>{" "}
+                {book.publisher}
               </p>
               <p>
                 <span className="font-semibold">ISBN:</span> {book.isbn}
               </p>
               <p>
-                <span className="font-semibold">Language:</span> {book.language.language_name}
+                <span className="font-semibold">Language:</span>{" "}
+                {book.language.language_name}
               </p>
               <p>
-                <span className="font-semibold">Stock:</span> {book.available_quantity}
+                <span className="font-semibold">Stock:</span>{" "}
+                {book.available_quantity}
               </p>
               <span className="flex items-center">
                 <span className="font-semibold">Average Rating:</span>
@@ -184,7 +213,9 @@ const BookDetailsPage = () => {
                   {book.reviews.length > 0 ? (
                     <>
                       {renderStars(book.ratings)}
-                      <span className="ml-2 text-black">{book.ratings.toFixed(1)} / 5</span>
+                      <span className="ml-2 text-black">
+                        {book.ratings.toFixed(1)} / 5
+                      </span>
                     </>
                   ) : (
                     <span className="text-gray-600">No ratings yet.</span>
