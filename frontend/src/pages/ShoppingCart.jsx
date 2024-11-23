@@ -1,7 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchUser, getCartItems, updateCartItemQuantity, removeCartItem, getOrCreateCartByUserId, getBookDetailsById,
-  getLocalCartItems, updateLocalCartItemQuantity, removeItemFromLocalCart } from '../services/api';
+import { 
+  fetchUser, 
+  getCartItems, 
+  updateCartItemQuantity, 
+  removeCartItem, 
+  getOrCreateCartByUserId, 
+  getBookDetailsById, 
+  getLocalCartItems, 
+  updateLocalCartItemQuantity, 
+  removeItemFromLocalCart 
+} from '../services/api';
 
 const ShoppingCart = () => {
   const [cart, setCart] = useState([]);
@@ -14,7 +23,7 @@ const ShoppingCart = () => {
     const loadCart = async () => {
       const currentUser = await fetchUser(); // Get the current user (logged in or null)
       setUser(currentUser);
-  
+
       if (currentUser) {
         // Logged-in user: Fetch their cart from the database
         const userCartItems = await getCartItems(currentUser.user_metadata.custom_incremented_id);
@@ -22,7 +31,7 @@ const ShoppingCart = () => {
       } else {
         // Anonymous user: Load the cart from localStorage
         const savedCart = getLocalCartItems();
-  
+
         // Fetch book details for each item in the cart
         const enrichedCart = await Promise.all(
           savedCart.map(async (item) => {
@@ -33,11 +42,11 @@ const ShoppingCart = () => {
             };
           })
         );
-  
+
         setCart(enrichedCart);
       }
     };
-  
+
     loadCart();
   }, []);
 
@@ -54,34 +63,58 @@ const ShoppingCart = () => {
   const calculateSubtotal = () => {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
   };
-
-  // Function to update quantity of an item
-  // Function to update quantity of an item
-const updateQuantity = async (bookId, newQuantity) => {
-  if (newQuantity <= 0) {
-    // If the new quantity is 0 or less, remove the item
-    await handleRemove(bookId);
-    return;
-  }
-
-  if (user) {
-    // Logged-in user: Update quantity in the database
-    const userId = user.user_metadata.custom_incremented_id;
-    const cartData = await getOrCreateCartByUserId(userId);
-    await updateCartItemQuantity(cartData.cart_id, bookId, newQuantity);
-
-    // Reload the cart from the database
-    const updatedCart = await getCartItems(userId);
-    setCart(updatedCart);
-  } else {
-    // Anonymous user: Update quantity in localStorage using API function
-    const updatedCart = updateLocalCartItemQuantity(bookId, newQuantity);
-    setCart(updatedCart);
-  }
-};
-
-  // Function to remove an item
+  
+  const updateQuantity = async (bookId, newQuantity) => {
+    if (newQuantity <= 0) {
+      // If the new quantity is 0 or less, remove the item
+      await handleRemove(bookId);
+      return;
+    }
+  
+    const originalCartOrder = [...cart]; // Preserve the current order of the cart
+  
+    if (user) {
+      // Logged-in user: Update quantity in the database
+      const userId = user.user_metadata.custom_incremented_id;
+      const cartData = await getOrCreateCartByUserId(userId);
+      await updateCartItemQuantity(cartData.cart_id, bookId, newQuantity);
+  
+      // Reload the cart from the database
+      const updatedCart = await getCartItems(userId);
+  
+      // Restore the original order of the cart (for consistent UI)
+      const orderedCart = originalCartOrder.map((originalItem) =>
+        updatedCart.find((updatedItem) => updatedItem.book_id === originalItem.book_id) || originalItem
+      );
+  
+      setCart(orderedCart);
+    } else {
+      // Anonymous user: Update quantity in localStorage
+      const updatedCart = updateLocalCartItemQuantity(bookId, newQuantity);
+  
+      // Re-enrich the cart with book details
+      const enrichedCart = await Promise.all(
+        updatedCart.map(async (item) => {
+          const bookDetails = await getBookDetailsById(item.book_id);
+          return {
+            ...item,
+            ...bookDetails,
+          };
+        })
+      );
+  
+      // Preserve the original order of the anonymous cart (for consistent UI)
+      const orderedCart = originalCartOrder.map((originalItem) =>
+        enrichedCart.find((enrichedItem) => enrichedItem.book_id === originalItem.book_id) || originalItem
+      );
+  
+      setCart(orderedCart);
+    }
+  };
+  
   const handleRemove = async (bookId) => {
+    const originalCartOrder = [...cart]; // Preserve the current order of the cart
+  
     if (user) {
       // Logged-in user: Remove item from the database
       const userId = user.user_metadata.custom_incremented_id;
@@ -90,11 +123,34 @@ const updateQuantity = async (bookId, newQuantity) => {
   
       // Reload the cart from the database
       const updatedCart = await getCartItems(userId);
-      setCart(updatedCart);
+  
+      // Restore the original order of the cart
+      const orderedCart = originalCartOrder.filter((originalItem) =>
+        updatedCart.find((updatedItem) => updatedItem.book_id === originalItem.book_id)
+      );
+  
+      setCart(orderedCart);
     } else {
-      // Anonymous user: Remove item using the API function
+      // Anonymous user: Remove item using localStorage
       const updatedCart = removeItemFromLocalCart(bookId);
-      setCart(updatedCart); // Update the state
+  
+      // Re-enrich the cart with book details
+      const enrichedCart = await Promise.all(
+        updatedCart.map(async (item) => {
+          const bookDetails = await getBookDetailsById(item.book_id);
+          return {
+            ...item,
+            ...bookDetails,
+          };
+        })
+      );
+  
+      // Preserve the original order of the anonymous cart
+      const orderedCart = originalCartOrder.filter((originalItem) =>
+        enrichedCart.find((enrichedItem) => enrichedItem.book_id === originalItem.book_id)
+      );
+  
+      setCart(orderedCart);
     }
   };
   
