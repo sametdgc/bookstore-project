@@ -19,9 +19,10 @@ const BookDetailsPage = () => {
   const { book_id } = useParams();
   const [book, setBook] = useState(null);
   const [wishlistMessage, setWishlistMessage] = useState("");
+  const [wishlistMessageColor, setWishlistMessageColor] = useState("");  
   const [cartMessage, setCartMessage] = useState("");
   const [isInWishlist, setIsInWishlist] = useState(false);
-  const [user, setUser] = useState(null); // Track the logged-in user
+  const [user, setUser] = useState(null); 
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -36,7 +37,7 @@ const BookDetailsPage = () => {
 
     const fetchCurrentUser = async () => {
       const currentUser = await fetchUser();
-      setUser(currentUser); // Update user state
+      setUser(currentUser); 
 
       if (currentUser) {
         // If logged in, fetch the wishlist from the database
@@ -62,15 +63,13 @@ const BookDetailsPage = () => {
     if (user) {
       // Logged-in user: Add item to database cart
       const userId = user.user_metadata.custom_incremented_id;
-      await addItemToCart(userId, book_id, 1, price); // Add 1 quantity to cart
-      setCartMessage("Product is successfully added to your cart!");
+      await addItemToCart(userId, book_id, 1, price);
     } else {
       // Anonymous user: Add item to localStorage cart
-      addItemToLocalCart(book_id, 1, price); // Add 1 quantity to local cart
-      setCartMessage("Product is successfully added to your cart!");
+      addItemToLocalCart(book_id, 1, price); 
     }
 
-    // Display confirmation message
+    setCartMessage("Product is successfully added to your cart!");
     setTimeout(() => setCartMessage(""), 2000);
   };
 
@@ -86,11 +85,13 @@ const BookDetailsPage = () => {
       if (isInWishlist) {
         // Remove the book from the database wishlist
         await removeBookFromWishlist(userId, book_id);
-        setWishlistMessage("Product is removed from the wishlist.");
+        setWishlistMessage("The product is successfully removed from your wishlist.");
+        setWishlistMessageColor("bg-gray-300"); 
       } else {
         // Add the book to the database wishlist
         await addBookToWishlist(userId, book_id);
-        setWishlistMessage("Product is added to wishlist.");
+        setWishlistMessage("The product is successfully added to your wishlist!");
+        setWishlistMessageColor("bg-red-500"); 
       }
     } else {
       // Anonymous user: Update the local wishlist
@@ -99,19 +100,19 @@ const BookDetailsPage = () => {
       if (isInWishlist) {
         // Remove from local wishlist
         const updatedWishlist = removeItemFromLocalWishlist(book_id);
-        setWishlistMessage("Product is removed from the wishlist.");
+        setWishlistMessage("The product is successfully removed from your wishlist.");
+        setWishlistMessageColor("bg-gray-300");
       } else {
         // Add to local wishlist
         const newItem = { book_id, title, image_url };
         addItemToLocalWishlist(newItem);
-        setWishlistMessage("Product is added to wishlist.");
+        setWishlistMessage("The product is successfully added to your wishlist!");
+        setWishlistMessageColor("bg-red-500");
       }
     }
 
     // Update the state to reflect the new wishlist status
     setIsInWishlist(!isInWishlist);
-
-    // Clear the message after a timeout
     setTimeout(() => setWishlistMessage(""), 2000);
   };
 
@@ -120,21 +121,36 @@ const BookDetailsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto py-16 px-4 relative">
+        {/* Wishlist success message */}
+        {wishlistMessage && (
+          <div
+            className={`fixed top-0 left-1/2 transform -translate-x-1/2 ${wishlistMessageColor} text-white p-2 rounded-lg shadow-md z-50`}
+          >
+            {wishlistMessage}
+          </div>
+        )}
+
+        {/* Cart success message */}
+        {cartMessage && (
+          <div className="fixed top-0 left-1/2 transform -translate-x-1/2 bg-[#383838] text-white p-2 rounded-lg shadow-md z-50">
+            {cartMessage}
+          </div>
+        )}
+
         <div className="bg-white shadow-md rounded-md p-8 flex flex-col md:flex-row items-start md:items-start space-y-8 md:space-y-0 md:space-x-8">
           <div className="md:w-1/4 flex justify-center md:justify-start relative">
-            {wishlistMessage && (
-              <p className="absolute -top-8 text-sm text-gray-600 bg-gray-200 px-2 py-1 rounded">
-                {wishlistMessage}
-              </p>
-            )}
-            <button
-              onClick={handleWishlistToggle}
-              className={`absolute top-2 left-2 p-2 rounded-full border-2 transition ${
-                isInWishlist ? "bg-red-500 text-white border-red-500" : "text-red-500 border-red-500"
-              }`}
+            <div
+              className="absolute top-2 right-2 z-10"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleWishlistToggle();
+              }}
             >
-              <FaHeart size={24} />
-            </button>
+              <FaHeart
+                size={24}
+                className={isInWishlist ? "text-red-500" : "text-gray-300"}
+              />
+            </div>
             <img
               src={book.image_url || "https://via.placeholder.com/200x300"}
               alt={`${book.title} cover`}
@@ -186,24 +202,16 @@ const BookDetailsPage = () => {
             </div>
             <button
               onClick={book.available_quantity > 0 ? handleAddToCart : null}
-              className={`py-2 px-4 rounded-md font-semibold text-xl transition-colors duration-300 ${
+              className={`py-2 px-4 rounded font-semibold text-center transition text-white text-xl ${
                 book.available_quantity > 0
-                  ? "bg-white text-blue-500 border border-blue-500 hover:bg-blue-500 hover:text-white"
-                  : "bg-red-500 text-white cursor-not-allowed"
+                  ? "bg-[#65aa92] hover:bg-[#4a886e] cursor-pointer"
+                  : "bg-red-500 cursor-not-allowed"
               }`}
               style={{ width: "300px", height: "50px" }}
               disabled={book.available_quantity === 0}
             >
               {book.available_quantity > 0 ? "Add to Cart" : "Out of Stock"}
             </button>
-            <div
-              className={`text-sm px-2 py-1 rounded shadow-md text-center transition-opacity duration-300 ${
-                cartMessage ? "opacity-100 bg-gray-200 text-gray-600" : "opacity-0"
-              }`}
-              style={{ minHeight: "30px", width: "300px" }}
-            >
-              {cartMessage}
-            </div>
           </div>
         </div>
 

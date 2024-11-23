@@ -11,8 +11,8 @@ const GenrePage = () => {
   useEffect(() => {
     const fetchBooksByGenre = async () => {
       try {
-        const genreId = await getGenreIdByName(genreName); // Get genre ID by name
-        const booksData = await getBooksByGenre(genreId); // Get books by genre ID
+        const genreId = await getGenreIdByName(genreName); 
+        const booksData = await getBooksByGenre(genreId); 
         setBooks(booksData);
       } catch (error) {
         console.error("Error fetching books:", error);

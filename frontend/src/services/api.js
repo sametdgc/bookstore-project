@@ -422,7 +422,7 @@ export const getOrCreateCartByUserId = async (userId) => {
     .from('cart')
     .select('*')
     .eq('user_id', userId)
-    .maybeSingle(); // Avoids throwing an error for non-existent rows
+    .maybeSingle(); 
 
   if (error && error.code !== "PGRST116") {
     // PGRST116: No rows returned
@@ -467,7 +467,7 @@ export const addItemToCart = async (userId, bookId, quantity, price) => {
     .select('*')
     .eq('cart_id', cartId)
     .eq('book_id', bookId)
-    .maybeSingle(); // Avoids throwing an error for non-existent rows;
+    .maybeSingle(); 
 
   if (existingError && existingError.code !== "PGRST116") {
     console.log("Error checking cart item:", existingError.message);
