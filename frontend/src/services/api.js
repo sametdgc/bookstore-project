@@ -115,7 +115,7 @@ export const updateBook = async (bookId, updates) => {
 
 // PLACE an order
 export const placeOrder = async (order) => {
-  const { data, error } = await supabase.from("Orders").insert([order]);
+  const { data, error } = await supabase.from("orders").insert([order]);
   if (error) console.log("Error placing order:", error.message);
   return data;
 };
@@ -124,7 +124,7 @@ export const placeOrder = async (order) => {
 
 // ADD a new review
 export const addReview = async (review) => {
-  const { data, error } = await supabase.from("Reviews").insert([review]);
+  const { data, error } = await supabase.from("reviews").insert([review]);
   if (error) console.log("Error adding review:", error.message);
   return data;
 };
@@ -132,7 +132,7 @@ export const addReview = async (review) => {
 // GET all reviews of a book
 export const getReviewsForBook = async (bookId) => {
   const { data, error } = await supabase
-    .from("Reviews")
+    .from("reviews")
     .select("*")
     .eq("book_id", bookId);
   if (error) console.log("Error fetching reviews:", error.message);
@@ -142,7 +142,7 @@ export const getReviewsForBook = async (bookId) => {
 // ADD a book to the wishlist
 export const addBookToWishlist = async (userId, bookId) => {
   const { data, error } = await supabase
-    .from("Wishlist")
+    .from("wishlist")
     .insert([{ user_id: userId, book_id: bookId }]);
   if (error) console.log("Error adding book to wishlist:", error.message);
   return data;
@@ -151,7 +151,7 @@ export const addBookToWishlist = async (userId, bookId) => {
 // GET the wishlist of a user
 export const getWishlistByUserId = async (userId) => {
   const { data, error } = await supabase
-    .from("Wishlist")
+    .from("wishlist")
     .select("*")
     .eq("user_id", userId);
   if (error) console.log("Error fetching wishlist:", error.message);
@@ -268,77 +268,20 @@ export const getUserData = async () => {
     const userId = user.user_metadata.custom_incremented_id;
     // Query the users table with the user_id
     const { data, error } = await supabase
-      .from("users") // Assuming your table is named 'users'
-      .select("*") // You can select specific fields if needed
-      .eq("user_id", userId) // Filter by the user_id from session
-      .single(); // Assuming you expect one user record for that ID
-    // Check for errors
+      .from("users") 
+      .select("*") 
+      .eq("user_id", userId) 
+      .single(); 
     if (error) {
       console.error("Error fetching user data:", error.message);
       return null;
     }
-    // Return the fetched user data
     return data;
   } catch (err) {
     console.error("Error in getUserData function:", err);
     return null;
   }
 };
-
-/*
-export const getUserData = async () => {
-  try {
-    const user = await fetchUser();
-    if (!user) return null;
-
-    const userId = user.user_metadata.custom_incremented_id;
-
-    const { data, error } = await supabase
-      .from("users")
-      .select(`
-        full_name,
-        email,
-        tax_id,
-        phone_number,
-        created_at,
-        updated_at, 
-        role_id,
-        user_uuid,
-        useraddresses (
-          address_title,
-          address:addresses (
-            city,
-            district,
-            address_details
-          )
-        ),
-        orders (
-          order_id,
-          order_date,
-          total_price,
-          address:addresses (
-            city,
-            district,
-            address_details
-          )
-        )
-      `)
-      .eq("user_id", userId)
-      .single();
-
-    if (error) {
-      console.error("Error fetching user data:", error.message);
-      return null;
-    }
-
-    return data;
-  } catch (err) {
-    console.error("Error in getUserData function:", err);
-    return null;
-  }
-};
-
-*/
 
 /*
  export const getUserData = async () => {
@@ -412,7 +355,6 @@ export const getUserAddresses = async () => {
 // Add a new address for a user
 export const addNewAddress = async (userId, addressData) => {
   try {
-    // Step 1: Add the new address to the `addresses` table
     const { data: newAddress, error: addressError } = await supabase
       .from("addresses")
       .insert([
@@ -423,18 +365,17 @@ export const addNewAddress = async (userId, addressData) => {
         },
       ])
       .select()
-      .single(); // Get the inserted address
+      .single(); 
 
     if (addressError)
       throw new Error("Error adding address: " + addressError.message);
 
-    // Step 2: Link the new address to the user in the `useraddresses` table
     const { error: userAddressError } = await supabase
       .from("useraddresses")
       .insert([
         {
           user_id: userId,
-          address_id: newAddress.address_id, // Use the newly inserted address ID
+          address_id: newAddress.address_id, 
           address_title: addressData.address_title,
         },
       ]);
@@ -497,10 +438,10 @@ export const getUserOrders = async () => {
 export const getOrCreateCartByUserId = async (userId) => {
   // First, check if the cart exists
   const { data: cart, error } = await supabase
-    .from("Cart")
-    .select("*")
-    .eq("user_id", userId)
-    .single();
+    .from('cart')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle(); // Avoids throwing an error for non-existent rows
 
   if (error && error.code !== "PGRST116") {
     // PGRST116: No rows returned
@@ -515,7 +456,7 @@ export const getOrCreateCartByUserId = async (userId) => {
 
   // If the cart doesn't exist, create a new one
   const { data: newCart, error: insertError } = await supabase
-    .from("Cart")
+    .from('cart')
     .insert([{ user_id: userId }])
     .single();
 
@@ -541,11 +482,11 @@ export const addItemToCart = async (userId, bookId, quantity, price) => {
 
   // Check if the item already exists in the cart
   const { data: existingItem, error: existingError } = await supabase
-    .from("CartItems")
-    .select("*")
-    .eq("cart_id", cartId)
-    .eq("book_id", bookId)
-    .single();
+    .from('cartitems')
+    .select('*')
+    .eq('cart_id', cartId)
+    .eq('book_id', bookId)
+    .maybeSingle(); // Avoids throwing an error for non-existent rows;
 
   if (existingError && existingError.code !== "PGRST116") {
     console.log("Error checking cart item:", existingError.message);
@@ -560,7 +501,7 @@ export const addItemToCart = async (userId, bookId, quantity, price) => {
 
   // If the item doesn't exist, insert it
   const { data, error } = await supabase
-    .from("CartItems")
+    .from('cartitems')
     .insert([{ cart_id: cartId, book_id: bookId, quantity, price }]);
 
   if (error) {
@@ -573,7 +514,7 @@ export const addItemToCart = async (userId, bookId, quantity, price) => {
 
 export const updateCartItemQuantity = async (cartId, bookId, quantity) => {
   const { data, error } = await supabase
-    .from("CartItems")
+    .from('cartitems')
     .update({ quantity })
     .eq("cart_id", cartId)
     .eq("book_id", bookId);
@@ -597,9 +538,8 @@ export const getCartItems = async (userId) => {
   }
 
   const { data, error } = await supabase
-    .from("CartItems")
-    .select(
-      `
+    .from('cartitems')
+    .select(`
       *,
       book:books (
         title,
@@ -610,7 +550,7 @@ export const getCartItems = async (userId) => {
     )
     .eq("cart_id", cart.cart_id);
 
-  if (error) {
+  if (error && error.code !== "PGRST116") {
     console.log("Error fetching cart items:", error.message);
     return [];
   }
@@ -618,10 +558,11 @@ export const getCartItems = async (userId) => {
   return data;
 };
 
+
 // Remove an item from the cart
 export const removeCartItem = async (cartId, bookId) => {
   const { data, error } = await supabase
-    .from("CartItems")
+    .from('cartitems')
     .delete()
     .eq("cart_id", cartId)
     .eq("book_id", bookId);
@@ -634,9 +575,34 @@ export const removeCartItem = async (cartId, bookId) => {
   return data;
 };
 
+
+// Helper function to get items from localStorage-based cart
+export const getLocalCartItems = () => {
+  return JSON.parse(localStorage.getItem('cart')) || [];
+};
+
+
+// Update quantity of an item in localStorage-based cart
+export const updateLocalCartItemQuantity = (bookId, newQuantity) => {
+  const cart = getLocalCartItems();
+
+  // Update the quantity or remove the item if quantity <= 0
+  const updatedCart = cart
+    .map((item) =>
+      item.book_id === bookId
+        ? { ...item, quantity: newQuantity }
+        : item
+    )
+    .filter((item) => item.quantity > 0); 
+  
+  localStorage.setItem('cart', JSON.stringify(updatedCart));
+  return updatedCart;
+};
+
+
 // Add item to localStorage-based cart for anonymous users
 export const addItemToLocalCart = (bookId, quantity, price) => {
-  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+  const cart = getLocalCartItems();
   const existingItem = cart.find((item) => item.book_id === bookId);
 
   if (existingItem) {
@@ -648,23 +614,76 @@ export const addItemToLocalCart = (bookId, quantity, price) => {
   localStorage.setItem("cart", JSON.stringify(cart));
 };
 
-// Get items from localStorage-based cart
-export const getLocalCartItems = () => {
-  return JSON.parse(localStorage.getItem("cart")) || [];
-};
 
 // Remove an item from localStorage-based cart
 export const removeItemFromLocalCart = (bookId) => {
-  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+  const cart = getLocalCartItems();
   const updatedCart = cart.filter((item) => item.book_id !== bookId);
+
   localStorage.setItem("cart", JSON.stringify(updatedCart));
+
+  console.log(`Removed item with bookId ${bookId} from local cart.`);
+  console.log('Updated local cart:', updatedCart);
+
+  return updatedCart;
 };
+
+export const syncLocalCartToDatabase = async (localCart, userId) => {
+  try {
+    // Fetch or create the user's database cart
+    const userCart = await getOrCreateCartByUserId(userId); 
+    const cartId = userCart.cart_id; 
+    const userCartItems = await getCartItems(userId);
+
+    // Create a map of existing database cart items by book_id
+    const userCartMap = {};
+    userCartItems.forEach((item) => {
+      userCartMap[item.book_id] = item; // { book_id: item }
+    });
+
+    for (const localItem of localCart) {
+      const { book_id, quantity, price } = localItem;
+
+      // Check if the book exists in the user's database cart
+      const { data: existingCartItem, error: cartError } = await supabase
+        .from('cartitems')
+        .select('*')
+        .eq('cart_id', cartId) 
+        .eq('book_id', book_id)
+        .maybeSingle(); // Avoids throwing an error for non-existent rows
+
+      if (cartError && cartError.code !== 'PGRST116') {
+        console.error(`Error checking book with ID ${book_id}:`, cartError.message);
+        continue; // Skip to the next item
+      }
+
+      if (!existingCartItem) {
+        // No rows returned, meaning the book is not yet in the user's cart
+        console.log(`Book with ID ${book_id} is not in the user's cart. Adding...`);
+        await addItemToCart(userId, book_id, quantity, price);
+      } else {
+        // If the book exists, update its quantity
+        const updatedQuantity = existingCartItem.quantity + quantity;
+        await updateCartItemQuantity(cartId, book_id, updatedQuantity);
+      }
+    }
+
+    // Clear the localStorage cart
+    localStorage.removeItem('cart');
+
+    return await getCartItems(userId);
+  } catch (error) {
+    console.error('Error syncing local cart to database:', error);
+    return [];
+  }
+};
+
 
 // Subtract items from stock when a purchase is made
 export const subtractItemsFromStock = async (bookId, quantity) => {
   const { data, error } = await supabase
     .from("books")
-    .update({ stock: supabase.raw("stock - ?", [quantity]) })
+    .update({ available_quantity: supabase.raw("available_quantity - ?", [quantity]) })
     .eq("book_id", bookId);
 
   if (error) {
@@ -674,3 +693,4 @@ export const subtractItemsFromStock = async (bookId, quantity) => {
 
   return data;
 };
+

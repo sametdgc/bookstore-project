@@ -1,32 +1,54 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { 
+  fetchUser, 
+  getCartItems, 
+  updateCartItemQuantity, 
+  removeCartItem, 
+  getOrCreateCartByUserId, 
+  getBookDetailsById, 
+  getLocalCartItems, 
+  updateLocalCartItemQuantity, 
+  removeItemFromLocalCart 
+} from '../services/api';
 
 const ShoppingCart = () => {
   const [cart, setCart] = useState([]);
-  const [shippingCost, setShippingCost] = useState(10.00); // Default shipping cost
+  const [shippingCost, setShippingCost] = useState(10.0); // Default shipping cost
+  const [user, setUser] = useState(null); // Track the logged-in user
   const navigate = useNavigate();
 
-  // Load cart items from localStorage on initial load and aggregate duplicates
+  // Fetch user and load their cart on mount
   useEffect(() => {
-    const savedCart = JSON.parse(localStorage.getItem('cart')) || [];
-    const aggregatedCart = aggregateCart(savedCart);
-    setCart(aggregatedCart);
-  }, []);
+    const loadCart = async () => {
+      const currentUser = await fetchUser(); // Get the current user (logged in or null)
+      setUser(currentUser);
 
-  // Helper function to aggregate items in the cart by quantity
-  const aggregateCart = (cartItems) => {
-    const cartMap = {};
-
-    cartItems.forEach(item => {
-      if (cartMap[item.book_id]) {
-        cartMap[item.book_id].quantity += 1;
+      if (currentUser) {
+        // Logged-in user: Fetch their cart from the database
+        const userCartItems = await getCartItems(currentUser.user_metadata.custom_incremented_id);
+        setCart(userCartItems || []);
       } else {
-        cartMap[item.book_id] = { ...item, quantity: 1 };
-      }
-    });
+        // Anonymous user: Load the cart from localStorage
+        const savedCart = getLocalCartItems();
 
-    return Object.values(cartMap);
-  };
+        // Fetch book details for each item in the cart
+        const enrichedCart = await Promise.all(
+          savedCart.map(async (item) => {
+            const bookDetails = await getBookDetailsById(item.book_id);
+            return {
+              ...item,
+              ...bookDetails, // Merge the book details into the item
+            };
+          })
+        );
+
+        setCart(enrichedCart);
+      }
+    };
+
+    loadCart();
+  }, []);
 
   // Function to calculate subtotal for each item
   const calculateItemSubtotal = (item) => (item.price * item.quantity).toFixed(2);
@@ -41,39 +63,97 @@ const ShoppingCart = () => {
   const calculateSubtotal = () => {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
   };
-
-  // Function to update quantity of an item
-  const updateQuantity = (bookId, newQuantity) => {
-    const updatedCart = cart.map(item =>
-      item.book_id === bookId
-        ? { ...item, quantity: newQuantity }
-        : item
-    ).filter(item => item.quantity > 0); // Remove items with quantity <= 0
-
-    setCart(updatedCart);
-    localStorage.setItem('cart', JSON.stringify(expandCart(updatedCart)));
+  
+  const updateQuantity = async (bookId, newQuantity) => {
+    if (newQuantity <= 0) {
+      // If the new quantity is 0 or less, remove the item
+      await handleRemove(bookId);
+      return;
+    }
+  
+    const originalCartOrder = [...cart]; // Preserve the current order of the cart
+  
+    if (user) {
+      // Logged-in user: Update quantity in the database
+      const userId = user.user_metadata.custom_incremented_id;
+      const cartData = await getOrCreateCartByUserId(userId);
+      await updateCartItemQuantity(cartData.cart_id, bookId, newQuantity);
+  
+      // Reload the cart from the database
+      const updatedCart = await getCartItems(userId);
+  
+      // Restore the original order of the cart (for consistent UI)
+      const orderedCart = originalCartOrder.map((originalItem) =>
+        updatedCart.find((updatedItem) => updatedItem.book_id === originalItem.book_id) || originalItem
+      );
+  
+      setCart(orderedCart);
+    } else {
+      // Anonymous user: Update quantity in localStorage
+      const updatedCart = updateLocalCartItemQuantity(bookId, newQuantity);
+  
+      // Re-enrich the cart with book details
+      const enrichedCart = await Promise.all(
+        updatedCart.map(async (item) => {
+          const bookDetails = await getBookDetailsById(item.book_id);
+          return {
+            ...item,
+            ...bookDetails,
+          };
+        })
+      );
+  
+      // Preserve the original order of the anonymous cart (for consistent UI)
+      const orderedCart = originalCartOrder.map((originalItem) =>
+        enrichedCart.find((enrichedItem) => enrichedItem.book_id === originalItem.book_id) || originalItem
+      );
+  
+      setCart(orderedCart);
+    }
   };
-
-  // Function to remove an item
-  const handleRemove = (bookId) => {
-    const updatedCart = cart.filter(item => item.book_id !== bookId);
-    setCart(updatedCart);
-    localStorage.setItem('cart', JSON.stringify(expandCart(updatedCart)));
+  
+  const handleRemove = async (bookId) => {
+    const originalCartOrder = [...cart]; // Preserve the current order of the cart
+  
+    if (user) {
+      // Logged-in user: Remove item from the database
+      const userId = user.user_metadata.custom_incremented_id;
+      const cartData = await getOrCreateCartByUserId(userId);
+      await removeCartItem(cartData.cart_id, bookId);
+  
+      // Reload the cart from the database
+      const updatedCart = await getCartItems(userId);
+  
+      // Restore the original order of the cart
+      const orderedCart = originalCartOrder.filter((originalItem) =>
+        updatedCart.find((updatedItem) => updatedItem.book_id === originalItem.book_id)
+      );
+  
+      setCart(orderedCart);
+    } else {
+      // Anonymous user: Remove item using localStorage
+      const updatedCart = removeItemFromLocalCart(bookId);
+  
+      // Re-enrich the cart with book details
+      const enrichedCart = await Promise.all(
+        updatedCart.map(async (item) => {
+          const bookDetails = await getBookDetailsById(item.book_id);
+          return {
+            ...item,
+            ...bookDetails,
+          };
+        })
+      );
+  
+      // Preserve the original order of the anonymous cart
+      const orderedCart = originalCartOrder.filter((originalItem) =>
+        enrichedCart.find((enrichedItem) => enrichedItem.book_id === originalItem.book_id)
+      );
+  
+      setCart(orderedCart);
+    }
   };
-
-  // Helper function to expand aggregated cart back into a list for localStorage
-  const expandCart = (cartItems) => {
-    const expandedCart = [];
-
-    cartItems.forEach(item => {
-      for (let i = 0; i < item.quantity; i++) {
-        expandedCart.push({ ...item, quantity: 1 });
-      }
-    });
-
-    return expandedCart;
-  };
-
+  
   return (
     <div className="container mx-auto py-16 text-center">
       <h1 className="text-4xl font-semibold text-[#65aa92]">Shopping Cart</h1>
@@ -93,51 +173,57 @@ const ShoppingCart = () => {
               </tr>
             </thead>
             <tbody>
-              {cart.map((item) => (
-                <tr key={item.book_id} className="border-b">
-                  <td className="flex items-center">
-                    <img
-                      src={item.image_url || 'https://via.placeholder.com/50x75'}
-                      alt={`${item.title} cover`}
-                      className="w-12 h-16 object-cover mr-4 rounded"
-                    />
-                    {/* Make the title clickable */}
-                    <span
-                      className="font-semibold text-[#65aa92] hover:underline cursor-pointer"
-                      onClick={() => navigate(`/books/${item.book_id}`)}
-                    >
-                      {item.title}
-                    </span>
-                  </td>
-                  <td>${item.price.toFixed(2)}</td>
-                  <td>
-                    <div className="flex items-center">
-                      <button
-                        className="px-2 py-1 bg-gray-200 rounded-l"
-                        onClick={() => updateQuantity(item.book_id, item.quantity - 1)}
+              {cart.map((item) => {
+                // Dynamically handle book details for logged-in vs. anonymous users
+                const title = item.book?.title || item.title || 'Unknown Title';
+                const imageUrl = item.book?.image_url || item.image_url || 'https://via.placeholder.com/50x75';
+                const price = item.book?.price || item.price || 0;
+
+                return (
+                  <tr key={item.book_id} className="border-b">
+                    <td className="flex items-center">
+                      <img
+                        src={imageUrl}
+                        alt={`${title} cover`}
+                        className="w-12 h-16 object-cover mr-4 rounded"
+                      />
+                      <span
+                        className="font-semibold text-[#65aa92] hover:underline cursor-pointer"
+                        onClick={() => navigate(`/books/${item.book_id}`)}
                       >
-                        -
-                      </button>
-                      <span className="px-4">{item.quantity}</span>
+                        {title}
+                      </span>
+                    </td>
+                    <td>${price.toFixed(2)}</td>
+                    <td>
+                      <div className="flex items-center">
+                        <button
+                          className="px-2 py-1 bg-gray-200 rounded-l"
+                          onClick={() => updateQuantity(item.book_id, item.quantity - 1)}
+                        >
+                          -
+                        </button>
+                        <span className="px-4">{item.quantity}</span>
+                        <button
+                          className="px-2 py-1 bg-gray-200 rounded-r"
+                          onClick={() => updateQuantity(item.book_id, item.quantity + 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </td>
+                    <td>${calculateItemSubtotal({ ...item, price })}</td>
+                    <td>
                       <button
-                        className="px-2 py-1 bg-gray-200 rounded-r"
-                        onClick={() => updateQuantity(item.book_id, item.quantity + 1)}
+                        onClick={() => handleRemove(item.book_id)}
+                        className="text-red-500 hover:underline"
                       >
-                        +
+                        Remove
                       </button>
-                    </div>
-                  </td>
-                  <td>${calculateItemSubtotal(item)}</td>
-                  <td>
-                    <button
-                      onClick={() => handleRemove(item.book_id)}
-                      className="text-red-500 hover:underline"
-                    >
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
@@ -161,8 +247,11 @@ const ShoppingCart = () => {
           <button
             className="mt-6 px-4 py-2 bg-[#65aa92] text-white font-semibold rounded shadow hover:bg-[#579d7b] transition-colors"
             onClick={() => {
-              navigate('/checkout');
-              console.log('Complete purchase clicked');
+              if (user) {
+                navigate('/checkout');
+              } else {
+                alert('Please log in to complete your purchase.');
+              }
             }}
           >
             Complete Purchase

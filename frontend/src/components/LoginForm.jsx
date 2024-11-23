@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link,useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
-import {testSupabaseConnection} from '../services/api';
+import {testSupabaseConnection, syncLocalCartToDatabase, getLocalCartItems} from '../services/api';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -12,26 +12,41 @@ const LoginForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+  
     try {
       testSupabaseConnection();
-      const { user, session, error } = await supabase.auth.signInWithPassword({
+  
+      // Step 1: Authenticate the user
+      const { data: { user }, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+  
       if (error) {
         console.error("Login error details:", error);
-        setError('Wrong email or password, please try again.'); 
-      } else {
-        console.log('User signed in:', user);
-        navigate('/');
+        setError('Wrong email or password, please try again.');
+        return;
       }
+  
+      console.log('User signed in:', user);
+  
+      // Step 2: Fetch the user's ID from user metadata
+      const userId = user.user_metadata.custom_incremented_id;
+  
+      // Step 3: Get the local cart items
+      const localCart = getLocalCartItems();
+  
+      // Step 4: Sync the local cart to the database
+      await syncLocalCartToDatabase(localCart, userId);
+  
+      // Step 5: Navigate to the homepage or shopping cart
+      navigate('/shopping-cart'); // Redirect to shopping cart after syncing
     } catch (err) {
       console.error('Login error:', err);
       setError('An unexpected error occurred. Please try again.');
     }
-    
   };
+  
 
   return (
     <div className="bg-white bg-opacity-90 p-8 rounded-lg shadow-lg w-full max-w-md">
