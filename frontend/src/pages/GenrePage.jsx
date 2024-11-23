@@ -6,18 +6,25 @@ import {
   fetchUser,
   addItemToCart,
   addItemToLocalCart,
+  getWishlistByUserId,
+  addBookToWishlist,
+  removeBookFromWishlist,
+  getLocalWishlistItems,
+  addItemToLocalWishlist,
+  removeItemFromLocalWishlist,
 } from "../services/api";
 import BookCard from "../components/common/BookCard";
 
 const GenrePage = () => {
   const { genreName } = useParams();
   const [books, setBooks] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null); 
-  const [cartMessage, setCartMessage] = useState(""); 
+  const [user, setUser] = useState(null);
+  const [cartMessage, setCartMessage] = useState("");
 
   useEffect(() => {
-    const fetchBooksByGenre = async () => {
+    const fetchBooksAndWishlist = async () => {
       try {
         // Fetch genre ID and books
         const genreId = await getGenreIdByName(genreName);
@@ -25,16 +32,28 @@ const GenrePage = () => {
 
         // Fetch current user (if logged in)
         const currentUser = await fetchUser();
+
         setBooks(booksData);
         setUser(currentUser);
+
+        if (currentUser) {
+          // Logged-in user: Fetch wishlist from the database
+          const userId = currentUser.user_metadata.custom_incremented_id;
+          const wishlistData = await getWishlistByUserId(userId);
+          setWishlist(wishlistData);
+        } else {
+          // Anonymous user: Fetch wishlist from localStorage
+          const localWishlist = getLocalWishlistItems();
+          setWishlist(localWishlist);
+        }
       } catch (error) {
-        console.error("Error fetching books or user:", error);
+        console.error("Error fetching books or wishlist:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBooksByGenre();
+    fetchBooksAndWishlist();
   }, [genreName]);
 
   // Add to Cart function
@@ -53,6 +72,38 @@ const GenrePage = () => {
     // Display confirmation message
     setCartMessage(`Product is successfully added to your cart!`);
     setTimeout(() => setCartMessage(""), 2000);
+  };
+
+  // Add to or Remove from Wishlist function
+  const handleWishlistToggle = async (book) => {
+    const { book_id } = book;
+    const isInWishlist = wishlist.some((item) => item.book_id === book_id);
+
+    if (isInWishlist) {
+      // Remove from wishlist
+      if (user) {
+        const userId = user.user_metadata.custom_incremented_id;
+        await removeBookFromWishlist(userId, book_id);
+      } else {
+        const updatedWishlist = removeItemFromLocalWishlist(book_id);
+        setWishlist(updatedWishlist);
+      }
+    } else {
+      // Add to wishlist
+      if (user) {
+        const userId = user.user_metadata.custom_incremented_id;
+        await addBookToWishlist(userId, book_id);
+      } else {
+        addItemToLocalWishlist(book);
+        setWishlist([...wishlist, book]);
+      }
+    }
+
+    // Update the wishlist state
+    const updatedWishlist = isInWishlist
+      ? wishlist.filter((item) => item.book_id !== book_id)
+      : [...wishlist, book];
+    setWishlist(updatedWishlist);
   };
 
   if (loading) return <div>Loading...</div>;
@@ -74,7 +125,9 @@ const GenrePage = () => {
           <BookCard
             key={book.book_id}
             book={book}
-            onAddToCart={() => handleAddToCart(book)} // Pass the function here
+            onAddToCart={() => handleAddToCart(book)}
+            onAddToWishlist={() => handleWishlistToggle(book)}
+            isInWishlist={wishlist.some((item) => item.book_id === book.book_id)}
           />
         ))}
       </div>

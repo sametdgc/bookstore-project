@@ -1,28 +1,50 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import BookCard from "../components/common/BookCard";
-import { fetchUser, addItemToCart, addItemToLocalCart } from "../services/api";
+import {
+  fetchUser,
+  addItemToCart,
+  addItemToLocalCart,
+  getWishlistByUserId,
+  addBookToWishlist,
+  removeBookFromWishlist,
+  getLocalWishlistItems,
+  addItemToLocalWishlist,
+  removeItemFromLocalWishlist,
+} from "../services/api";
 
 const SearchPage = () => {
   const [filteredBooks, setFilteredBooks] = useState([]);
-  const [user, setUser] = useState(null); 
-  const [cartMessage, setCartMessage] = useState(""); 
-  const { state } = useLocation(); 
+  const [user, setUser] = useState(null);
+  const [wishlist, setWishlist] = useState([]);
+  const [cartMessage, setCartMessage] = useState("");
+  const { state } = useLocation(); // State passed from the SearchBar
 
-  // Fetch the current user on component mount
+  // Fetch the current user and their wishlist on component mount
   useEffect(() => {
-    const fetchCurrentUser = async () => {
+    const fetchUserAndWishlist = async () => {
       const currentUser = await fetchUser();
-      setUser(currentUser); 
+      setUser(currentUser);
+
+      if (currentUser) {
+        // Logged-in user: Fetch wishlist from database
+        const userId = currentUser.user_metadata.custom_incremented_id;
+        const wishlistData = await getWishlistByUserId(userId);
+        setWishlist(wishlistData);
+      } else {
+        // Anonymous user: Fetch wishlist from localStorage
+        const localWishlist = getLocalWishlistItems();
+        setWishlist(localWishlist);
+      }
     };
 
-    fetchCurrentUser();
+    fetchUserAndWishlist();
   }, []);
 
-  // If state is passed and contains search results, set the filteredBooks state
+  // Set filteredBooks based on the state passed from SearchBar
   useEffect(() => {
     if (state && state.searchResults) {
-      setFilteredBooks(state.searchResults); // Set filteredBooks to the search results passed from SearchBar
+      setFilteredBooks(state.searchResults);
     }
   }, [state]);
 
@@ -33,7 +55,7 @@ const SearchPage = () => {
     if (user) {
       // Logged-in user: Add to the database cart
       const userId = user.user_metadata.custom_incremented_id;
-      await addItemToCart(userId, book_id, 1, price); 
+      await addItemToCart(userId, book_id, 1, price);
     } else {
       // Anonymous user: Add to the localStorage cart
       addItemToLocalCart(book_id, 1, price);
@@ -42,6 +64,38 @@ const SearchPage = () => {
     // Display confirmation message
     setCartMessage(`Product is successfully added to your cart!`);
     setTimeout(() => setCartMessage(""), 2000);
+  };
+
+  // Add to or Remove from Wishlist function
+  const handleWishlistToggle = async (book) => {
+    const { book_id } = book;
+    const isInWishlist = wishlist.some((item) => item.book_id === book_id);
+
+    if (isInWishlist) {
+      // Remove from wishlist
+      if (user) {
+        const userId = user.user_metadata.custom_incremented_id;
+        await removeBookFromWishlist(userId, book_id);
+      } else {
+        const updatedWishlist = removeItemFromLocalWishlist(book_id);
+        setWishlist(updatedWishlist);
+      }
+    } else {
+      // Add to wishlist
+      if (user) {
+        const userId = user.user_metadata.custom_incremented_id;
+        await addBookToWishlist(userId, book_id);
+      } else {
+        addItemToLocalWishlist(book);
+        setWishlist([...wishlist, book]);
+      }
+    }
+
+    // Update the wishlist state
+    const updatedWishlist = isInWishlist
+      ? wishlist.filter((item) => item.book_id !== book_id)
+      : [...wishlist, book];
+    setWishlist(updatedWishlist);
   };
 
   return (
@@ -66,7 +120,9 @@ const SearchPage = () => {
             <BookCard
               key={book.book_id}
               book={book}
-              onAddToCart={() => handleAddToCart(book)} // Pass the function here
+              onAddToCart={() => handleAddToCart(book)}
+              onAddToWishlist={() => handleWishlistToggle(book)}
+              isInWishlist={wishlist.some((item) => item.book_id === book.book_id)}
             />
           ))}
         </div>

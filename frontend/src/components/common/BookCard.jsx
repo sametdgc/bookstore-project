@@ -1,43 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHeart } from "react-icons/fa";
 
-const BookCard = ({ book, onAddToCart, onAddToWishlist }) => {
+const BookCard = ({ book, onAddToCart, onAddToWishlist, isInWishlist }) => {
   const navigate = useNavigate();
-  const [isInWishlist, setIsInWishlist] = useState(false);
-  const [wishlistMessage, setWishlistMessage] = useState("");
-
-  useEffect(() => {
-    const existingWishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
-    const isBookInWishlist = existingWishlist.some(
-      (item) => item.book_id === book.book_id
-    );
-    setIsInWishlist(isBookInWishlist);
-  }, [book.book_id]);
 
   const handleCardClick = () => {
     navigate(`/books/${book.book_id}`); // Redirect to the BookDetailsPage with the book ID in the URL
-  };
-
-  const handleWishlistToggle = () => {
-    const existingWishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
-    let updatedWishlist;
-
-    if (isInWishlist) {
-      // Remove from wishlist
-      updatedWishlist = existingWishlist.filter(
-        (item) => item.book_id !== book.book_id
-      );
-      setWishlistMessage("Product is removed from the wishlist.");
-    } else {
-      // Add to wishlist
-      updatedWishlist = [...existingWishlist, book];
-      setWishlistMessage("Product is added to wishlist.");
-    }
-
-    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
-    setIsInWishlist(!isInWishlist);
-    setTimeout(() => setWishlistMessage(""), 2000);
   };
 
   return (
@@ -50,13 +19,12 @@ const BookCard = ({ book, onAddToCart, onAddToWishlist }) => {
         className="absolute top-2 right-2 z-10"
         onClick={(e) => {
           e.stopPropagation(); // Prevents navigating when clicking the heart
-          onAddToWishlist(book); // Call the wishlist handler
+          onAddToWishlist(book); // Delegate to parent
         }}
       >
         <FaHeart
           size={24}
           className={isInWishlist ? "text-red-500" : "text-gray-300"}
-          onClick={handleWishlistToggle}
         />
       </div>
 

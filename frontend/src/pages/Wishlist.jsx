@@ -1,20 +1,53 @@
-// src/pages/WishlistPage.js
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  fetchUser,
+  getLocalWishlistItems,
+  removeItemFromLocalWishlist,
+  getWishlistByUserId,
+  removeBookFromWishlist,
+  syncLocalWishlistToDatabase,
+} from "../services/api";
 
 const WishlistPage = () => {
   const [wishlist, setWishlist] = useState([]);
+  const [user, setUser] = useState(null); // Logged-in user
   const navigate = useNavigate();
 
   useEffect(() => {
-    const savedWishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
-    setWishlist(savedWishlist);
-  }, []);
+    const fetchWishlist = async () => {
+      const currentUser = await fetchUser(); // Check if the user is logged in
+      setUser(currentUser);
+  
+      if (currentUser) {
+        // Logged-in user: Sync local wishlist to database, then fetch
+        const userId = currentUser.user_metadata.custom_incremented_id;
+        const localWishlist = getLocalWishlistItems();
+        await syncLocalWishlistToDatabase(localWishlist, userId); // Sync local to database
+        const userWishlist = await getWishlistByUserId(userId); // Fetch enriched wishlist
+        setWishlist(userWishlist || []);
+      } else {
+        // Anonymous user: Load wishlist from localStorage
+        const localWishlist = getLocalWishlistItems();
+        setWishlist(localWishlist);
+      }
+    };
+  
+    fetchWishlist();
+  }, []);  
 
-  const handleRemoveFromWishlist = (bookId) => {
-    const updatedWishlist = wishlist.filter((item) => item.book_id !== bookId);
-    setWishlist(updatedWishlist);
-    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+  const handleRemoveFromWishlist = async (bookId) => {
+    if (user) {
+      // Remove from database wishlist for logged-in users
+      const userId = user.user_metadata.custom_incremented_id;
+      await removeBookFromWishlist(userId, bookId);
+      const updatedWishlist = await getWishlistByUserId(userId);
+      setWishlist(updatedWishlist || []);
+    } else {
+      // Remove from localStorage wishlist for anonymous users
+      const updatedWishlist = removeItemFromLocalWishlist(bookId);
+      setWishlist(updatedWishlist);
+    }
   };
 
   const handleBookClick = (bookId) => {

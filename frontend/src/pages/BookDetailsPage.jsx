@@ -1,19 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { FaHeart } from 'react-icons/fa';
-import { 
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { FaHeart } from "react-icons/fa";
+import {
   getBookDetailsById,
-  addItemToCart, 
-  addItemToLocalCart, 
-  fetchUser 
-} from '../services/api';
-import ReviewWindow, { renderStars } from '../components/ReviewWindow';
+  addItemToCart,
+  addItemToLocalCart,
+  fetchUser,
+  getLocalWishlistItems,
+  addItemToLocalWishlist,
+  removeItemFromLocalWishlist,
+  addBookToWishlist,
+  removeBookFromWishlist,
+  getWishlistByUserId,
+} from "../services/api";
+import ReviewWindow, { renderStars } from "../components/ReviewWindow";
 
 const BookDetailsPage = () => {
   const { book_id } = useParams();
   const [book, setBook] = useState(null);
-  const [wishlistMessage, setWishlistMessage] = useState('');
-  const [cartMessage, setCartMessage] = useState('');
+  const [wishlistMessage, setWishlistMessage] = useState("");
+  const [cartMessage, setCartMessage] = useState("");
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [user, setUser] = useState(null); // Track the logged-in user
 
@@ -31,14 +37,21 @@ const BookDetailsPage = () => {
     const fetchCurrentUser = async () => {
       const currentUser = await fetchUser();
       setUser(currentUser); // Update user state
+
+      if (currentUser) {
+        // If logged in, fetch the wishlist from the database
+        const userId = currentUser.user_metadata.custom_incremented_id;
+        const wishlist = await getWishlistByUserId(userId);
+        setIsInWishlist(wishlist.some((item) => item.book_id === parseInt(book_id)));
+      } else {
+        // Otherwise, check the local wishlist
+        const existingWishlist = getLocalWishlistItems();
+        setIsInWishlist(existingWishlist.some((item) => item.book_id === parseInt(book_id)));
+      }
     };
 
     fetchBookDetails();
     fetchCurrentUser();
-
-    // Check if book is already in wishlist
-    const existingWishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
-    setIsInWishlist(existingWishlist.some((item) => item.book_id === parseInt(book_id)));
   }, [book_id]);
 
   const handleAddToCart = async () => {
@@ -50,34 +63,56 @@ const BookDetailsPage = () => {
       // Logged-in user: Add item to database cart
       const userId = user.user_metadata.custom_incremented_id;
       await addItemToCart(userId, book_id, 1, price); // Add 1 quantity to cart
-      setCartMessage('Product is successfully added to your cart!');
+      setCartMessage("Product is successfully added to your cart!");
     } else {
       // Anonymous user: Add item to localStorage cart
       addItemToLocalCart(book_id, 1, price); // Add 1 quantity to local cart
-      setCartMessage('Product is successfully added to your cart!');
+      setCartMessage("Product is successfully added to your cart!");
     }
 
     // Display confirmation message
-    setTimeout(() => setCartMessage(''), 2000);
+    setTimeout(() => setCartMessage(""), 2000);
   };
 
-  const handleWishlistToggle = () => {
-    const existingWishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
-    let updatedWishlist;
+  const handleWishlistToggle = async () => {
+    if (!book) return;
 
-    if (isInWishlist) {
-      // Remove from wishlist
-      updatedWishlist = existingWishlist.filter((item) => item.book_id !== book.book_id);
-      setWishlistMessage('Product is removed from the wishlist.');
+    const { book_id, title, image_url } = book;
+
+    if (user) {
+      // Logged-in user: Update the database wishlist
+      const userId = user.user_metadata.custom_incremented_id;
+
+      if (isInWishlist) {
+        // Remove the book from the database wishlist
+        await removeBookFromWishlist(userId, book_id);
+        setWishlistMessage("Product is removed from the wishlist.");
+      } else {
+        // Add the book to the database wishlist
+        await addBookToWishlist(userId, book_id);
+        setWishlistMessage("Product is added to wishlist.");
+      }
     } else {
-      // Add to wishlist
-      updatedWishlist = [...existingWishlist, book];
-      setWishlistMessage('Product is added to wishlist.');
+      // Anonymous user: Update the local wishlist
+      const localWishlist = getLocalWishlistItems();
+
+      if (isInWishlist) {
+        // Remove from local wishlist
+        const updatedWishlist = removeItemFromLocalWishlist(book_id);
+        setWishlistMessage("Product is removed from the wishlist.");
+      } else {
+        // Add to local wishlist
+        const newItem = { book_id, title, image_url };
+        addItemToLocalWishlist(newItem);
+        setWishlistMessage("Product is added to wishlist.");
+      }
     }
 
-    localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+    // Update the state to reflect the new wishlist status
     setIsInWishlist(!isInWishlist);
-    setTimeout(() => setWishlistMessage(''), 2000);
+
+    // Clear the message after a timeout
+    setTimeout(() => setWishlistMessage(""), 2000);
   };
 
   if (!book) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -95,16 +130,16 @@ const BookDetailsPage = () => {
             <button
               onClick={handleWishlistToggle}
               className={`absolute top-2 left-2 p-2 rounded-full border-2 transition ${
-                isInWishlist ? 'bg-red-500 text-white border-red-500' : 'text-red-500 border-red-500'
+                isInWishlist ? "bg-red-500 text-white border-red-500" : "text-red-500 border-red-500"
               }`}
             >
               <FaHeart size={24} />
             </button>
             <img
-              src={book.image_url || 'https://via.placeholder.com/200x300'}
+              src={book.image_url || "https://via.placeholder.com/200x300"}
               alt={`${book.title} cover`}
               className="rounded-lg shadow-lg object-cover"
-              style={{ width: '100%', height: '350px', maxWidth: '250px' }}
+              style={{ width: "100%", height: "350px", maxWidth: "250px" }}
             />
           </div>
           <div className="md:w-2/4 flex flex-col space-y-4">
@@ -112,11 +147,21 @@ const BookDetailsPage = () => {
             <p className="text-2xl text-gray-700">{book.author.author_name}</p>
             <p className="text-md text-gray-600 mt-2">{book.description}</p>
             <div className="text-md text-gray-500 space-y-1">
-              <p><span className="font-semibold">Genre:</span> {book.genre.genre_name}</p>
-              <p><span className="font-semibold">Publisher:</span> {book.publisher}</p>
-              <p><span className="font-semibold">ISBN:</span> {book.isbn}</p>
-              <p><span className="font-semibold">Language:</span> {book.language.language_name}</p>
-              <p><span className="font-semibold">Stock:</span> {book.available_quantity}</p>
+              <p>
+                <span className="font-semibold">Genre:</span> {book.genre.genre_name}
+              </p>
+              <p>
+                <span className="font-semibold">Publisher:</span> {book.publisher}
+              </p>
+              <p>
+                <span className="font-semibold">ISBN:</span> {book.isbn}
+              </p>
+              <p>
+                <span className="font-semibold">Language:</span> {book.language.language_name}
+              </p>
+              <p>
+                <span className="font-semibold">Stock:</span> {book.available_quantity}
+              </p>
               <span className="flex items-center">
                 <span className="font-semibold">Average Rating:</span>
                 <span className="ml-2 flex items-center">
@@ -133,26 +178,29 @@ const BookDetailsPage = () => {
             </div>
           </div>
           <div className="md:w-1/4 flex flex-col items-center md:items-end justify-center space-y-4 self-stretch">
-            <div className="bg-gray-50 p-4 rounded-md shadow-lg text-center font-semibold" style={{ width: '300px', height: '60px' }}>
+            <div
+              className="bg-gray-50 p-4 rounded-md shadow-lg text-center font-semibold"
+              style={{ width: "300px", height: "60px" }}
+            >
               <p className="text-2xl text-gray-700">${book.price}</p>
             </div>
             <button
               onClick={book.available_quantity > 0 ? handleAddToCart : null}
               className={`py-2 px-4 rounded-md font-semibold text-xl transition-colors duration-300 ${
                 book.available_quantity > 0
-                  ? 'bg-white text-blue-500 border border-blue-500 hover:bg-blue-500 hover:text-white'
-                  : 'bg-red-500 text-white cursor-not-allowed'
+                  ? "bg-white text-blue-500 border border-blue-500 hover:bg-blue-500 hover:text-white"
+                  : "bg-red-500 text-white cursor-not-allowed"
               }`}
-              style={{ width: '300px', height: '50px' }}
+              style={{ width: "300px", height: "50px" }}
               disabled={book.available_quantity === 0}
             >
-              {book.available_quantity > 0 ? 'Add to Cart' : 'Out of Stock'}
+              {book.available_quantity > 0 ? "Add to Cart" : "Out of Stock"}
             </button>
             <div
               className={`text-sm px-2 py-1 rounded shadow-md text-center transition-opacity duration-300 ${
-                cartMessage ? 'opacity-100 bg-gray-200 text-gray-600' : 'opacity-0'
-              }`} 
-              style={{ minHeight: '30px', width: '300px' }} 
+                cartMessage ? "opacity-100 bg-gray-200 text-gray-600" : "opacity-0"
+              }`}
+              style={{ minHeight: "30px", width: "300px" }}
             >
               {cartMessage}
             </div>
@@ -160,7 +208,6 @@ const BookDetailsPage = () => {
         </div>
 
         <ReviewWindow book={book} />
-
       </div>
     </div>
   );

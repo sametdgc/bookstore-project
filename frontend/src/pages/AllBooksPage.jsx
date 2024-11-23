@@ -1,6 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { getAllBooks, getGenres, fetchUser, addItemToCart, addItemToLocalCart } from "../services/api";
+import {
+  getAllBooks,
+  getGenres,
+  fetchUser,
+  addItemToCart,
+  addItemToLocalCart,
+  getWishlistByUserId,
+  addBookToWishlist,
+  removeBookFromWishlist,
+  getLocalWishlistItems,
+  addItemToLocalWishlist,
+  removeItemFromLocalWishlist,
+} from "../services/api";
 import BookCard from "../components/common/BookCard";
 
 const AllBooksPage = () => {
@@ -11,22 +23,34 @@ const AllBooksPage = () => {
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
-  const [cartMessage, setCartMessage] = useState(""); 
-  const [user, setUser] = useState(null); 
+  const [cartMessage, setCartMessage] = useState("");
+  const [wishlist, setWishlist] = useState([]);
+  const [user, setUser] = useState(null);
   const pageSize = parseInt(searchParams.get("pageSize")) || 10;
   const pageNum = parseInt(searchParams.get("pageNum")) || 1;
 
-  // Fetch books, genres, and current user on component mount
+  // Fetch books, genres, current user, and wishlist on component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         const booksData = await getAllBooks(pageSize, (pageNum - 1) * pageSize);
         const genresData = await getGenres();
-        const currentUser = await fetchUser(); 
+        const currentUser = await fetchUser();
         setBooks(booksData);
         setGenres(genresData);
         setFilteredBooks(booksData);
-        setUser(currentUser); 
+        setUser(currentUser);
+
+        if (currentUser) {
+          // Logged-in user: fetch wishlist from the database
+          const userId = currentUser.user_metadata.custom_incremented_id;
+          const wishlistData = await getWishlistByUserId(userId);
+          setWishlist(wishlistData);
+        } else {
+          // Anonymous user: fetch wishlist from localStorage
+          const localWishlist = getLocalWishlistItems();
+          setWishlist(localWishlist);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -82,15 +106,6 @@ const AllBooksPage = () => {
     setSearchParams({ pageSize, pageNum: newPageNum });
   };
 
-  // Add to Wishlist function
-  const handleAddToWishlist = (book) => {
-    const existingWishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
-    if (!existingWishlist.find((item) => item.book_id === book.book_id)) {
-      const updatedWishlist = [...existingWishlist, book];
-      localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
-    }
-  };
-
   // Add to Cart function
   const handleAddToCart = async (book) => {
     const { book_id, price } = book;
@@ -106,6 +121,38 @@ const AllBooksPage = () => {
 
     setCartMessage(`Product is successfully added to your cart!`);
     setTimeout(() => setCartMessage(""), 2000);
+  };
+
+  // Add to or Remove from Wishlist function
+  const handleWishlistToggle = async (book) => {
+    const { book_id } = book;
+    const isInWishlist = wishlist.some((item) => item.book_id === book_id);
+
+    if (isInWishlist) {
+      // Remove from wishlist
+      if (user) {
+        const userId = user.user_metadata.custom_incremented_id;
+        await removeBookFromWishlist(userId, book_id);
+      } else {
+        const updatedWishlist = removeItemFromLocalWishlist(book_id);
+        setWishlist(updatedWishlist);
+      }
+    } else {
+      // Add to wishlist
+      if (user) {
+        const userId = user.user_metadata.custom_incremented_id;
+        await addBookToWishlist(userId, book_id);
+      } else {
+        addItemToLocalWishlist(book);
+        setWishlist([...wishlist, book]);
+      }
+    }
+
+    // Update the wishlist state
+    const updatedWishlist = isInWishlist
+      ? wishlist.filter((item) => item.book_id !== book_id)
+      : [...wishlist, book];
+    setWishlist(updatedWishlist);
   };
 
   return (
@@ -127,6 +174,8 @@ const AllBooksPage = () => {
             key={book.book_id}
             book={book}
             onAddToCart={() => handleAddToCart(book)}
+            onAddToWishlist={() => handleWishlistToggle(book)}
+            isInWishlist={wishlist.some((item) => item.book_id === book.book_id)}
           />
         ))}
       </div>
