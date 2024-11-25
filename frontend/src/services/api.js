@@ -113,14 +113,6 @@ export const updateBook = async (bookId, updates) => {
 //   return data;
 // };
 
-// PLACE an order
-export const placeOrder = async (order) => {
-  const { data, error } = await supabase.from("orders").insert([order]);
-  if (error) console.log("Error placing order:", error.message);
-  return data;
-};
-
-// GET all orders of a user
 
 // ADD a new review
 export const addReview = async (review) => {
@@ -746,22 +738,6 @@ export const syncLocalCartToDatabase = async (localCart, userId) => {
   }
 };
 
-
-// Subtract items from stock when a purchase is made
-export const subtractItemsFromStock = async (bookId, quantity) => {
-  const { data, error } = await supabase
-    .from("books")
-    .update({ available_quantity: supabase.raw("available_quantity - ?", [quantity]) })
-    .eq("book_id", bookId);
-
-  if (error) {
-    console.log("Error updating stock:", error.message);
-    return null;
-  }
-
-  return data;
-};
-
 /* 
 
   WISHLIST SERVICES
@@ -889,3 +865,119 @@ export const syncLocalWishlistToDatabase = async (localWishlist, userId) => {
     console.error("Error syncing wishlist to database:", error);
   }
 };
+
+
+/*
+
+  PLACING AN ORDER
+
+*/
+
+export const placeOrder = async (orderDetails, orderItems) => {
+  try {
+    // Insert order into the "orders" table
+    const { data: newOrder, error: orderError } = await supabase
+      .from("orders")
+      .insert([orderDetails])
+      .select()
+      .single();
+
+    if (orderError) {
+      console.error("Error placing order:", orderError.message);
+      throw orderError;
+    }
+
+    console.log("New Order Created:", newOrder);
+
+    // insert order items into "orderitems"
+    const formattedItems = orderItems.map((item) => ({
+      order_id: newOrder.order_id,
+      book_id: item.book_id,
+      quantity: item.quantity,
+      item_price: item.price,
+    }));
+
+    const { error: itemsError } = await supabase.from("orderitems").insert(formattedItems);
+
+    if (itemsError) {
+      console.error("Error inserting into orderitems:", itemsError.message);
+      throw itemsError;
+    }
+
+    console.log("Order Items inserted successfully:", formattedItems);
+
+    // subtract stock for each book
+    for (const item of orderItems) {
+      const stockUpdateSuccess = await subtractItemsFromStock(item.book_id, item.quantity);
+
+      // if stock update fails, log and stop further execution
+      if (!stockUpdateSuccess) {
+        throw new Error(`Stock update failed for book_id: ${item.book_id}`);
+      }
+    }
+
+    // clear the cart items for the user
+    const clearCartResult = await clearCartItems(orderDetails.user_id);
+    if (!clearCartResult.success) {
+      throw new Error("Failed to clear the cart items after placing the order.");
+    }
+
+    console.log("Cart items cleared successfully for user_id:", orderDetails.user_id);
+
+    return { success: true, order: newOrder };
+  } catch (error) {
+    console.error("Order placement failed:", error.message);
+    return { success: false, message: error.message };
+  }
+};
+
+
+export const subtractItemsFromStock = async (bookId, quantity) => {
+  try {
+    const { error } = await supabase.rpc("subtract_from_stock", {
+      book_id: bookId,
+      decrement_by: quantity,
+    });
+    if (error) {
+      console.error(`Error subtracting stock for book_id ${bookId}:`, error.message);
+      return false; 
+    }
+    console.log(`Stock updated successfully for book_id: ${bookId}`);
+    return true; 
+  } catch (error) {
+    console.error(`Unexpected error subtracting stock for book_id ${bookId}:`, error.message);
+    return false; 
+  }
+};
+
+// Clear all items in the cart for a specific user
+export const clearCartItems = async (userId) => {
+  try {
+    
+    const cart = await getOrCreateCartByUserId(userId);
+
+    if (!cart) {
+      console.log(`Cart not found for user_id: ${userId}`);
+      return { success: true }; 
+    }
+
+    const { error } = await supabase
+      .from("cartitems") 
+      .delete()
+      .eq("cart_id", cart.cart_id); 
+
+    if (error) {
+      console.error("Error clearing cart items:", error.message);
+      return { success: false, message: error.message };
+    }
+
+    console.log(`Cart items cleared for user_id: ${userId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Unexpected error in clearCartItems:", error.message);
+    return { success: false, message: error.message };
+  }
+};
+
+
+// GET all orders of a user
