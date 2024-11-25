@@ -10,6 +10,26 @@ export const getGenres = async () => {
   return data;
 };
 
+//Fetch all languages
+export const getLanguages = async () => {
+  const { data, error } = await supabase.from("languages").select("*");
+  if (error) {
+    console.log("Error fetching languages:", error.message);
+    return [];
+  }
+  return data;
+};
+
+//Fetch all authors
+export const getAuthors = async () => {
+  const { data, error } = await supabase.from("authors").select("*");
+  if (error) {
+    console.log("Error fetching authors:", error.message);
+    return [];
+  }
+  return data;
+};
+
 // GET all books with pagination
 export const getAllBooks = async (limit, offset) => {
   const { data, error } = await supabase

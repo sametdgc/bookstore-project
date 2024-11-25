@@ -47,7 +47,7 @@ const SearchBar = () => {
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && results.length > 0) {
-      navigate("/search", { state: { searchResults: results } });
+      navigate("/search", { state: { books: results } });
       setIsDropdownOpen(false);
       inputRef.current.blur(); // Remove focus from the input on Enter
     }
@@ -55,7 +55,7 @@ const SearchBar = () => {
 
   const handleSearchClick = () => {
     if (results.length > 0) {
-      navigate("/search", { state: { searchResults: results } });
+      navigate("/search", { state: { books: results } });
       setIsDropdownOpen(false);
       inputRef.current.blur(); // Remove focus from the input on click
     }
