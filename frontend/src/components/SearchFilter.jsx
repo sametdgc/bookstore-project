@@ -1,28 +1,59 @@
 import React, { useState, useEffect } from "react";
-import { getGenres } from "../services/api";
+import { getGenres, getLanguages } from "../services/api";
 
-const SearchFilter = ({ onFilterChange, onCollapseChange }) => {
+const SearchFilter = ({
+  onFilterChange,
+  onSortChange,
+  onCollapseChange,
+  genreCounts,
+  languageCounts,
+  authorCounts,
+  authors, // All authors passed from SearchPage
+}) => {
   const [genres, setGenres] = useState([]); // Stores fetched genres
-  const [selectedGenres, setSelectedGenres] = useState([]); // Stores selected genre IDs
+  const [languages, setLanguages] = useState([]); // Stores fetched languages
+  const [selectedGenres, setSelectedGenres] = useState([]); // Selected genre IDs
+  const [selectedLanguages, setSelectedLanguages] = useState([]); // Selected language IDs
+  const [selectedAuthors, setSelectedAuthors] = useState([]); // Selected author IDs
+  const [authorSearch, setAuthorSearch] = useState(""); // Search input for authors
+  const [filteredAuthors, setFilteredAuthors] = useState([]); // Authors displayed based on search
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(100);
   const [isCollapsed, setIsCollapsed] = useState(false); // Internal toggle for collapse
+  const [sortOrder, setSortOrder] = useState("asc"); // Sort order
 
-  // Fetch genres on component mount
+  // Fetch genres and languages on component mount
   useEffect(() => {
-    const fetchGenres = async () => {
+    const fetchFilters = async () => {
       try {
-        const data = await getGenres();
-        setGenres(data);
+        const [fetchedGenres, fetchedLanguages] = await Promise.all([
+          getGenres(),
+          getLanguages(),
+        ]);
+        setGenres(fetchedGenres);
+        setLanguages(fetchedLanguages);
       } catch (error) {
-        console.error("Failed to fetch genres:", error);
+        console.error("Failed to fetch filters:", error);
       }
     };
-    fetchGenres();
+    fetchFilters();
   }, []);
 
-  // Handle checkbox toggle
-  const handleCheckboxChange = (genreId) => {
+  // Update filtered authors whenever the search input changes
+  useEffect(() => {
+    if (authorSearch.trim() === "") {
+      setFilteredAuthors(authors); // Show all authors if no search input
+    } else {
+      setFilteredAuthors(
+        authors.filter((author) =>
+          author.author_name.toLowerCase().includes(authorSearch.toLowerCase())
+        )
+      );
+    }
+  }, [authorSearch, authors]);
+
+  // Handle genre checkbox toggle
+  const handleGenreCheckboxChange = (genreId) => {
     setSelectedGenres((prev) =>
       prev.includes(genreId)
         ? prev.filter((id) => id !== genreId) // Remove if already selected
@@ -30,9 +61,40 @@ const SearchFilter = ({ onFilterChange, onCollapseChange }) => {
     );
   };
 
+  // Handle language checkbox toggle
+  const handleLanguageCheckboxChange = (languageId) => {
+    setSelectedLanguages((prev) =>
+      prev.includes(languageId)
+        ? prev.filter((id) => id !== languageId) // Remove if already selected
+        : [...prev, languageId] // Add if not selected
+    );
+  };
+
+  // Handle author checkbox toggle
+  const handleAuthorCheckboxChange = (authorId) => {
+    setSelectedAuthors((prev) =>
+      prev.includes(authorId)
+        ? prev.filter((id) => id !== authorId) // Remove if already selected
+        : [...prev, authorId] // Add if not selected
+    );
+  };
+
+  // Handle sort order change
+  const handleSortOrderChange = (e) => {
+    const selectedOrder = e.target.value;
+    setSortOrder(selectedOrder);
+    onSortChange(selectedOrder); // Notify parent of sort change
+  };
+
   // Apply filters
   const handleApplyFilters = () => {
-    onFilterChange({ genre_ids: selectedGenres, minPrice, maxPrice });
+    onFilterChange({
+      genre_ids: selectedGenres,
+      language_ids: selectedLanguages,
+      author_ids: selectedAuthors,
+      minPrice,
+      maxPrice,
+    });
   };
 
   // Toggle collapse
@@ -61,6 +123,19 @@ const SearchFilter = ({ onFilterChange, onCollapseChange }) => {
         <div>
           <h2 className="text-xl font-bold mb-4">Filters</h2>
           <div className="flex flex-col gap-4">
+            {/* Sort By Dropdown */}
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Sort By</h3>
+              <select
+                value={sortOrder}
+                onChange={handleSortOrderChange}
+                className="w-full p-2 border rounded-lg"
+              >
+                <option value="asc">Price: Low to High</option>
+                <option value="desc">Price: High to Low</option>
+              </select>
+            </div>
+
             {/* Genre Dropdown with Checkboxes */}
             <div>
               <h3 className="text-lg font-semibold mb-2">Genres</h3>
@@ -71,14 +146,84 @@ const SearchFilter = ({ onFilterChange, onCollapseChange }) => {
                       type="checkbox"
                       id={`genre-${genre.genre_id}`}
                       value={genre.genre_id}
-                      onChange={() => handleCheckboxChange(genre.genre_id)}
+                      onChange={() => handleGenreCheckboxChange(genre.genre_id)}
                       className="cursor-pointer"
                     />
                     <label
                       htmlFor={`genre-${genre.genre_id}`}
                       className="cursor-pointer text-sm truncate w-full"
                     >
-                      {genre.genre_name}
+                      {genre.genre_name}{" "}
+                      <span className="text-gray-500">
+                        ({genreCounts[genre.genre_id] || 0})
+                      </span>
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Language Dropdown with Checkboxes */}
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Languages</h3>
+              <div className="border rounded-lg shadow-sm bg-white p-2 max-h-40 overflow-y-auto">
+                {languages.map((language) => (
+                  <div key={language.language_id} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`language-${language.language_id}`}
+                      value={language.language_id}
+                      onChange={() =>
+                        handleLanguageCheckboxChange(language.language_id)
+                      }
+                      className="cursor-pointer"
+                    />
+                    <label
+                      htmlFor={`language-${language.language_id}`}
+                      className="cursor-pointer text-sm truncate w-full"
+                    >
+                      {language.language_name}{" "}
+                      <span className="text-gray-500">
+                        ({languageCounts[language.language_id] || 0})
+                      </span>
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Author Dropdown with Checkboxes and Search */}
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Authors</h3>
+              {/* Search Input */}
+              <input
+                type="text"
+                placeholder="Search authors..."
+                value={authorSearch}
+                onChange={(e) => setAuthorSearch(e.target.value)}
+                className="w-full p-2 mb-2 border rounded-lg"
+              />
+              {/* Author List */}
+              <div className="border rounded-lg shadow-sm bg-white p-2 max-h-40 overflow-y-auto">
+                {filteredAuthors.map((author) => (
+                  <div key={author.author_id} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`author-${author.author_id}`}
+                      value={author.author_id}
+                      onChange={() =>
+                        handleAuthorCheckboxChange(author.author_id)
+                      }
+                      className="cursor-pointer"
+                    />
+                    <label
+                      htmlFor={`author-${author.author_id}`}
+                      className="cursor-pointer text-sm truncate w-full"
+                    >
+                      {author.author_name}{" "}
+                      <span className="text-gray-500">
+                        ({authorCounts[author.author_id] || 0})
+                      </span>
                     </label>
                   </div>
                 ))}

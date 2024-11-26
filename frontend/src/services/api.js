@@ -82,13 +82,14 @@ export const getBookDetailsById = async (bookId) => {
 };
 
 // GET books by id
-export const getBookById = async (bookId) => {
+export const getBookById = async (bookIds) => {
   const { data, error } = await supabase
     .from("books")
     .select("*")
-    .eq("book_id", bookId)
-    .single();
-  if (error) console.log("Error fetching book:", error.message);
+    .in("book_id", bookIds);
+  if (error) {
+    console.log("Error fetching books by ID:", error.message);
+  }
   return data;
 };
 
