@@ -19,6 +19,7 @@ import {
   MyProfilePage,
   CheckoutPage,
   ContactPage,
+  PmDashboard
 } from "./pages";
 import { TopNavBar, SubscriptionBanner, Footer } from "./components";
 import SearchPage from "./pages/SearchPage";
@@ -54,6 +55,7 @@ function App() {
           <Route path="/contact" element={<ContactPage />} />{" "}
           {/* <-- Add this route */}
           <Route path="*" element={<MainPage />} />
+          <Route path="/pm-dashboard" element={<PmDashboard />} /> {/* Product Manager Dashboard */}
         </Routes>
       </div>
       <SubscriptionBanner />

@@ -10,6 +10,26 @@ export const getGenres = async () => {
   return data;
 };
 
+//Fetch all languages
+export const getLanguages = async () => {
+  const { data, error } = await supabase.from("languages").select("*");
+  if (error) {
+    console.log("Error fetching languages:", error.message);
+    return [];
+  }
+  return data;
+};
+
+//Fetch all authors
+export const getAuthors = async () => {
+  const { data, error } = await supabase.from("authors").select("*");
+  if (error) {
+    console.log("Error fetching authors:", error.message);
+    return [];
+  }
+  return data;
+};
+
 // GET all books with pagination
 export const getAllBooks = async (limit, offset) => {
   const { data, error } = await supabase
@@ -62,13 +82,14 @@ export const getBookDetailsById = async (bookId) => {
 };
 
 // GET books by id
-export const getBookById = async (bookId) => {
+export const getBookById = async (bookIds) => {
   const { data, error } = await supabase
     .from("books")
     .select("*")
-    .eq("book_id", bookId)
-    .single();
-  if (error) console.log("Error fetching book:", error.message);
+    .in("book_id", bookIds);
+  if (error) {
+    console.log("Error fetching books by ID:", error.message);
+  }
   return data;
 };
 
@@ -879,3 +900,27 @@ export const syncLocalWishlistToDatabase = async (localWishlist, userId) => {
     console.error("Error syncing wishlist to database:", error);
   }
 };
+
+
+// Get role of a user by user_id
+// Fetch the role of a user by their user ID
+export const getUserRoleById = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('role_id, role:roles(role_name)')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user role:', error.message);
+      return null;
+    }
+
+    return data.role;
+  } catch (err) {
+    console.error('Unexpected error fetching user role:', err);
+    return null;
+  }
+};
+

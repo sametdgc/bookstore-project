@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Link,useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
-import {testSupabaseConnection, syncLocalCartToDatabase, getLocalCartItems} from '../services/api';
+import { testSupabaseConnection, syncLocalCartToDatabase, getLocalCartItems, getUserRoleById } from '../services/api';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -9,44 +9,56 @@ const LoginForm = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate(); 
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     try {
       testSupabaseConnection();
-  
+
       // Step 1: Authenticate the user
       const { data: { user }, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-  
+
       if (error) {
         console.error("Login error details:", error);
         setError('Wrong email or password, please try again.');
         return;
       }
-  
+
       console.log('User signed in:', user);
-  
-      // Step 2: Fetch the user's ID from user metadata
+
       const userId = user.user_metadata.custom_incremented_id;
-  
-      // Step 3: Get the local cart items
-      const localCart = getLocalCartItems();
-  
-      // Step 4: Sync the local cart to the database
-      await syncLocalCartToDatabase(localCart, userId);
-  
-      // Step 5: Navigate to the homepage or shopping cart
-      navigate('/shopping-cart'); // Redirect to shopping cart after syncing
+      
+      const role = await getUserRoleById(userId);
+      if (!role) {
+        console.error("Error fetching user role.");
+        setError('An unexpected error occurred. Please try again.');
+        return;
+      }
+
+
+      
+      switch (role.role_name) {
+        case 'Product Manager':
+          navigate('/pm-dashboard'); 
+          break;
+        case 'customer':
+          
+        
+          const localCart = getLocalCartItems();
+          await syncLocalCartToDatabase(localCart, userId);
+          navigate('/shopping-cart'); 
+          break;
+        default:
+          navigate('/'); 
+      }
     } catch (err) {
       console.error('Login error:', err);
       setError('An unexpected error occurred. Please try again.');
     }
   };
-  
 
   return (
     <div className="bg-white bg-opacity-90 p-8 rounded-lg shadow-lg w-full max-w-md">
