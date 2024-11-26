@@ -113,6 +113,14 @@ export const updateBook = async (bookId, updates) => {
 //   return data;
 // };
 
+// PLACE an order
+export const placeOrder = async (order) => {
+  const { data, error } = await supabase.from("orders").insert([order]);
+  if (error) console.log("Error placing order:", error.message);
+  return data;
+};
+
+// GET all orders of a user
 
 // ADD a new review
 export const addReview = async (review) => {
@@ -241,10 +249,10 @@ export const getUserData = async () => {
     const userId = user.user_metadata.custom_incremented_id;
     // Query the users table with the user_id
     const { data, error } = await supabase
-      .from("users") 
-      .select("*") 
-      .eq("user_id", userId) 
-      .single(); 
+      .from("users")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
     if (error) {
       console.error("Error fetching user data:", error.message);
       return null;
@@ -269,7 +277,7 @@ export const updateUserData = async (updatedData) => {
     const userId = user.user_metadata.custom_incremented_id;
 
     const { data, error } = await supabase
-      .from("users") 
+      .from("users")
       .update({ full_name, phone_number, tax_id })
       .eq("user_id", userId);
 
@@ -317,7 +325,6 @@ export const updateUserData = async (updatedData) => {
   }
 };
 */
-
 // GET user addresses
 export const getUserAddresses = async () => {
   try {
@@ -335,7 +342,8 @@ export const getUserAddresses = async () => {
         address:addresses (
           city,
           district,
-          address_details
+          address_details,
+          zip_code
         )
       `
       )
@@ -363,10 +371,11 @@ export const addNewAddress = async (userId, addressData) => {
           city: addressData.city,
           district: addressData.district,
           address_details: addressData.address_details,
+          zip_code: addressData.zip_code, // Add zip_code
         },
       ])
       .select()
-      .single(); 
+      .single();
 
     if (addressError)
       throw new Error("Error adding address: " + addressError.message);
@@ -376,7 +385,7 @@ export const addNewAddress = async (userId, addressData) => {
       .insert([
         {
           user_id: userId,
-          address_id: newAddress.address_id, 
+          address_id: newAddress.address_id,
           address_title: addressData.address_title,
         },
       ]);
@@ -394,20 +403,27 @@ export const addNewAddress = async (userId, addressData) => {
 };
 
 // UPDATE an existing address for a user
-export const updateAddressDetails = async (userId, addressId, updatedAddressData) => {
+export const updateAddressDetails = async (
+  userId,
+  addressId,
+  updatedAddressData
+) => {
   try {
-    // Update the `addresses` table with the new details (city, district, address_details)
+    // Update the `addresses` table with the new details (city, district, address_details, zip_code)
     const { error: addressError } = await supabase
       .from("addresses")
       .update({
         city: updatedAddressData.city,
         district: updatedAddressData.district,
         address_details: updatedAddressData.address_details,
+        zip_code: updatedAddressData.zip_code, // Update zip_code
       })
       .eq("address_id", addressId); // Match the address_id
 
     if (addressError) {
-      throw new Error("Error updating address details: " + addressError.message);
+      throw new Error(
+        "Error updating address details: " + addressError.message
+      );
     }
 
     // Update the `address_title` in the `useraddresses` table if provided
@@ -420,7 +436,9 @@ export const updateAddressDetails = async (userId, addressId, updatedAddressData
       .eq("address_id", addressId); // Match the address_id
 
     if (userAddressError) {
-      throw new Error("Error updating address title: " + userAddressError.message);
+      throw new Error(
+        "Error updating address title: " + userAddressError.message
+      );
     }
 
     return { success: true };
@@ -450,7 +468,6 @@ export const deleteAddress = async (addressId) => {
     return { success: false, error: error.message };
   }
 };
-
 
 // GET user orders
 export const getUserOrders = async () => {
@@ -498,10 +515,10 @@ export const getUserOrders = async () => {
 export const getOrCreateCartByUserId = async (userId) => {
   // First, check if the cart exists
   const { data: cart, error } = await supabase
-    .from('cart')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle(); 
+    .from("cart")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
 
   if (error && error.code !== "PGRST116") {
     // PGRST116: No rows returned
@@ -516,7 +533,7 @@ export const getOrCreateCartByUserId = async (userId) => {
 
   // If the cart doesn't exist, create a new one
   const { data: newCart, error: insertError } = await supabase
-    .from('cart')
+    .from("cart")
     .insert([{ user_id: userId }])
     .single();
 
@@ -542,11 +559,11 @@ export const addItemToCart = async (userId, bookId, quantity, price) => {
 
   // Check if the item already exists in the cart
   const { data: existingItem, error: existingError } = await supabase
-    .from('cartitems')
-    .select('*')
-    .eq('cart_id', cartId)
-    .eq('book_id', bookId)
-    .maybeSingle(); 
+    .from("cartitems")
+    .select("*")
+    .eq("cart_id", cartId)
+    .eq("book_id", bookId)
+    .maybeSingle();
 
   if (existingError && existingError.code !== "PGRST116") {
     console.log("Error checking cart item:", existingError.message);
@@ -561,7 +578,7 @@ export const addItemToCart = async (userId, bookId, quantity, price) => {
 
   // If the item doesn't exist, insert it
   const { data, error } = await supabase
-    .from('cartitems')
+    .from("cartitems")
     .insert([{ cart_id: cartId, book_id: bookId, quantity, price }]);
 
   if (error) {
@@ -574,7 +591,7 @@ export const addItemToCart = async (userId, bookId, quantity, price) => {
 
 export const updateCartItemQuantity = async (cartId, bookId, quantity) => {
   const { data, error } = await supabase
-    .from('cartitems')
+    .from("cartitems")
     .update({ quantity })
     .eq("cart_id", cartId)
     .eq("book_id", bookId);
@@ -598,8 +615,9 @@ export const getCartItems = async (userId) => {
   }
 
   const { data, error } = await supabase
-    .from('cartitems')
-    .select(`
+    .from("cartitems")
+    .select(
+      `
       *,
       book:books (
         title,
@@ -618,11 +636,10 @@ export const getCartItems = async (userId) => {
   return data;
 };
 
-
 // Remove an item from the cart
 export const removeCartItem = async (cartId, bookId) => {
   const { data, error } = await supabase
-    .from('cartitems')
+    .from("cartitems")
     .delete()
     .eq("cart_id", cartId)
     .eq("book_id", bookId);
@@ -635,12 +652,10 @@ export const removeCartItem = async (cartId, bookId) => {
   return data;
 };
 
-
 // Helper function to get items from localStorage-based cart
 export const getLocalCartItems = () => {
-  return JSON.parse(localStorage.getItem('cart')) || [];
+  return JSON.parse(localStorage.getItem("cart")) || [];
 };
-
 
 // Update quantity of an item in localStorage-based cart
 export const updateLocalCartItemQuantity = (bookId, newQuantity) => {
@@ -649,16 +664,13 @@ export const updateLocalCartItemQuantity = (bookId, newQuantity) => {
   // Update the quantity or remove the item if quantity <= 0
   const updatedCart = cart
     .map((item) =>
-      item.book_id === bookId
-        ? { ...item, quantity: newQuantity }
-        : item
+      item.book_id === bookId ? { ...item, quantity: newQuantity } : item
     )
-    .filter((item) => item.quantity > 0); 
-  
-  localStorage.setItem('cart', JSON.stringify(updatedCart));
+    .filter((item) => item.quantity > 0);
+
+  localStorage.setItem("cart", JSON.stringify(updatedCart));
   return updatedCart;
 };
-
 
 // Add item to localStorage-based cart for anonymous users
 export const addItemToLocalCart = (bookId, quantity, price) => {
@@ -674,7 +686,6 @@ export const addItemToLocalCart = (bookId, quantity, price) => {
   localStorage.setItem("cart", JSON.stringify(cart));
 };
 
-
 // Remove an item from localStorage-based cart
 export const removeItemFromLocalCart = (bookId) => {
   const cart = getLocalCartItems();
@@ -683,7 +694,7 @@ export const removeItemFromLocalCart = (bookId) => {
   localStorage.setItem("cart", JSON.stringify(updatedCart));
 
   console.log(`Removed item with bookId ${bookId} from local cart.`);
-  console.log('Updated local cart:', updatedCart);
+  console.log("Updated local cart:", updatedCart);
 
   return updatedCart;
 };
@@ -691,8 +702,8 @@ export const removeItemFromLocalCart = (bookId) => {
 export const syncLocalCartToDatabase = async (localCart, userId) => {
   try {
     // Fetch or create the user's database cart
-    const userCart = await getOrCreateCartByUserId(userId); 
-    const cartId = userCart.cart_id; 
+    const userCart = await getOrCreateCartByUserId(userId);
+    const cartId = userCart.cart_id;
     const userCartItems = await getCartItems(userId);
 
     // Create a map of existing database cart items by book_id
@@ -706,20 +717,25 @@ export const syncLocalCartToDatabase = async (localCart, userId) => {
 
       // Check if the book exists in the user's database cart
       const { data: existingCartItem, error: cartError } = await supabase
-        .from('cartitems')
-        .select('*')
-        .eq('cart_id', cartId) 
-        .eq('book_id', book_id)
+        .from("cartitems")
+        .select("*")
+        .eq("cart_id", cartId)
+        .eq("book_id", book_id)
         .maybeSingle(); // Avoids throwing an error for non-existent rows
 
-      if (cartError && cartError.code !== 'PGRST116') {
-        console.error(`Error checking book with ID ${book_id}:`, cartError.message);
+      if (cartError && cartError.code !== "PGRST116") {
+        console.error(
+          `Error checking book with ID ${book_id}:`,
+          cartError.message
+        );
         continue; // Skip to the next item
       }
 
       if (!existingCartItem) {
         // No rows returned, meaning the book is not yet in the user's cart
-        console.log(`Book with ID ${book_id} is not in the user's cart. Adding...`);
+        console.log(
+          `Book with ID ${book_id} is not in the user's cart. Adding...`
+        );
         await addItemToCart(userId, book_id, quantity, price);
       } else {
         // If the book exists, update its quantity
@@ -729,11 +745,11 @@ export const syncLocalCartToDatabase = async (localCart, userId) => {
     }
 
     // Clear the localStorage cart
-    localStorage.removeItem('cart');
+    localStorage.removeItem("cart");
 
     return await getCartItems(userId);
   } catch (error) {
-    console.error('Error syncing local cart to database:', error);
+    console.error("Error syncing local cart to database:", error);
     return [];
   }
 };
@@ -791,7 +807,6 @@ export const getWishlistByUserId = async (userId) => {
 
   return enrichedWishlist;
 };
-
 
 // REMOVE a book from the wishlist
 export const removeBookFromWishlist = async (userId, bookId) => {
@@ -851,8 +866,7 @@ export const syncLocalWishlistToDatabase = async (localWishlist, userId) => {
             `Error adding book with ID ${localItem.book_id}: ${error.message}`
           );
         }
-      }
-      else {
+      } else {
         console.log(
           `Book with ID ${localItem.book_id} is already in the wishlist. Skipping...`
         );
@@ -865,119 +879,3 @@ export const syncLocalWishlistToDatabase = async (localWishlist, userId) => {
     console.error("Error syncing wishlist to database:", error);
   }
 };
-
-
-/*
-
-  PLACING AN ORDER
-
-*/
-
-export const placeOrder = async (orderDetails, orderItems) => {
-  try {
-    // Insert order into the "orders" table
-    const { data: newOrder, error: orderError } = await supabase
-      .from("orders")
-      .insert([orderDetails])
-      .select()
-      .single();
-
-    if (orderError) {
-      console.error("Error placing order:", orderError.message);
-      throw orderError;
-    }
-
-    console.log("New Order Created:", newOrder);
-
-    // insert order items into "orderitems"
-    const formattedItems = orderItems.map((item) => ({
-      order_id: newOrder.order_id,
-      book_id: item.book_id,
-      quantity: item.quantity,
-      item_price: item.price,
-    }));
-
-    const { error: itemsError } = await supabase.from("orderitems").insert(formattedItems);
-
-    if (itemsError) {
-      console.error("Error inserting into orderitems:", itemsError.message);
-      throw itemsError;
-    }
-
-    console.log("Order Items inserted successfully:", formattedItems);
-
-    // subtract stock for each book
-    for (const item of orderItems) {
-      const stockUpdateSuccess = await subtractItemsFromStock(item.book_id, item.quantity);
-
-      // if stock update fails, log and stop further execution
-      if (!stockUpdateSuccess) {
-        throw new Error(`Stock update failed for book_id: ${item.book_id}`);
-      }
-    }
-
-    // clear the cart items for the user
-    const clearCartResult = await clearCartItems(orderDetails.user_id);
-    if (!clearCartResult.success) {
-      throw new Error("Failed to clear the cart items after placing the order.");
-    }
-
-    console.log("Cart items cleared successfully for user_id:", orderDetails.user_id);
-
-    return { success: true, order: newOrder };
-  } catch (error) {
-    console.error("Order placement failed:", error.message);
-    return { success: false, message: error.message };
-  }
-};
-
-
-export const subtractItemsFromStock = async (bookId, quantity) => {
-  try {
-    const { error } = await supabase.rpc("subtract_from_stock", {
-      book_id: bookId,
-      decrement_by: quantity,
-    });
-    if (error) {
-      console.error(`Error subtracting stock for book_id ${bookId}:`, error.message);
-      return false; 
-    }
-    console.log(`Stock updated successfully for book_id: ${bookId}`);
-    return true; 
-  } catch (error) {
-    console.error(`Unexpected error subtracting stock for book_id ${bookId}:`, error.message);
-    return false; 
-  }
-};
-
-// Clear all items in the cart for a specific user
-export const clearCartItems = async (userId) => {
-  try {
-    
-    const cart = await getOrCreateCartByUserId(userId);
-
-    if (!cart) {
-      console.log(`Cart not found for user_id: ${userId}`);
-      return { success: true }; 
-    }
-
-    const { error } = await supabase
-      .from("cartitems") 
-      .delete()
-      .eq("cart_id", cart.cart_id); 
-
-    if (error) {
-      console.error("Error clearing cart items:", error.message);
-      return { success: false, message: error.message };
-    }
-
-    console.log(`Cart items cleared for user_id: ${userId}`);
-    return { success: true };
-  } catch (error) {
-    console.error("Unexpected error in clearCartItems:", error.message);
-    return { success: false, message: error.message };
-  }
-};
-
-
-// GET all orders of a user
