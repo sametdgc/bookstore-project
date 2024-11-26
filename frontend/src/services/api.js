@@ -154,7 +154,7 @@ export const getReviewsForBook = async (bookId) => {
 
 export const searchBooks = async (query) => {
   // Query for books by title or ISBN
-  const { data: booksByTitleOrIsbnOrDesc, error: mainError } = await supabase
+  const { data: booksByTitleOrIsbnOrDescorPub, error: mainError } = await supabase
     .from("books")
     .select(
       `
@@ -162,7 +162,7 @@ export const searchBooks = async (query) => {
       author:authors (author_name) -- Join the authors table to get author_name
     `
     )
-    .or(`title.ilike.%${query}%,isbn.ilike.%${query}%,description.ilike.%${query}%`); // Search in title, ISBN, or description
+    .or(`title.ilike.%${query}%,isbn.ilike.%${query}%,description.ilike.%${query}%,publisher.ilike.%${query}%`); // Search in title, ISBN, or description
 
   if (mainError) {
     console.log("Error fetching books by title or ISBN:", mainError.message);
@@ -182,15 +182,15 @@ export const searchBooks = async (query) => {
 
   if (authorError) {
     console.log("Error fetching books by author:", authorError.message);
-    return booksByTitleOrIsbnOrDesc; // Return partial results if author query fails
+    return booksByTitleOrIsbnOrDescorPub; // Return partial results if author query fails
   }
 
   // Combine and deduplicate results
   const combinedResults = [
-    ...booksByTitleOrIsbnOrDesc,
+    ...booksByTitleOrIsbnOrDescorPub,
     ...booksByAuthor.filter(
       (bookByAuthor) =>
-        !booksByTitleOrIsbnOrDesc.some((book) => book.book_id === bookByAuthor.book_id)
+        !booksByTitleOrIsbnOrDescorPub.some((book) => book.book_id === bookByAuthor.book_id)
     ),
   ];
 
