@@ -143,7 +143,7 @@ const SearchPage = () => {
         <div
           className={`transition-all duration-300 ${
             isFilterCollapsed ? "w-16" : "w-64"
-          } border border-blue-500`}
+          }`}
         >
           <SearchFilter
             onFilterChange={handleFilterChange}
