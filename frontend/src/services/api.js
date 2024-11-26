@@ -973,7 +973,7 @@ export const subtractItemsFromStock = async (bookId, quantity) => {
 
 // Clear all items in the cart for a specific user
 export const clearCartItems = async (userId) => {
-  try {
+  try { 
     
     const cart = await getOrCreateCartByUserId(userId);
 
@@ -1002,3 +1002,28 @@ export const clearCartItems = async (userId) => {
 
 
 // GET all orders of a user
+
+
+
+
+// Get role of a user by user_id
+// Fetch the role of a user by their user ID
+export const getUserRoleById = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('role_id, role:roles(role_name)')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user role:', error.message);
+      return null;
+    }
+
+    return data.role;
+  } catch (err) {
+    console.error('Unexpected error fetching user role:', err);
+    return null;
+  }
+};

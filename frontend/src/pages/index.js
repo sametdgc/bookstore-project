@@ -12,7 +12,7 @@ import MyProfilePage from "./MyProfilePage";
 import CheckoutPage from "./CheckoutPage";
 import HelpAndSupportPage from "./HelpAndSupportPage";
 import ContactPage from "./footerPages/ContactPage";
-
+import PmDashboard from "./pm/PmDashboard";
 export {
   LoginPage,
   RegisterPage,
@@ -28,4 +28,5 @@ export {
   CheckoutPage,
   HelpAndSupportPage,
   ContactPage,
+  PmDashboard
 };
