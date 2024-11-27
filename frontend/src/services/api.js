@@ -93,46 +93,6 @@ export const getBookById = async (bookIds) => {
   return data;
 };
 
-// UPDATE a book
-export const updateBook = async (bookId, updates) => {
-  const { data, error } = await supabase
-    .from("books")
-    .update(updates)
-    .eq("book_id", bookId);
-  if (error) console.log("Error updating book:", error.message);
-  return data;
-};
-
-// // GET cart of a user
-// export const getCartByUserId = async (userId) => {
-//   const { data, error } = await supabase
-//       .from('Cart')
-//       .select('*')
-//       .eq('user_id', userId)
-//       .single();
-//   if (error) console.log('Error fetching cart:', error.message);
-//   return data;
-// };
-
-// // ADD an item to the cart
-// export const addItemToCart = async (cartId, cartItem) => {
-//   const { data, error } = await supabase
-//       .from('CartItems')
-//       .insert([{ cart_id: cartId, ...cartItem }]);
-//   if (error) console.log('Error adding item to cart:', error.message);
-//   return data;
-// };
-
-// // UPDATE an item's quantity in the cart
-// export const updateCartItemQuantity = async (cartId, bookId, quantity) => {
-//   const { data, error } = await supabase
-//       .from('CartItems')
-//       .update({ quantity })
-//       .eq('cart_id', cartId)
-//       .eq('book_id', bookId);
-//   if (error) console.log('Error updating cart item:', error.message);
-//   return data;
-// };
 
 // PLACE an order
 export const placeOrder = async (order) => {
@@ -141,24 +101,6 @@ export const placeOrder = async (order) => {
   return data;
 };
 
-// GET all orders of a user
-
-// ADD a new review
-export const addReview = async (review) => {
-  const { data, error } = await supabase.from("reviews").insert([review]);
-  if (error) console.log("Error adding review:", error.message);
-  return data;
-};
-
-// GET all reviews of a book
-export const getReviewsForBook = async (bookId) => {
-  const { data, error } = await supabase
-    .from("reviews")
-    .select("*")
-    .eq("book_id", bookId);
-  if (error) console.log("Error fetching reviews:", error.message);
-  return data;
-};
 
 // SEARCH for books by title, ISBN, or author
 export const searchBooks = async (query) => {
@@ -922,5 +864,156 @@ export const getUserRoleById = async (userId) => {
     console.error('Unexpected error fetching user role:', err);
     return null;
   }
+};
+
+// Fetch reviews for a book
+export const getReviewsForBook = async (bookId) => {
+  try {
+    const { data, error } = await supabase
+      .from("reviews")
+      .select(
+        `
+        *,
+        user:users (full_name)
+      `
+      )
+      .eq("book_id", bookId);
+
+    if (error) {
+      console.error("Error fetching reviews:", error.message);
+      return [];
+    }
+
+    return data;
+  } catch (err) {
+    console.error("Unexpected error fetching reviews:", err);
+    return [];
+  }
+};
+
+// Submit a new review
+export const submitReview = async (review) => {
+  try {
+    const { error } = await supabase.from("reviews").insert([review]);
+
+    if (error) {
+      console.error("Error submitting review:", error.message);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error("Unexpected error submitting review:", err);
+    return false;
+  }
+};
+
+// Approve a review
+export const approveReview = async (reviewId) => {
+  try {
+    const { error } = await supabase
+      .from("reviews")
+      .update({ approval_status: true })
+      .eq("review_id", reviewId);
+
+    if (error) {
+      console.error("Error approving review:", error.message);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error("Unexpected error approving review:", err);
+    return false;
+  }
+};
+
+// Fetch pending reviews for a book
+export const getPendingReviewsForBook = async (bookId) => {
+  try {
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("*")
+      .eq("book_id", bookId)
+      .eq("approval_status", false);
+
+    if (error) {
+      console.error("Error fetching pending reviews:", error.message);
+      return [];
+    }
+
+    return data;
+  } catch (err) {
+    console.error("Unexpected error fetching pending reviews:", err);
+    return [];
+  }
+};
+
+
+// Disapprove a review
+export const disapproveReview = async (reviewId) => {
+  const { data, error } = await supabase
+    .from('reviews')
+    .delete()
+    .eq('review_id', reviewId);
+
+  if (error) {
+    console.error('Error disapproving review:', error.message);
+    return null;
+  }
+
+  return data;
+};
+
+// Fetch all pending reviews for PM approval
+export const getPendingReviews = async ({
+  bookId = null,
+  rating = null,
+  searchQuery = '',
+  sortBy = 'created_at',
+  sortDirection = 'desc',
+  limit = 10,
+  offset = 0,
+} = {}) => {
+  let query = supabase
+    .from('reviews')
+    .select(
+      `
+      review_id,
+      book_id,
+      user_id,
+      rating,
+      comment,
+      created_at,
+      books (title, image_url),
+      users (full_name)
+      `
+    )
+    .eq('approval_status', false)
+    .order(sortBy, { ascending: sortDirection === 'asc' })
+    .range(offset, offset + limit - 1);
+
+  if (bookId) {
+    query = query.eq('book_id', bookId);
+  }
+
+  if (rating) {
+    query = query.eq('rating', rating);
+  }
+
+  if (searchQuery) {
+    query = query.or(
+      `books.title.ilike.%${searchQuery}%,users.full_name.ilike.%${searchQuery}%`
+    );
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching pending reviews:', error.message);
+    return [];
+  }
+
+  return data;
 };
 
