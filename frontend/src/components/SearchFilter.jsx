@@ -118,27 +118,31 @@ const SearchFilter = ({
       >
         {isCollapsed ? "➤" : "☰"}
       </button>
-
+  
       {/* Content */}
       {!isCollapsed && (
-        <div>
-          <h1 className="text-xl font-bold mb-4">Advanced Search</h1>
-          <div className="flex flex-col gap-4">
-            {/* Unified Sort Dropdown */}
-            <div>
-              <h2 className="text-lg font-semibold mb-2">Sort by</h2>
-              <select
-                value={sortOption}
-                onChange={handleSortChange}
-                className="w-full p-2 border rounded-lg"
-              >
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-                <option value="popularity-high">Popularity: Most Popular</option>
-                <option value="popularity-low">Popularity: Least Popular</option>
-              </select>
-            </div>
-
+        <div className="flex flex-col gap-6">
+          <h1 className="text-xl font-bold mb-4">Custom Search</h1>
+  
+          {/* Sorting Section */}
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-300">
+            <h2 className="text-lg font-semibold mb-2">Sort By</h2>
+            <select
+              value={sortOption}
+              onChange={handleSortChange}
+              className="w-full p-2 border rounded-lg"
+            >
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="popularity-high">Popularity: Most Popular</option>
+              <option value="popularity-low">Popularity: Least Popular</option>
+            </select>
+          </div>
+  
+          {/* Advanced Filters Section */}
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-300">
+            <h2 className="text-lg font-semibold mb-2">Advanced Filters</h2>
+  
             {/* Genres */}
             <div>
               <h3 className="text-lg font-semibold mb-2">Genres</h3>
@@ -161,9 +165,9 @@ const SearchFilter = ({
                 ))}
               </div>
             </div>
-
+  
             {/* Languages */}
-            <div>
+            <div className="mt-4">
               <h3 className="text-lg font-semibold mb-2">Languages</h3>
               <div className="border rounded-lg shadow-sm bg-white p-2 max-h-40 overflow-y-auto">
                 {languages.map((language) => (
@@ -186,9 +190,9 @@ const SearchFilter = ({
                 ))}
               </div>
             </div>
-
+  
             {/* Authors */}
-            <div>
+            <div className="mt-4">
               <h3 className="text-lg font-semibold mb-2">Authors</h3>
               <input
                 type="text"
@@ -218,29 +222,30 @@ const SearchFilter = ({
                 ))}
               </div>
             </div>
-
+  
             {/* Price Range */}
-            <div className="flex items-center gap-2">
-              <span>Price:</span>
-              <input
-                type="number"
-                value={minPrice}
-                onChange={(e) => setMinPrice(Number(e.target.value))}
-                className="w-20 p-2 border rounded-lg"
-              />
-              <span>-</span>
-              <input
-                type="number"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(Number(e.target.value))}
-                className="w-20 p-2 border rounded-lg"
-              />
+            <div className="flex items-center gap-2 mt-4">
+                <span>Price:</span>
+                <input
+                    type="number"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(Number(e.target.value))}
+                    className="w-20 p-2 border rounded-lg"
+                />
+                <span>-</span>
+                <input
+                    type="number"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(Number(e.target.value))}
+                    className="w-20 p-2 border rounded-lg"
+                />
             </div>
 
+  
             {/* Apply Filters Button */}
             <button
               onClick={handleApplyFilters}
-              className="p-2 bg-[#65aa92] text-white rounded-lg hover:bg-[#4c8a73]"
+              className="mt-4 p-2 bg-[#65aa92] text-white rounded-lg hover:bg-[#4c8a73]"
             >
               Apply Filters
             </button>
@@ -249,6 +254,9 @@ const SearchFilter = ({
       )}
     </div>
   );
+  
+  
+  
 };
 
 export default SearchFilter;

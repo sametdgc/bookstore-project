@@ -195,7 +195,7 @@ const SearchPage = () => {
         {/* Search Filter */}
         <div
           className={`transition-all duration-300 ${
-            isFilterCollapsed ? "w-16" : "w-64"
+            isFilterCollapsed ? "w-16" : "w-[300px]"
           }`}
         >
           <SearchFilter
