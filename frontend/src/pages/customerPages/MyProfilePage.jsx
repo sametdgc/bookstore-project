@@ -4,9 +4,9 @@ import {
   getUserOrders,
   fetchUser,
   updateUserData,
-} from "../services/api";
-import AddressesWindow from "../components/profilePage/AddressesWindow";
-import PersonalDetailsWindow from "../components/profilePage/PersonalDetailsWindow";
+} from "../../services/api";
+import AddressesWindow from "../../components/profilePage/AddressesWindow";
+import PersonalDetailsWindow from "../../components/profilePage/PersonalDetailsWindow";
 import { Link } from "react-router-dom";
 import { User, Book, ShoppingBag } from "lucide-react";
 

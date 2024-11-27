@@ -7,7 +7,7 @@ import {
   getWishlistByUserId,
   removeBookFromWishlist,
   syncLocalWishlistToDatabase,
-} from "../services/api";
+} from "../../services/api";
 
 const WishlistPage = () => {
   const [wishlist, setWishlist] = useState([]);

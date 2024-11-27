@@ -12,8 +12,8 @@ import {
   addBookToWishlist,
   removeBookFromWishlist,
   getWishlistByUserId,
-} from "../services/api";
-import ReviewWindow, { renderStars } from "../components/ReviewWindow";
+} from "../../services/api";
+import ReviewWindow, { renderStars } from "../../components/ReviewWindow";
 
 const BookDetailsPage = () => {
   const { book_id } = useParams();
@@ -156,7 +156,7 @@ const BookDetailsPage = () => {
         {/* Cart success message */}
         {cartMessage && (
           <div
-            className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-[#65aa92] shadow-md text-white px-4 py-2 rounded-lg shadow-md z-50 inline-block"
+            className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-[#65aa92] text-white px-4 py-2 rounded-lg shadow-md z-50 inline-block"
           >
             {cartMessage}
           </div>

@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import visaLogo from "../assets/visa-logo.png";
-import mastercardLogo from "../assets/logo-mastercard.png";
-import troyLogo from "../assets/troy-logo.png";
-import bkmExpressLogo from "../assets/bkm-express-logo.png";
+import visaLogo from "../../assets/visa-logo.png";
+import mastercardLogo from "../../assets/logo-mastercard.png";
+import troyLogo from "../../assets/troy-logo.png";
+import bkmExpressLogo from "../../assets/bkm-express-logo.png";
 import {
   fetchUser,
   getCartItems,
   placeOrder,
   getUserAddresses,
-} from "../services/api";
+} from "../../services/api";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 const CheckoutPage = () => {

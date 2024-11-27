@@ -1,5 +1,5 @@
 import React from 'react';
-import { HeroSection, MainContent } from '../components';
+import { HeroSection, MainContent } from '../../components';
 
 
 const MainPage = () => {

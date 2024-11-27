@@ -10,7 +10,7 @@ import {
   getLocalCartItems, 
   updateLocalCartItemQuantity, 
   removeItemFromLocalCart 
-} from '../services/api';
+} from '../../services/api';
 
 const ShoppingCart = () => {
   const [cart, setCart] = useState([]);

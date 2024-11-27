@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import BookCard from "../components/common/BookCard";
-import SearchFilter from "../components/SearchFilter"; // Reusable filter component
-import { getAllBooks, getBookById, getAuthors } from "../services/api"; // Updated API services
+import BookCard from "../../components/common/BookCard"; // Reusable book card component
+import SearchFilter from "../../components/SearchFilter"; // Reusable filter component
+import { getAllBooks, getBookById, getAuthors } from "../../services/api"; // Updated API services
 
 const SearchPage = () => {
   const [allBooks, setAllBooks] = useState([]); // All books

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getBooksByGenre, getGenreIdByName } from "../services/api";
-import BookCard from "../components/common/BookCard";
+import { getBooksByGenre, getGenreIdByName } from "../../services/api";
+import BookCard from "../../components/common/BookCard";
 
 const GenrePage = () => {
   const { genreName } = useParams();
