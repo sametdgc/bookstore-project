@@ -81,11 +81,25 @@ export const getBookDetailsById = async (bookId) => {
   return data;
 };
 
-// GET books by id
+// GET books by ids, works for a set of book ids
 export const getBookById = async (bookIds) => {
   const { data, error } = await supabase
     .from("books")
-    .select("*")
+    .select(
+      `
+      *,
+      author:authors (author_name),
+      genre:genres (genre_name),
+      language:languages (language_name),
+      reviews:reviews (
+        review_id,
+        user:user_id (full_name),
+        rating,
+        comment,
+        approval_status
+      )
+    `
+    )
     .in("book_id", bookIds);
   if (error) {
     console.log("Error fetching books by ID:", error.message);
@@ -102,26 +116,52 @@ export const placeOrder = async (order) => {
 };
 
 
-// SEARCH for books by title, ISBN, or author
 export const searchBooks = async (query) => {
-  const { data, error } = await supabase
+  // Query for books by title or ISBN
+  const { data: booksByTitleOrIsbnOrDescorPub, error: mainError } = await supabase
     .from("books")
     .select(
       `
       *,
-      author:authors (author_name)
+      author:authors (author_name) -- Join the authors table to get author_name
     `
     )
-    .ilike("title", `%${query}%`); // Search in the title
-  //.or(`isbn.ilike.%${query}%,authors.author_name.ilike.%${query}%`);  // Combine ISBN and author search
+    .or(`title.ilike.%${query}%,isbn.ilike.%${query}%,description.ilike.%${query}%,publisher.ilike.%${query}%`); // Search in title, ISBN, or description
 
-  if (error) {
-    console.log("Error fetching search results:", error.message);
+  if (mainError) {
+    console.log("Error fetching books by title or ISBN:", mainError.message);
     return [];
   }
-  console.log(data);
 
-  return data;
+  // Query for books by author name
+  const { data: booksByAuthor, error: authorError } = await supabase
+    .from("books")
+    .select(
+      `
+      *,
+      author:authors (author_name) -- Join the authors table to get author_name
+    `
+    )
+    .ilike("author.author_name", `%${query}%`); // Search in related author table
+
+  if (authorError) {
+    console.log("Error fetching books by author:", authorError.message);
+    return booksByTitleOrIsbnOrDescorPub; // Return partial results if author query fails
+  }
+
+  // Combine and deduplicate results
+  const combinedResults = [
+    ...booksByTitleOrIsbnOrDescorPub,
+    ...booksByAuthor.filter(
+      (bookByAuthor) =>
+        !booksByTitleOrIsbnOrDescorPub.some((book) => book.book_id === bookByAuthor.book_id)
+    ),
+  ];
+
+  // Remove books without authors
+  const filteredResults = combinedResults.filter((book) => book.author);
+
+  return filteredResults;
 };
 
 // GET a books by genre
