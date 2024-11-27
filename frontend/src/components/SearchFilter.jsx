@@ -8,19 +8,21 @@ const SearchFilter = ({
   genreCounts,
   languageCounts,
   authorCounts,
-  authors, // All authors passed from SearchPage
+  authors,
+  initialFilters, // Initial filters passed from parent
 }) => {
   const [genres, setGenres] = useState([]); // Stores fetched genres
   const [languages, setLanguages] = useState([]); // Stores fetched languages
-  const [selectedGenres, setSelectedGenres] = useState([]); // Selected genre IDs
-  const [selectedLanguages, setSelectedLanguages] = useState([]); // Selected language IDs
-  const [selectedAuthors, setSelectedAuthors] = useState([]); // Selected author IDs
-  const [authorSearch, setAuthorSearch] = useState(""); // Search input for authors
-  const [filteredAuthors, setFilteredAuthors] = useState([]); // Authors displayed based on search
-  const [minPrice, setMinPrice] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(100);
+  const [selectedGenres, setSelectedGenres] = useState(initialFilters.genre_ids.map(Number) || []);
+  const [selectedLanguages, setSelectedLanguages] = useState(initialFilters.language_ids.map(Number) || []);
+  const [selectedAuthors, setSelectedAuthors] = useState(initialFilters.author_ids.map(Number) || []);
+  const [authorSearch, setAuthorSearch] = useState("");
+  const [filteredAuthors, setFilteredAuthors] = useState(authors || []);
+  const [minPrice, setMinPrice] = useState(initialFilters.minPrice || 0);
+  const [maxPrice, setMaxPrice] = useState(initialFilters.maxPrice || 100);
   const [isCollapsed, setIsCollapsed] = useState(false); // Internal toggle for collapse
-  const [sortOrder, setSortOrder] = useState("asc"); // Sort order
+  const [sortOption, setSortOption] = useState("price-asc"); // Unified sort state
+
 
   // Fetch genres and languages on component mount
   useEffect(() => {
@@ -56,8 +58,8 @@ const SearchFilter = ({
   const handleGenreCheckboxChange = (genreId) => {
     setSelectedGenres((prev) =>
       prev.includes(genreId)
-        ? prev.filter((id) => id !== genreId) // Remove if already selected
-        : [...prev, genreId] // Add if not selected
+        ? prev.filter((id) => id !== genreId)
+        : [...prev, genreId]
     );
   };
 
@@ -65,8 +67,8 @@ const SearchFilter = ({
   const handleLanguageCheckboxChange = (languageId) => {
     setSelectedLanguages((prev) =>
       prev.includes(languageId)
-        ? prev.filter((id) => id !== languageId) // Remove if already selected
-        : [...prev, languageId] // Add if not selected
+        ? prev.filter((id) => id !== languageId)
+        : [...prev, languageId]
     );
   };
 
@@ -74,16 +76,15 @@ const SearchFilter = ({
   const handleAuthorCheckboxChange = (authorId) => {
     setSelectedAuthors((prev) =>
       prev.includes(authorId)
-        ? prev.filter((id) => id !== authorId) // Remove if already selected
-        : [...prev, authorId] // Add if not selected
+        ? prev.filter((id) => id !== authorId)
+        : [...prev, authorId]
     );
   };
 
-  // Handle sort order change
-  const handleSortOrderChange = (e) => {
-    const selectedOrder = e.target.value;
-    setSortOrder(selectedOrder);
-    onSortChange(selectedOrder); // Notify parent of sort change
+  const handleSortChange = (e) => {
+    const selectedSortOption = e.target.value;
+    setSortOption(selectedSortOption);
+    onSortChange(selectedSortOption); // Notify parent of sort change
   };
 
   // Apply filters
@@ -101,7 +102,7 @@ const SearchFilter = ({
   const toggleCollapse = () => {
     const newCollapsedState = !isCollapsed;
     setIsCollapsed(newCollapsedState);
-    onCollapseChange(newCollapsedState); // Notify parent
+    onCollapseChange(newCollapsedState);
   };
 
   return (
@@ -121,22 +122,24 @@ const SearchFilter = ({
       {/* Content */}
       {!isCollapsed && (
         <div>
-          <h2 className="text-xl font-bold mb-4">Filters</h2>
+          <h1 className="text-xl font-bold mb-4">Advanced Search</h1>
           <div className="flex flex-col gap-4">
-            {/* Sort By Dropdown */}
+            {/* Unified Sort Dropdown */}
             <div>
-              <h3 className="text-lg font-semibold mb-2">Sort By</h3>
+              <h2 className="text-lg font-semibold mb-2">Sort by</h2>
               <select
-                value={sortOrder}
-                onChange={handleSortOrderChange}
+                value={sortOption}
+                onChange={handleSortChange}
                 className="w-full p-2 border rounded-lg"
               >
-                <option value="asc">Price: Low to High</option>
-                <option value="desc">Price: High to Low</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="popularity-high">Popularity: Most Popular</option>
+                <option value="popularity-low">Popularity: Least Popular</option>
               </select>
             </div>
 
-            {/* Genre Dropdown with Checkboxes */}
+            {/* Genres */}
             <div>
               <h3 className="text-lg font-semibold mb-2">Genres</h3>
               <div className="border rounded-lg shadow-sm bg-white p-2 max-h-40 overflow-y-auto">
@@ -144,15 +147,11 @@ const SearchFilter = ({
                   <div key={genre.genre_id} className="flex items-center gap-2">
                     <input
                       type="checkbox"
-                      id={`genre-${genre.genre_id}`}
-                      value={genre.genre_id}
+                      checked={selectedGenres.includes(genre.genre_id)}
                       onChange={() => handleGenreCheckboxChange(genre.genre_id)}
                       className="cursor-pointer"
                     />
-                    <label
-                      htmlFor={`genre-${genre.genre_id}`}
-                      className="cursor-pointer text-sm truncate w-full"
-                    >
+                    <label className="cursor-pointer text-sm truncate w-full">
                       {genre.genre_name}{" "}
                       <span className="text-gray-500">
                         ({genreCounts[genre.genre_id] || 0})
@@ -163,7 +162,7 @@ const SearchFilter = ({
               </div>
             </div>
 
-            {/* Language Dropdown with Checkboxes */}
+            {/* Languages */}
             <div>
               <h3 className="text-lg font-semibold mb-2">Languages</h3>
               <div className="border rounded-lg shadow-sm bg-white p-2 max-h-40 overflow-y-auto">
@@ -171,17 +170,13 @@ const SearchFilter = ({
                   <div key={language.language_id} className="flex items-center gap-2">
                     <input
                       type="checkbox"
-                      id={`language-${language.language_id}`}
-                      value={language.language_id}
+                      checked={selectedLanguages.includes(language.language_id)}
                       onChange={() =>
                         handleLanguageCheckboxChange(language.language_id)
                       }
                       className="cursor-pointer"
                     />
-                    <label
-                      htmlFor={`language-${language.language_id}`}
-                      className="cursor-pointer text-sm truncate w-full"
-                    >
+                    <label className="cursor-pointer text-sm truncate w-full">
                       {language.language_name}{" "}
                       <span className="text-gray-500">
                         ({languageCounts[language.language_id] || 0})
@@ -192,10 +187,9 @@ const SearchFilter = ({
               </div>
             </div>
 
-            {/* Author Dropdown with Checkboxes and Search */}
+            {/* Authors */}
             <div>
               <h3 className="text-lg font-semibold mb-2">Authors</h3>
-              {/* Search Input */}
               <input
                 type="text"
                 placeholder="Search authors..."
@@ -203,23 +197,18 @@ const SearchFilter = ({
                 onChange={(e) => setAuthorSearch(e.target.value)}
                 className="w-full p-2 mb-2 border rounded-lg"
               />
-              {/* Author List */}
               <div className="border rounded-lg shadow-sm bg-white p-2 max-h-40 overflow-y-auto">
                 {filteredAuthors.map((author) => (
                   <div key={author.author_id} className="flex items-center gap-2">
                     <input
                       type="checkbox"
-                      id={`author-${author.author_id}`}
-                      value={author.author_id}
+                      checked={selectedAuthors.includes(author.author_id)}
                       onChange={() =>
                         handleAuthorCheckboxChange(author.author_id)
                       }
                       className="cursor-pointer"
                     />
-                    <label
-                      htmlFor={`author-${author.author_id}`}
-                      className="cursor-pointer text-sm truncate w-full"
-                    >
+                    <label className="cursor-pointer text-sm truncate w-full">
                       {author.author_name}{" "}
                       <span className="text-gray-500">
                         ({authorCounts[author.author_id] || 0})
@@ -232,7 +221,7 @@ const SearchFilter = ({
 
             {/* Price Range */}
             <div className="flex items-center gap-2">
-              <span className="text-gray-700">Price:</span>
+              <span>Price:</span>
               <input
                 type="number"
                 value={minPrice}
@@ -251,7 +240,7 @@ const SearchFilter = ({
             {/* Apply Filters Button */}
             <button
               onClick={handleApplyFilters}
-              className="p-2 bg-[#65aa92] text-white rounded-lg hover:bg-[#4c8a73] transition-colors duration-300"
+              className="p-2 bg-[#65aa92] text-white rounded-lg hover:bg-[#4c8a73]"
             >
               Apply Filters
             </button>

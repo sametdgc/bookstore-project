@@ -81,11 +81,25 @@ export const getBookDetailsById = async (bookId) => {
   return data;
 };
 
-// GET books by id
+// GET books by ids, works for a set of book ids
 export const getBookById = async (bookIds) => {
   const { data, error } = await supabase
     .from("books")
-    .select("*")
+    .select(
+      `
+      *,
+      author:authors (author_name),
+      genre:genres (genre_name),
+      language:languages (language_name),
+      reviews:reviews (
+        review_id,
+        user:user_id (full_name),
+        rating,
+        comment,
+        approval_status
+      )
+    `
+    )
     .in("book_id", bookIds);
   if (error) {
     console.log("Error fetching books by ID:", error.message);
