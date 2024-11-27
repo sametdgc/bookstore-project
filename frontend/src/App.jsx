@@ -14,25 +14,31 @@ import {
   BookDetailsPage,
   AllBooksPage,
   GenrePage,
-  AboutPage,
-  ReturnRefundPolicyPage,
   MyProfilePage,
   CheckoutPage,
-  ContactPage,
-} from "./pages";
+  SearchPage,
+  HelpAndSupportPage
+} from "./pages/customerPages";
+
+import { ContactPage, AboutPage, ReturnRefundPolicyPage } from "./pages/footerPages";
+import { PMDashboard } from "./pages/pmPages";
 import { TopNavBar, SubscriptionBanner, Footer } from "./components";
-import SearchPage from "./pages/SearchPage";
-import HelpAndSupportPage from "./pages/HelpAndSupportPage";
+
 
 function App() {
   const location = useLocation();
 
+  const hideLayoutPaths = ["/pm-dashboard"];
+
+  const shouldHideLayout = hideLayoutPaths.includes(location.pathname);
+
   return (
     <div className="App">
-      <TopNavBar />
+      {/* Conditionally render TopNavBar */}
+      {!shouldHideLayout && <TopNavBar />}
 
       {/* Main Routes */}
-      <div className="px-10 lg:px-20">
+      <div className={shouldHideLayout ? "" : "px-10 lg:px-20"}>
         <Routes>
           <Route path="/" element={<MainPage />} />
           <Route path="/all-books" element={<AllBooksPage />} />
@@ -44,20 +50,19 @@ function App() {
           <Route path="/cart" element={<ShoppingCart />} />
           <Route path="/genre/:genreName" element={<GenrePage />} />
           <Route path="/about" element={<AboutPage />} />
-          <Route
-            path="/return-refund-policy"
-            element={<ReturnRefundPolicyPage />}
-          />
+          <Route path="/return-refund-policy"element={<ReturnRefundPolicyPage />}/>
           <Route path="/profile" element={<MyProfilePage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/help-and-support" element={<HelpAndSupportPage />} />
-          <Route path="/contact" element={<ContactPage />} />{" "}
-          {/* <-- Add this route */}
+          <Route path="/contact" element={<ContactPage />} />
           <Route path="*" element={<MainPage />} />
+
+          <Route path="/pm-dashboard" element={<PMDashboard />} />{" "}
         </Routes>
       </div>
-      <SubscriptionBanner />
-      <Footer />
+
+      {!shouldHideLayout && <SubscriptionBanner />}
+      {!shouldHideLayout && <Footer />}
     </div>
   );
 }

@@ -4,9 +4,9 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "../components/Accordion";
-import Input from "../components/Input";
-import Button from "../components/Button";
+} from "../../components/Accordion";
+import Input from "../../components/Input";
+import Button from "../../components/Button";
 import { Link } from "react-router-dom";
 
 const HelpAndSupportPage = () => {

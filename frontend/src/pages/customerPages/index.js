@@ -6,12 +6,10 @@ import Wishlist from "./Wishlist";
 import AllBooksPage from "./AllBooksPage";
 import BookDetailsPage from "./BookDetailsPage";
 import GenrePage from "./GenrePage";
-import AboutPage from "./footerPages/AboutPage";
-import ReturnRefundPolicyPage from "./footerPages/ReturnRefundPolicyPage";
 import MyProfilePage from "./MyProfilePage";
 import CheckoutPage from "./CheckoutPage";
 import HelpAndSupportPage from "./HelpAndSupportPage";
-import ContactPage from "./footerPages/ContactPage";
+import SearchPage from "./SearchPage";
 
 export {
   LoginPage,
@@ -22,10 +20,8 @@ export {
   AllBooksPage,
   BookDetailsPage,
   GenrePage,
-  AboutPage,
-  ReturnRefundPolicyPage,
   MyProfilePage,
   CheckoutPage,
   HelpAndSupportPage,
-  ContactPage,
+  SearchPage,
 };
