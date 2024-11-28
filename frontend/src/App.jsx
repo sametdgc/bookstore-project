@@ -17,7 +17,8 @@ import {
   MyProfilePage,
   CheckoutPage,
   SearchPage,
-  HelpAndSupportPage
+  HelpAndSupportPage,
+  InvoicePage,
 } from "./pages/customerPages";
 
 import { ContactPage, AboutPage, ReturnRefundPolicyPage } from "./pages/footerPages";
@@ -53,6 +54,7 @@ function App() {
           <Route path="/return-refund-policy"element={<ReturnRefundPolicyPage />}/>
           <Route path="/profile" element={<MyProfilePage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/invoice" element={<InvoicePage />} />
           <Route path="/help-and-support" element={<HelpAndSupportPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="*" element={<MainPage />} />
