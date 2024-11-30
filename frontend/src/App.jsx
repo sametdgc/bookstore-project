@@ -12,8 +12,6 @@ import {
   ShoppingCart,
   Wishlist,
   BookDetailsPage,
-  AllBooksPage,
-  GenrePage,
   MyProfilePage,
   CheckoutPage,
   SearchPage,
@@ -42,14 +40,12 @@ function App() {
       <div className={shouldHideLayout ? "" : "px-10 lg:px-20"}>
         <Routes>
           <Route path="/" element={<MainPage />} />
-          <Route path="/all-books" element={<AllBooksPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/books/:book_id" element={<BookDetailsPage />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/cart" element={<ShoppingCart />} />
-          <Route path="/genre/:genreName" element={<GenrePage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/return-refund-policy"element={<ReturnRefundPolicyPage />}/>
           <Route path="/profile" element={<MyProfilePage />} />

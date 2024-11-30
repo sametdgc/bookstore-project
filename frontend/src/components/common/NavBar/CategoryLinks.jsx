@@ -17,13 +17,13 @@ const CategoryLinks = () => {
     return (
         <div className="flex flex-wrap justify-center space-x-2 md:space-x-4 py-2 text-white text-sm md:text-base bg-[#65aa92]">
             {/* Add the All Books link */}
-            <Link to="/all-books" className="hover:text-gray-300 px-2 py-1 whitespace-nowrap">
+            <Link to="/search?sortOrder=popularity-high" className="hover:text-gray-300 px-2 py-1 whitespace-nowrap">
                 All Books
             </Link>
             {categories.map((category) => (
                 <Link
-                    key={category.genre_id}
-                    to={`/genre/${category.genre_name.toLowerCase().replace(/ /g, "-")}`}
+
+                    to={`/search?genre_ids=${category.genre_id}&sortOrder=popularity-high`}
                     className="hover:text-gray-300 px-2 py-1 whitespace-nowrap"
                 >
                     {category.genre_name}
