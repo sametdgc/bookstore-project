@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 import { testSupabaseConnection, syncLocalCartToDatabase, getLocalCartItems, getUserRoleById } from '../services/api';
+import Cookies from "js-cookie";
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -30,7 +31,7 @@ const LoginForm = () => {
       console.log('User signed in:', user);
 
       const userId = user.user_metadata.custom_incremented_id;
-      
+      Cookies.set("user_id", userId, { expires: 7 });
       const role = await getUserRoleById(userId);
       if (!role) {
         console.error("Error fetching user role.");

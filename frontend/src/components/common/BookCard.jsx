@@ -12,6 +12,7 @@ import {
   addItemToLocalWishlist,
   removeItemFromLocalWishlist,
 } from "../../services/api.js";
+import Cookies from "js-cookie";
 
 const BookCard = ({ book }) => {
   const navigate = useNavigate();
@@ -22,15 +23,15 @@ const BookCard = ({ book }) => {
   const [wishlistMessage, setWishlistMessage] = useState("");
   const [wishlistMessageColor, setWishlistMessageColor] = useState("");
 
+  const userId = Cookies.get("user_id");
+
   // Fetch user and wishlist on component mount
   useEffect(() => {
     const fetchUserAndWishlist = async () => {
-      const currentUser = await fetchUser();
-      setUser(currentUser);
+      // setUser(currentUser);
 
-      if (currentUser) {
+      if (userId) {
         // Logged-in user: Fetch wishlist from the database
-        const userId = currentUser.user_metadata.custom_incremented_id;
         const wishlistData = await getWishlistByUserId(userId);
         setWishlist(wishlistData);
         setIsInWishlist(wishlistData.some((item) => item.book_id === book.book_id));

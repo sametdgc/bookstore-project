@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../../services/supabaseClient';
 import { getUserData } from "../../../services/api";
+import Cookies from "js-cookie";
 
 const LoginStatus = () => {
   const [user, setUser] = useState(null);
@@ -50,6 +51,7 @@ const LoginStatus = () => {
     } else {
       setUser(null);
       setUserName('');
+      Cookies.remove("user_id");
       navigate('/login');
     }
   };
