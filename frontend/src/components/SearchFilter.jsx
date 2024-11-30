@@ -136,6 +136,8 @@ const SearchFilter = ({
               <option value="price-desc">Price: High to Low</option>
               <option value="popularity-high">Popularity: Most Popular</option>
               <option value="popularity-low">Popularity: Least Popular</option>
+              <option value="name-asc">Name : Ascending Order</option>
+              <option value="name-desc">Name : Descending Order</option>
             </select>
           </div>
   
