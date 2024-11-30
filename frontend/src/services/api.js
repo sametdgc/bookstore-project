@@ -1057,3 +1057,53 @@ export const getPendingReviews = async ({
   return data;
 };
 
+
+/*
+
+INVOICE SERVICES
+
+*/
+
+// Fetch order details by order ID
+export const getOrderDetailsById = async (orderId) => {
+  try {
+    const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          order_id,
+          order_date,
+          total_price,
+          users (
+            full_name,
+            email,
+            phone_number
+          ),
+          addresses (
+            city,
+            district,
+            address_details,
+            zip_code
+          ),
+          orderitems (
+            book_id,
+            quantity,
+            item_price,
+            books (title)
+          )
+        `)
+        .eq('order_id', orderId)
+        .single();
+
+      console.log(data);
+    if (error) {
+      console.error('Error fetching order details:', error.message);
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    return { data: null, error: err };
+  }
+};
+
