@@ -479,7 +479,7 @@ export const deleteAddress = async (addressId) => {
   }
 };
 
-// GET user orders (including order items)
+// GET user orders (including order items and delivery statuses)
 export const getUserOrders = async () => {
   try {
     const user = await fetchUser();
@@ -504,10 +504,14 @@ export const getUserOrders = async () => {
           book_id,
           quantity,
           item_price,
-          book:books (
+          books (
             title,
             image_url
           )
+        ),
+        delivery_status:deliverystatuses!order_id (
+          status,
+          last_updated
         )
       `
       )
@@ -518,12 +522,24 @@ export const getUserOrders = async () => {
       return [];
     }
 
-    return data;
+    // Transform the data to add book titles and image URLs directly to order items
+    const transformedData = data.map((order) => ({
+      ...order,
+      order_items: order.order_items.map((item) => ({
+        ...item,
+        book_title: item.books.title,
+        book_image_url: item.books.image_url,
+      })),
+      delivery_status: order.delivery_status[0], // Ensure it's picking the first status associated with the order
+    }));
+
+    return transformedData;
   } catch (err) {
     console.error("Error in getUserOrders function:", err);
     return [];
   }
 };
+
 
 /*
 

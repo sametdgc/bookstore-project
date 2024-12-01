@@ -9,7 +9,7 @@ import AddressesWindow from "../../components/profilePage/AddressesWindow";
 import PersonalDetailsWindow from "../../components/profilePage/PersonalDetailsWindow";
 import OrderDetailsWindow from "../../components/profilePage/OrderDetailsWindow"; // Import the OrderDetailsWindow
 import { Link } from "react-router-dom";
-import { User, Book, ShoppingBag, ChevronDown, ChevronUp } from "lucide-react";
+import { User, Book, ShoppingBag, ChevronDown, ChevronUp, Clipboard, Truck, Home } from "lucide-react"; // Import new icons
 
 const MyProfilePage = () => {
   const [user, setUser] = useState(null);
@@ -157,10 +157,8 @@ const MyProfilePage = () => {
                       key={order.order_id}
                       className="bg-gray-50 rounded-lg p-6 shadow-sm hover:shadow-md transition duration-300"
                     >
-                      <div
-                        className="flex justify-between items-center cursor-pointer"
-                        onClick={() => handleToggleOrder(order.order_id)}
-                      >
+                      <div className="flex justify-between items-center">
+                        {/* Order ID and Date */}
                         <div>
                           <h3 className="text-lg font-semibold text-gray-800">
                             Order #{order.order_id}
@@ -169,11 +167,70 @@ const MyProfilePage = () => {
                             {new Date(order.order_date).toLocaleDateString()}
                           </span>
                         </div>
-                        {expandedOrderId === order.order_id ? (
-                          <ChevronUp className="text-[#65aa92]" size={20} />
-                        ) : (
-                          <ChevronDown className="text-[#65aa92]" size={20} />
-                        )}
+
+                        {/* Delivery Status Icons */}
+                        <div className="flex items-center ml-auto mr-6">
+                          {["Processing", "In Transit", "Delivered"].map(
+                            (step, index) => {
+                              const currentStatus =
+                                order.delivery_status?.status.toLowerCase() ||
+                                "processing";
+
+                              // Determine the current step and whether it should be highlighted
+                              const isCompleted =
+                                (currentStatus === "processing" && index === 0) ||
+                                (currentStatus === "in-transit" && index <= 1) ||
+                                currentStatus === "delivered";
+
+                              const connectorCompleted =
+                                (currentStatus === "in-transit" && index === 0) ||
+                                currentStatus === "delivered";
+
+                              return (
+                                <div key={step} className="flex items-center">
+                                  {/* Status Icon */}
+                                  <div
+                                    className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                                      isCompleted
+                                        ? "bg-[#65aa92] text-white"
+                                        : "bg-gray-300 text-gray-700"
+                                    }`}
+                                    title={step} // Tooltip text to show the status
+                                  >
+                                    {index === 0 ? (
+                                      <Clipboard size={20} />
+                                    ) : index === 1 ? (
+                                      <Truck size={20} />
+                                    ) : (
+                                      <Home size={20} />
+                                    )}
+                                  </div>
+
+                                  {/* Connector Line */}
+                                  {index < 2 && (
+                                    <div
+                                      className={`h-1 ${
+                                        connectorCompleted
+                                          ? "bg-[#65aa92]"
+                                          : "bg-gray-300"
+                                      }`}
+                                      style={{ width: '160px' }} // Adjusted width to properly connect the icons
+                                    />
+                                  )}
+                                </div>
+                              );
+                            }
+                          )}
+                        </div>
+
+                        {/* Expand/Collapse Icon */}
+                        <div className="cursor-pointer" onClick={() => handleToggleOrder(order.order_id)}>
+                          {expandedOrderId === order.order_id ? (
+                            <ChevronUp className="text-[#65aa92]" size={20} />
+                          ) : (
+                            <ChevronDown className="text-[#65aa92]" size={20} />
+                          )}
+                        </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4 mt-4">
                         <div>

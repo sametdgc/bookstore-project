@@ -8,7 +8,7 @@ const OrderDetailsWindow = ({ order }) => {
     <div className="mt-6">
       <div className="grid grid-cols-5 gap-4 mb-4">
         <h3 className="col-span-3 text-lg font-semibold text-gray-800">
-          Item
+          Order Items
         </h3>
         <span className="col-span-1 text-lg font-semibold text-gray-800 text-center">
           Quantity
@@ -26,8 +26,8 @@ const OrderDetailsWindow = ({ order }) => {
             {/* Book Image and Title */}
             <div className="col-span-3 flex items-center">
               <img
-                src={item.book?.image_url || "https://via.placeholder.com/50x75"}
-                alt={item.book?.title}
+                src={item.book_image_url || "https://via.placeholder.com/50x75"}
+                alt={item.book_title}
                 className="w-16 h-24 object-cover rounded cursor-pointer"
                 onClick={() => navigate(`/books/${item.book_id}`)}
               />
@@ -35,7 +35,7 @@ const OrderDetailsWindow = ({ order }) => {
                 href={`/books/${item.book_id}`}
                 className="text-lg font-semibold text-[#65aa92] hover:underline cursor-pointer ml-4"
               >
-                {item.book?.title}
+                {item.book_title}
               </a>
             </div>
 
