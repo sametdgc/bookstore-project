@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { fetchUser, getCartItems, placeOrder } from "../../services/api";
 import {
-  fetchUser,
-  getCartItems,
-  placeOrder,
-  getUserAddresses,
-} from "../../services/api";
-import { AddressSelector, PaymentForm, OrderSummary } from "../../components/checkoutPage";
+  AddressSelector,
+  PaymentForm,
+  OrderSummary,
+} from "../../components/checkoutPage";
 import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
 
 const CheckoutPage = () => {
   const [cardDetails, setCardDetails] = useState({
@@ -23,6 +23,20 @@ const CheckoutPage = () => {
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [email, setEmail] = useState("");
 
+  // Verification modal state
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+  const [verificationCode, setVerificationCode] = useState([
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  ]);
+  const [timeLeft, setTimeLeft] = useState(15);
+
+  const navigate = useNavigate();
+
   useEffect(() => {
     const loadCart = async () => {
       const user = await fetchUser();
@@ -37,6 +51,16 @@ const CheckoutPage = () => {
 
     loadCart();
   }, []);
+
+  useEffect(() => {
+    let timer;
+    if (isVerificationModalOpen && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prevTime) => prevTime - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isVerificationModalOpen, timeLeft]);
 
   const calculateSubtotal = () => {
     return cart
@@ -110,12 +134,10 @@ const CheckoutPage = () => {
   const validateFields = () => {
     let isValid = true;
 
-    // Validate email
     if (!validateField("email", email)) {
       isValid = false;
     }
 
-    // Validate card details
     Object.keys(cardDetails).forEach((key) => {
       if (!validateField(key, cardDetails[key])) {
         isValid = false;
@@ -125,52 +147,91 @@ const CheckoutPage = () => {
     return isValid;
   };
 
-  const handleConfirmOrder = async () => {
+  const handleConfirmOrder = () => {
     setGeneralError("");
-  
+
     if (!selectedAddressId) {
       setGeneralError("Please select a delivery address.");
       return;
     }
-  
+
     if (!validateFields()) {
       setGeneralError("Please fill in all required fields correctly.");
       return;
     }
-  
-    try {
-      const userId = Cookies.get("user_id");
-      if (!userId) {
-        setGeneralError("You must be logged in to place an order.");
-        return;
-      }
-  
-      const orderDetails = {
-        user_id: userId,
-        total_price: calculateTotalPrice(),
-        order_date: new Date().toISOString(),
-        address_id: selectedAddressId,
-      };
-  
-      const orderResult = await placeOrder(orderDetails, cart);
-  
-      if (!orderResult.success) {
-        setGeneralError(orderResult.message || "Failed to place the order.");
-        return;
-      }
-  
-      showProcessingAlert();
-  
-      setTimeout(() => {
-        removeProcessingAlert();
-        showSuccessAlert();
-      }, 2000);
-    } catch (error) {
-      console.error("Error during order placement:", error.message);
-      setGeneralError("An unexpected error occurred. Please try again.");
+
+    setIsVerificationModalOpen(true);
+  };
+
+  const handleVerificationInputChange = (index, value) => {
+    if (!/^\d*$/.test(value)) return;
+
+    const newCode = [...verificationCode];
+    newCode[index] = value;
+    setVerificationCode(newCode);
+
+    if (value && index < 5) {
+      const nextInput = document.querySelector(
+        `input[name="code-${index + 1}"]`
+      );
+      nextInput?.focus();
     }
   };
-  
+
+  const handleVerification = async () => {
+    const code = verificationCode.join("");
+    if (code.length === 6) {
+      setIsVerificationModalOpen(false);
+
+      // Continue with the original order placement logic
+      try {
+        const userId = Cookies.get("user_id");
+        if (!userId) {
+          setGeneralError("You must be logged in to place an order.");
+          return;
+        }
+
+        const orderDetails = {
+          user_id: userId,
+          total_price: calculateTotalPrice(),
+          order_date: new Date().toISOString(),
+          address_id: selectedAddressId,
+        };
+
+        const orderResult = await placeOrder(orderDetails, cart);
+
+        if (!orderResult.success) {
+          if (orderResult.insufficientStockItems) {
+            const stockMessage = orderResult.insufficientStockItems
+              .map(
+                (item) =>
+                  `Book ID ${item.book_id} has only ${item.stock} items in stock.`
+              )
+              .join("\n");
+            setGeneralError(`Stock issue:\n${stockMessage}`);
+          } else {
+            setGeneralError(
+              orderResult.message || "Failed to place the order."
+            );
+          }
+          return;
+        }
+
+        showProcessingAlert();
+        setTimeout(() => {
+          removeProcessingAlert();
+          showSuccessAlert();
+          const orderId = orderResult.data.order_id;
+          navigate(`/invoice?orderID=${orderId}`);
+        }, 2000);
+      } catch (error) {
+        console.error("Error during order placement:", error.message);
+        setGeneralError("An unexpected error occurred. Please try again.");
+      }
+    } else {
+      setGeneralError("Invalid verification code. Please try again.");
+    }
+  };
 
   const showProcessingAlert = () => {
     const processingAlert = document.createElement("div");
@@ -190,15 +251,6 @@ const CheckoutPage = () => {
     document.body.appendChild(processingAlert);
   };
 
-  const removeProcessingAlert = () => {
-    const processingAlert = document.querySelector(".fixed");
-    if (processingAlert && processingAlert.parentNode) {
-      processingAlert.parentNode.removeChild(processingAlert);
-    } else {
-      console.warn("Processing alert not found or already removed.");
-    }
-  };
-  
   const showSuccessAlert = () => {
     const successAlert = document.createElement("div");
     successAlert.innerHTML = `
@@ -222,6 +274,15 @@ const CheckoutPage = () => {
       </div>
     `;
     document.body.appendChild(successAlert);
+  };
+
+  const removeProcessingAlert = () => {
+    const processingAlert = document.querySelector(".fixed");
+    if (processingAlert && processingAlert.parentNode) {
+      processingAlert.parentNode.removeChild(processingAlert);
+    } else {
+      console.warn("Processing alert not found or already removed.");
+    }
   };
 
   return (
@@ -254,9 +315,13 @@ const CheckoutPage = () => {
               className="w-full p-2 border border-gray-300 rounded-md"
               placeholder="Enter your email address"
             />
-            {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+            {errors.email && (
+              <p className="text-red-500 text-sm">{errors.email}</p>
+            )}
           </div>
-          <h2 className="text-2xl font-semibold mb-4 mt-4">Credit/Debit Card Payment</h2>
+          <h2 className="text-2xl font-semibold mb-4 mt-4">
+            Credit/Debit Card Payment
+          </h2>
           <PaymentForm
             cardDetails={cardDetails}
             errors={errors}
@@ -277,6 +342,53 @@ const CheckoutPage = () => {
           Confirm Your Order
         </button>
       </div>
+
+      {isVerificationModalOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+          <div className="relative bg-white rounded-lg shadow-xl p-8 m-4 max-w-sm w-full">
+            <div className="flex flex-col items-center space-y-4">
+              <h2 className="text-lg font-semibold">Security Code</h2>
+              <p className="text-sm text-gray-500">
+                Enter the 6-digit code sent to your phone.
+              </p>
+              <div className="flex gap-2">
+                {verificationCode.map((digit, index) => (
+                  <input
+                    key={index}
+                    type="text"
+                    name={`code-${index}`}
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) =>
+                      handleVerificationInputChange(index, e.target.value)
+                    }
+                    className="h-12 w-12 text-center text-lg border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#65aa92]"
+                  />
+                ))}
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-500">
+                  Time remaining: {timeLeft}s
+                </p>
+                <button
+                  className="text-sm text-[#65aa92] hover:underline"
+                  disabled={timeLeft > 0}
+                  onClick={() => setTimeLeft(15)}
+                >
+                  Resend Code
+                </button>
+              </div>
+              <button
+                className="w-full px-6 py-3 bg-[#65aa92] text-white font-semibold rounded shadow hover:bg-[#579d7b]"
+                onClick={handleVerification}
+                disabled={verificationCode.some((digit) => !digit)}
+              >
+                Verify and Place Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
