@@ -107,53 +107,51 @@ export const getBookById = async (bookIds) => {
   return data;
 };
 
-
-// PLACE an order and add entry to deliverystatuses
-// export const placeOrder = async (order) => {
-//   // Insert the order and request to return the newly inserted row
-//   const { data, error } = await supabase
-//     .from("orders")
-//     .insert([order])
-//     .select("*"); // Ensure the inserted row is returned
-
-//   if (error) {
-//     console.error("Error placing order:", error.message);
-//     return { success: false, message: error.message };
-//   }
-
-//   if (!data || data.length === 0) {
-//     console.error("Error: No order data returned after placing the order");
-//     return { success: false, message: "Order placement failed, no data returned" };
-//   }
-
-//   const newOrderId = data[0].order_id;
-
-//   createDeliveryStatus(newOrderId);
-
-//   return { success: true, data: data[0] }; // Return the first inserted row for further use
-// };
-
-
 export const placeOrder = async (orderDetails, cartItems) => {
-  // Insert the order and return the newly created order ID
+  // Step 1: Check stock for all cart items
+  const insufficientStockItems = [];
+  for (const item of cartItems) {
+    const { data: book, error: bookError } = await supabase
+      .from("books")
+      .select("available_quantity")
+      .eq("book_id", item.book_id)
+      .single();
+
+    if (bookError) {
+      console.error(`Error fetching stock for book ID ${item.book_id}:`, bookError.message);
+      return { success: false, message: bookError.message };
+    }
+
+    if (book.available_quantity < item.quantity) {
+      insufficientStockItems.push({
+        book_id: item.book_id,
+        available_quantity: book.available_quantity,
+      });
+    }
+  }
+
+  if (insufficientStockItems.length > 0) {
+    return {
+      success: false,
+      message: "Some items do not have enough stock.",
+      insufficientStockItems,
+    };
+  }
+
+  // Step 2: Place the order
   const { data: orderData, error: orderError } = await supabase
     .from("orders")
     .insert([orderDetails])
-    .select("*"); // Ensure the inserted row is returned
+    .select("*");
 
   if (orderError) {
     console.error("Error placing order:", orderError.message);
     return { success: false, message: orderError.message };
   }
 
-  if (!orderData || orderData.length === 0) {
-    console.error("Error: No order data returned after placing the order");
-    return { success: false, message: "Order placement failed, no data returned" };
-  }
-
   const newOrderId = orderData[0].order_id;
 
-  // Insert order items for each item in the cart
+  // Step 3: Insert order items
   const orderItems = cartItems.map((item) => ({
     order_id: newOrderId,
     book_id: item.book_id,
@@ -168,7 +166,33 @@ export const placeOrder = async (orderDetails, cartItems) => {
     return { success: false, message: orderItemsError.message };
   }
 
-  // Create delivery status entry
+  // Step 4: Decrease stock for each book using decrementBookStock
+  for (const item of cartItems) {
+    const { success, message } = await decrementBookStock(item.book_id, item.quantity);
+
+    if (!success) {
+      console.error(`Error decrementing stock for book ID ${item.book_id}:`, message);
+      return { success: false, message };
+    }
+  }
+
+  // Step 5: Delete cart items (Updated)
+  for (const item of cartItems) {
+    const { error: cartDeleteError } = await supabase
+      .from("cartitems")
+      .delete()
+      .match({
+        cart_id: item.cart_id, 
+        book_id: item.book_id, 
+      });
+
+    if (cartDeleteError) {
+      console.error(`Error deleting cart item with cart_id ${item.cart_id} and book_id ${item.book_id}:`, cartDeleteError.message);
+      return { success: false, message: cartDeleteError.message };
+    }
+  }
+
+  // Step 6: Create delivery status entry
   const { success: deliveryStatusSuccess, message: deliveryStatusMessage } =
     await createDeliveryStatus(newOrderId);
 
@@ -180,6 +204,28 @@ export const placeOrder = async (orderDetails, cartItems) => {
   return { success: true, data: orderData[0] };
 };
 
+
+export const decrementBookStock = async (bookId, quantity) => {
+  try {
+    // Call the updated stored procedure
+    const { error } = await supabase.rpc("decrement_stock", {
+      book_id_input: bookId, // Updated to match the new parameter name
+      quantity_input: quantity, // Updated to match the new parameter name
+    });
+
+    if (error) {
+      console.error(`Error decrementing stock for book ID ${bookId}:`, error.message);
+      return { success: false, message: error.message };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("Unexpected error decrementing book stock:", err.message);
+    return { success: false, message: "Unexpected error occurred." };
+  }
+};
+
+
 export const createDeliveryStatus = async (orderId) => {
   const { data, error } = await supabase
     .from("deliverystatuses")
@@ -190,6 +236,8 @@ export const createDeliveryStatus = async (orderId) => {
   }
   return { success: true, data };
 };
+
+
 
 export const searchBooks = async (query) => {
   // Query for books by title or ISBN
@@ -629,7 +677,6 @@ export const getOrCreateCartByUserId = async (userId) => {
     console.log("Error fetching cart:", error.message);
     return null;
   }
-
   // If the cart exists, return it
   if (cart) {
     return cart;
