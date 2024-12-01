@@ -180,6 +180,17 @@ export const placeOrder = async (orderDetails, cartItems) => {
   return { success: true, data: orderData[0] };
 };
 
+export const createDeliveryStatus = async (orderId) => {
+  const { data, error } = await supabase
+    .from("deliverystatuses")
+    .insert([{ order_id: orderId, status: "Pending" }]);
+  if (error) {
+    console.error("Error creating delivery status:", error.message);
+    return { success: false, message: error.message };
+  }
+  return { success: true, data };
+};
+
 export const searchBooks = async (query) => {
   // Query for books by title or ISBN
   const { data: booksByTitleOrIsbnOrDescorPub, error: mainError } = await supabase
