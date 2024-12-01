@@ -7,8 +7,9 @@ import {
 } from "../../services/api";
 import AddressesWindow from "../../components/profilePage/AddressesWindow";
 import PersonalDetailsWindow from "../../components/profilePage/PersonalDetailsWindow";
+import OrderDetailsWindow from "../../components/profilePage/OrderDetailsWindow"; // Import the OrderDetailsWindow
 import { Link } from "react-router-dom";
-import { User, Book, ShoppingBag } from "lucide-react";
+import { User, Book, ShoppingBag, ChevronDown, ChevronUp, Clipboard, Truck, Home } from "lucide-react"; // Import new icons
 
 const MyProfilePage = () => {
   const [user, setUser] = useState(null);
@@ -17,6 +18,7 @@ const MyProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("personal");
+  const [expandedOrderId, setExpandedOrderId] = useState(null); // State for expanded order
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -44,14 +46,8 @@ const MyProfilePage = () => {
     fetchProfileData();
   }, []);
 
-  const handleSaveChanges = async (updatedData) => {
-    await updateUserData(updatedData);
-    setUserData(updatedData);
-    setIsEditing(false);
-  };
-
-  const handleEditToggle = () => {
-    setIsEditing(!isEditing);
+  const handleToggleOrder = (orderId) => {
+    setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
   };
 
   if (loading) {
@@ -136,16 +132,18 @@ const MyProfilePage = () => {
                 userData={userData}
                 userEmail={user?.email}
                 isEditing={isEditing}
-                onSaveChanges={handleSaveChanges}
-                onEditToggle={handleEditToggle}
-                onCancel={handleEditToggle}
+                onSaveChanges={(updatedData) => {
+                  updateUserData(updatedData);
+                  setUserData(updatedData);
+                  setIsEditing(false);
+                }}
+                onEditToggle={() => setIsEditing(!isEditing)}
+                onCancel={() => setIsEditing(false)}
               />
             )}
 
             {activeTab === "addresses" && (
-              <AddressesWindow
-                userId={user?.user_metadata?.custom_incremented_id}
-              />
+              <AddressesWindow userId={user?.user_metadata?.custom_incremented_id} />
             )}
 
             {activeTab === "orders" && (
@@ -159,15 +157,82 @@ const MyProfilePage = () => {
                       key={order.order_id}
                       className="bg-gray-50 rounded-lg p-6 shadow-sm hover:shadow-md transition duration-300"
                     >
-                      <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-semibold text-gray-800">
-                          Order #{order.order_id}
-                        </h3>
-                        <span className="text-sm font-medium text-gray-600">
-                          {new Date(order.order_date).toLocaleDateString()}
-                        </span>
+                      <div className="flex justify-between items-center">
+                        {/* Order ID and Date */}
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-800">
+                            Order #{order.order_id}
+                          </h3>
+                          <span className="text-sm font-medium text-gray-600">
+                            {new Date(order.order_date).toLocaleDateString()}
+                          </span>
+                        </div>
+
+                        {/* Delivery Status Icons */}
+                        <div className="flex items-center ml-auto mr-6">
+                          {["Processing", "In Transit", "Delivered"].map(
+                            (step, index) => {
+                              const currentStatus =
+                                order.delivery_status?.status.toLowerCase() ||
+                                "processing";
+
+                              // Determine the current step and whether it should be highlighted
+                              const isCompleted =
+                                (currentStatus === "processing" && index === 0) ||
+                                (currentStatus === "in-transit" && index <= 1) ||
+                                currentStatus === "delivered";
+
+                              const connectorCompleted =
+                                (currentStatus === "in-transit" && index === 0) ||
+                                currentStatus === "delivered";
+
+                              return (
+                                <div key={step} className="flex items-center">
+                                  {/* Status Icon */}
+                                  <div
+                                    className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                                      isCompleted
+                                        ? "bg-[#65aa92] text-white"
+                                        : "bg-gray-300 text-gray-700"
+                                    }`}
+                                    title={step} // Tooltip text to show the status
+                                  >
+                                    {index === 0 ? (
+                                      <Clipboard size={20} />
+                                    ) : index === 1 ? (
+                                      <Truck size={20} />
+                                    ) : (
+                                      <Home size={20} />
+                                    )}
+                                  </div>
+
+                                  {/* Connector Line */}
+                                  {index < 2 && (
+                                    <div
+                                      className={`h-1 ${
+                                        connectorCompleted
+                                          ? "bg-[#65aa92]"
+                                          : "bg-gray-300"
+                                      }`}
+                                      style={{ width: '160px' }} // Adjusted width to properly connect the icons
+                                    />
+                                  )}
+                                </div>
+                              );
+                            }
+                          )}
+                        </div>
+
+                        {/* Expand/Collapse Icon */}
+                        <div className="cursor-pointer" onClick={() => handleToggleOrder(order.order_id)}>
+                          {expandedOrderId === order.order_id ? (
+                            <ChevronUp className="text-[#65aa92]" size={20} />
+                          ) : (
+                            <ChevronDown className="text-[#65aa92]" size={20} />
+                          )}
+                        </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-4 mt-4">
                         <div>
                           <p className="text-sm text-gray-600">Total Price</p>
                           <p className="text-lg font-semibold text-[#65aa92]">
@@ -175,15 +240,15 @@ const MyProfilePage = () => {
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">
-                            Delivery Address
-                          </p>
+                          <p className="text-sm text-gray-600">Delivery Address</p>
                           <p className="text-sm text-gray-800">
                             {order.address ? (
                               <>
-                                {order.address.city}, {order.address.district}
-                                <br />
                                 {order.address.address_details}
+                                <br />
+                                {order.address.zip_code}
+                                <br />
+                                {order.address.city}, {order.address.district}
                               </>
                             ) : (
                               "Address not available"
@@ -191,6 +256,9 @@ const MyProfilePage = () => {
                           </p>
                         </div>
                       </div>
+                      {expandedOrderId === order.order_id && (
+                        <OrderDetailsWindow order={order} />
+                      )}
                     </div>
                   ))
                 ) : (
