@@ -16,7 +16,6 @@ const LoginForm = () => {
     try {
       testSupabaseConnection();
 
-      // Step 1: Authenticate the user
       const { data: { user }, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -27,8 +26,6 @@ const LoginForm = () => {
         setError('Wrong email or password, please try again.');
         return;
       }
-
-      console.log('User signed in:', user);
 
       const userId = user.user_metadata.custom_incremented_id;
       Cookies.set("user_id", userId, { expires: 7 });

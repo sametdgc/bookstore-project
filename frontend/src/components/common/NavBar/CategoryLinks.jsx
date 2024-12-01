@@ -22,7 +22,7 @@ const CategoryLinks = () => {
             </Link>
             {categories.map((category) => (
                 <Link
-
+                    key={category.genre_id}
                     to={`/search?genre_ids=${category.genre_id}&sortOrder=popularity-high`}
                     className="hover:text-gray-300 px-2 py-1 whitespace-nowrap"
                 >
