@@ -193,11 +193,13 @@ const CheckoutPage = () => {
 
   const removeProcessingAlert = () => {
     const processingAlert = document.querySelector(".fixed");
-    if (processingAlert) {
-      document.body.removeChild(processingAlert);
+    if (processingAlert && processingAlert.parentNode) {
+      processingAlert.parentNode.removeChild(processingAlert);
+    } else {
+      console.warn("Processing alert not found or already removed.");
     }
   };
-
+  
   const showSuccessAlert = () => {
     const successAlert = document.createElement("div");
     successAlert.innerHTML = `

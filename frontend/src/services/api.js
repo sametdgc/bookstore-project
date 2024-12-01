@@ -110,7 +110,11 @@ export const getBookById = async (bookIds) => {
 
 // PLACE an order and add entry to deliverystatuses
 export const placeOrder = async (order) => {
-  const { data, error } = await supabase.from("orders").insert([order]);
+  // Insert the order and request to return the newly inserted row
+  const { data, error } = await supabase
+    .from("orders")
+    .insert([order])
+    .select("*"); // Ensure the inserted row is returned
 
   if (error) {
     console.error("Error placing order:", error.message);
@@ -123,18 +127,24 @@ export const placeOrder = async (order) => {
   }
 
   const newOrderId = data[0].order_id;
-  const { error: deliveryStatusError } = await supabase
-    .from("deliverystatuses")
-    .insert([{ order_id: newOrderId }]); 
-  if (deliveryStatusError) {
-    console.error("Error inserting into deliverystatuses:", deliveryStatusError.message);
-    return { success: false, message: deliveryStatusError.message };
-  }
 
-  return { success: true, data };
+  createDeliveryStatus(newOrderId);
+
+  return { success: true, data: data[0] }; // Return the first inserted row for further use
 };
 
+const createDeliveryStatus = async (orderId) => {
+  const { error } = await supabase
+    .from("deliverystatuses")
+    .insert([{ order_id: orderId, status: "processing" }]);
 
+  if (error) {
+    console.error("Error creating delivery status:", error.message);
+    return { success: false, message: error.message };
+  }
+
+  return { success: true };
+};
 
 
 export const searchBooks = async (query) => {
