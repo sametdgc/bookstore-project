@@ -472,7 +472,7 @@ export const deleteAddress = async (addressId) => {
   }
 };
 
-// GET user orders
+// GET user orders (including order items)
 export const getUserOrders = async () => {
   try {
     const user = await fetchUser();
@@ -490,7 +490,17 @@ export const getUserOrders = async () => {
         address:addresses (
           city,
           district,
-          address_details
+          address_details,
+          zip_code
+        ),
+        order_items:orderitems (
+          book_id,
+          quantity,
+          item_price,
+          book:books (
+            title,
+            image_url
+          )
         )
       `
       )

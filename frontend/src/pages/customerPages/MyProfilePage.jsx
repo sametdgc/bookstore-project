@@ -7,8 +7,9 @@ import {
 } from "../../services/api";
 import AddressesWindow from "../../components/profilePage/AddressesWindow";
 import PersonalDetailsWindow from "../../components/profilePage/PersonalDetailsWindow";
+import OrderDetailsWindow from "../../components/profilePage/OrderDetailsWindow"; // Import the OrderDetailsWindow
 import { Link } from "react-router-dom";
-import { User, Book, ShoppingBag } from "lucide-react";
+import { User, Book, ShoppingBag, ChevronDown, ChevronUp } from "lucide-react";
 
 const MyProfilePage = () => {
   const [user, setUser] = useState(null);
@@ -17,6 +18,7 @@ const MyProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("personal");
+  const [expandedOrderId, setExpandedOrderId] = useState(null); // State for expanded order
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -44,14 +46,8 @@ const MyProfilePage = () => {
     fetchProfileData();
   }, []);
 
-  const handleSaveChanges = async (updatedData) => {
-    await updateUserData(updatedData);
-    setUserData(updatedData);
-    setIsEditing(false);
-  };
-
-  const handleEditToggle = () => {
-    setIsEditing(!isEditing);
+  const handleToggleOrder = (orderId) => {
+    setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
   };
 
   if (loading) {
@@ -136,16 +132,18 @@ const MyProfilePage = () => {
                 userData={userData}
                 userEmail={user?.email}
                 isEditing={isEditing}
-                onSaveChanges={handleSaveChanges}
-                onEditToggle={handleEditToggle}
-                onCancel={handleEditToggle}
+                onSaveChanges={(updatedData) => {
+                  updateUserData(updatedData);
+                  setUserData(updatedData);
+                  setIsEditing(false);
+                }}
+                onEditToggle={() => setIsEditing(!isEditing)}
+                onCancel={() => setIsEditing(false)}
               />
             )}
 
             {activeTab === "addresses" && (
-              <AddressesWindow
-                userId={user?.user_metadata?.custom_incremented_id}
-              />
+              <AddressesWindow userId={user?.user_metadata?.custom_incremented_id} />
             )}
 
             {activeTab === "orders" && (
@@ -159,15 +157,25 @@ const MyProfilePage = () => {
                       key={order.order_id}
                       className="bg-gray-50 rounded-lg p-6 shadow-sm hover:shadow-md transition duration-300"
                     >
-                      <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-semibold text-gray-800">
-                          Order #{order.order_id}
-                        </h3>
-                        <span className="text-sm font-medium text-gray-600">
-                          {new Date(order.order_date).toLocaleDateString()}
-                        </span>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => handleToggleOrder(order.order_id)}
+                      >
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-800">
+                            Order #{order.order_id}
+                          </h3>
+                          <span className="text-sm font-medium text-gray-600">
+                            {new Date(order.order_date).toLocaleDateString()}
+                          </span>
+                        </div>
+                        {expandedOrderId === order.order_id ? (
+                          <ChevronUp className="text-[#65aa92]" size={20} />
+                        ) : (
+                          <ChevronDown className="text-[#65aa92]" size={20} />
+                        )}
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-4 mt-4">
                         <div>
                           <p className="text-sm text-gray-600">Total Price</p>
                           <p className="text-lg font-semibold text-[#65aa92]">
@@ -175,15 +183,15 @@ const MyProfilePage = () => {
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">
-                            Delivery Address
-                          </p>
+                          <p className="text-sm text-gray-600">Delivery Address</p>
                           <p className="text-sm text-gray-800">
                             {order.address ? (
                               <>
-                                {order.address.city}, {order.address.district}
-                                <br />
                                 {order.address.address_details}
+                                <br />
+                                {order.address.zip_code}
+                                <br />
+                                {order.address.city}, {order.address.district}
                               </>
                             ) : (
                               "Address not available"
@@ -191,6 +199,9 @@ const MyProfilePage = () => {
                           </p>
                         </div>
                       </div>
+                      {expandedOrderId === order.order_id && (
+                        <OrderDetailsWindow order={order} />
+                      )}
                     </div>
                   ))
                 ) : (
