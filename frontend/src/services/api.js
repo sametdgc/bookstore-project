@@ -108,13 +108,27 @@ export const getBookById = async (bookIds) => {
 };
 
 
-// PLACE an order
+// PLACE an order and add entry to deliverystatuses
 export const placeOrder = async (order) => {
   const { data, error } = await supabase.from("orders").insert([order]);
 
   if (error) {
     console.error("Error placing order:", error.message);
     return { success: false, message: error.message };
+  }
+
+  if (!data || data.length === 0) {
+    console.error("Error: No order data returned after placing the order");
+    return { success: false, message: "Order placement failed, no data returned" };
+  }
+
+  const newOrderId = data[0].order_id;
+  const { error: deliveryStatusError } = await supabase
+    .from("deliverystatuses")
+    .insert([{ order_id: newOrderId }]); 
+  if (deliveryStatusError) {
+    console.error("Error inserting into deliverystatuses:", deliveryStatusError.message);
+    return { success: false, message: deliveryStatusError.message };
   }
 
   return { success: true, data };
