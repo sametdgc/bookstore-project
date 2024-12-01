@@ -109,43 +109,76 @@ export const getBookById = async (bookIds) => {
 
 
 // PLACE an order and add entry to deliverystatuses
-export const placeOrder = async (order) => {
-  // Insert the order and request to return the newly inserted row
-  const { data, error } = await supabase
+// export const placeOrder = async (order) => {
+//   // Insert the order and request to return the newly inserted row
+//   const { data, error } = await supabase
+//     .from("orders")
+//     .insert([order])
+//     .select("*"); // Ensure the inserted row is returned
+
+//   if (error) {
+//     console.error("Error placing order:", error.message);
+//     return { success: false, message: error.message };
+//   }
+
+//   if (!data || data.length === 0) {
+//     console.error("Error: No order data returned after placing the order");
+//     return { success: false, message: "Order placement failed, no data returned" };
+//   }
+
+//   const newOrderId = data[0].order_id;
+
+//   createDeliveryStatus(newOrderId);
+
+//   return { success: true, data: data[0] }; // Return the first inserted row for further use
+// };
+
+
+export const placeOrder = async (orderDetails, cartItems) => {
+  // Insert the order and return the newly created order ID
+  const { data: orderData, error: orderError } = await supabase
     .from("orders")
-    .insert([order])
+    .insert([orderDetails])
     .select("*"); // Ensure the inserted row is returned
 
-  if (error) {
-    console.error("Error placing order:", error.message);
-    return { success: false, message: error.message };
+  if (orderError) {
+    console.error("Error placing order:", orderError.message);
+    return { success: false, message: orderError.message };
   }
 
-  if (!data || data.length === 0) {
+  if (!orderData || orderData.length === 0) {
     console.error("Error: No order data returned after placing the order");
     return { success: false, message: "Order placement failed, no data returned" };
   }
 
-  const newOrderId = data[0].order_id;
+  const newOrderId = orderData[0].order_id;
 
-  createDeliveryStatus(newOrderId);
+  // Insert order items for each item in the cart
+  const orderItems = cartItems.map((item) => ({
+    order_id: newOrderId,
+    book_id: item.book_id,
+    quantity: item.quantity,
+    item_price: item.book.price,
+  }));
 
-  return { success: true, data: data[0] }; // Return the first inserted row for further use
-};
+  const { error: orderItemsError } = await supabase.from("orderitems").insert(orderItems);
 
-const createDeliveryStatus = async (orderId) => {
-  const { error } = await supabase
-    .from("deliverystatuses")
-    .insert([{ order_id: orderId, status: "processing" }]);
-
-  if (error) {
-    console.error("Error creating delivery status:", error.message);
-    return { success: false, message: error.message };
+  if (orderItemsError) {
+    console.error("Error inserting order items:", orderItemsError.message);
+    return { success: false, message: orderItemsError.message };
   }
 
-  return { success: true };
-};
+  // Create delivery status entry
+  const { success: deliveryStatusSuccess, message: deliveryStatusMessage } =
+    await createDeliveryStatus(newOrderId);
 
+  if (!deliveryStatusSuccess) {
+    console.error("Error creating delivery status:", deliveryStatusMessage);
+    return { success: false, message: deliveryStatusMessage };
+  }
+
+  return { success: true, data: orderData[0] };
+};
 
 export const searchBooks = async (query) => {
   // Query for books by title or ISBN

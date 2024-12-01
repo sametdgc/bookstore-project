@@ -152,7 +152,7 @@ const CheckoutPage = () => {
         address_id: selectedAddressId,
       };
   
-      const orderResult = await placeOrder(orderDetails);
+      const orderResult = await placeOrder(orderDetails, cart);
   
       if (!orderResult.success) {
         setGeneralError(orderResult.message || "Failed to place the order.");
@@ -170,7 +170,6 @@ const CheckoutPage = () => {
       setGeneralError("An unexpected error occurred. Please try again.");
     }
   };
-  
   
 
   const showProcessingAlert = () => {
