@@ -183,7 +183,7 @@ export const placeOrder = async (orderDetails, cartItems) => {
 export const createDeliveryStatus = async (orderId) => {
   const { data, error } = await supabase
     .from("deliverystatuses")
-    .insert([{ order_id: orderId, status: "Pending" }]);
+    .insert([{ order_id: orderId }]);
   if (error) {
     console.error("Error creating delivery status:", error.message);
     return { success: false, message: error.message };
