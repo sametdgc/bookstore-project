@@ -50,9 +50,8 @@ const BookCard = ({ book }) => {
   const handleAddToCart = async () => {
     const { book_id, price } = book;
 
-    if (user) {
+    if (userId) {
       // Logged-in user: Add to database cart
-      const userId = user.user_metadata.custom_incremented_id;
       await addItemToCart(userId, book_id, 1, price);
     } else {
       // Anonymous user: Add to localStorage cart

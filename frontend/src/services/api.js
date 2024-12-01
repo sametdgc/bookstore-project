@@ -111,9 +111,16 @@ export const getBookById = async (bookIds) => {
 // PLACE an order
 export const placeOrder = async (order) => {
   const { data, error } = await supabase.from("orders").insert([order]);
-  if (error) console.log("Error placing order:", error.message);
-  return data;
+
+  if (error) {
+    console.error("Error placing order:", error.message);
+    return { success: false, message: error.message };
+  }
+
+  return { success: true, data };
 };
+
+
 
 
 export const searchBooks = async (query) => {
