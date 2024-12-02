@@ -59,7 +59,7 @@ function App() {
         </Routes>
       </div>
 
-      {!shouldHideLayout && <SubscriptionBanner />}
+      {/* {!shouldHideLayout && <SubscriptionBanner />} */}
       {!shouldHideLayout && <Footer />}
     </div>
   );

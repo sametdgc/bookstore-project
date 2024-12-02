@@ -159,7 +159,17 @@ const ShoppingCart = () => {
       <h1 className="text-4xl font-semibold text-[#65aa92]">Shopping Cart</h1>
 
       {cart.length === 0 ? (
-        <p className="text-lg text-gray-600 mt-4">Your shopping cart is currently empty.</p>
+        <div className="flex flex-col items-center justify-center min-h-[50vh]">
+        <p className="text-2xl font-semibold text-gray-700 text-center mb-4">
+          Your shopping cart is currently empty.
+        </p>
+        <button
+          onClick={() => navigate("/")} 
+          className="px-6 py-3 bg-[#65aa92] text-white font-semibold rounded shadow hover:bg-[#579d7b]"
+        >
+          Start Shopping
+        </button>
+      </div>
       ) : (
         <div>
           <table className="table-auto w-full my-4">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { addNewAddress, getUserAddresses } from "../../services/api";
+import { addNewAddress, getUserAddresses, deleteAddress } from "../../services/api";
 import { PlusCircle, Edit2, Trash2 } from "lucide-react";
 
 const AddressSelector = ({ userId, onAddressSelect }) => {
@@ -61,15 +61,30 @@ const AddressSelector = ({ userId, onAddressSelect }) => {
     }
   };
 
+  const handleDeleteAddress = async (addressId) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this address?"
+    );
+    if (!confirmed) return;
+
+    const result = await deleteAddress(addressId);
+
+    if (result.success) {
+      const updatedAddresses = await getUserAddresses(userId);
+      setAddresses(updatedAddresses || []);
+    } else {
+      alert("Failed to delete address. Please try again.");
+    }
+  };
+
   const handleAddressSelect = (addressId) => {
-    console.log("Selected address:", addressId);  
-    setSelectedAddressId(addressId); 
+    setSelectedAddressId(addressId);
     onAddressSelect(addressId);
   };
 
   return (
-    <div className="p-4  shadow-md rounded-lg">
-      {/* <h2 className="text-xl font-semibold mb-4">Delivery Address</h2> */}
+    <div className="p-4 shadow-md rounded-lg">
+      <h2 className="text-xl font-semibold mb-4 text-gray-800">Delivery Address</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div
@@ -86,7 +101,7 @@ const AddressSelector = ({ userId, onAddressSelect }) => {
               selectedAddressId === address.address_id
                 ? "border-[#65aa92] bg-green-50"
                 : "border-gray-300"
-            } cursor-pointer`}
+            } cursor-pointer hover:shadow-md`}
             onClick={() => handleAddressSelect(address.address_id)}
           >
             <div className="flex justify-between items-center">
@@ -109,16 +124,16 @@ const AddressSelector = ({ userId, onAddressSelect }) => {
                   title="Delete"
                   onClick={(e) => {
                     e.stopPropagation();
-                    alert("Delete functionality not implemented in this demo.");
+                    handleDeleteAddress(address.address_id);
                   }}
                 />
               </div>
             </div>
-            <p className="text-sm text-gray-700">{address.address_details}</p>
+            <p className="text-sm text-gray-700">{address.address.address_details}</p>
             <p className="text-sm text-gray-700">
-              {address.district}, {address.city}
+              {address.address.district}, {address.address.city}
             </p>
-            <p className="text-sm text-gray-700">ZIP: {address.zip_code}</p>
+            <p className="text-sm text-gray-700">ZIP: {address.address.zip_code}</p>
           </div>
         ))}
       </div>

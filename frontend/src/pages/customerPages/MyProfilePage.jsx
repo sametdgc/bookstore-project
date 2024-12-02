@@ -9,7 +9,16 @@ import AddressesWindow from "../../components/profilePage/AddressesWindow";
 import PersonalDetailsWindow from "../../components/profilePage/PersonalDetailsWindow";
 import OrderDetailsWindow from "../../components/profilePage/OrderDetailsWindow"; // Import the OrderDetailsWindow
 import { Link } from "react-router-dom";
-import { User, Book, ShoppingBag, ChevronDown, ChevronUp, Clipboard, Truck, Home } from "lucide-react"; // Import new icons
+import {
+  User,
+  Book,
+  ShoppingBag,
+  ChevronDown,
+  ChevronUp,
+  Clipboard,
+  Truck,
+  Home,
+} from "lucide-react"; // Import new icons
 
 const MyProfilePage = () => {
   const [user, setUser] = useState(null);
@@ -143,7 +152,9 @@ const MyProfilePage = () => {
             )}
 
             {activeTab === "addresses" && (
-              <AddressesWindow userId={user?.user_metadata?.custom_incremented_id} />
+              <AddressesWindow
+                userId={user?.user_metadata?.custom_incremented_id}
+              />
             )}
 
             {activeTab === "orders" && (
@@ -161,7 +172,12 @@ const MyProfilePage = () => {
                         {/* Order ID and Date */}
                         <div>
                           <h3 className="text-lg font-semibold text-gray-800">
-                            Order #{order.order_id}
+                            <Link
+                              to={`/invoice?orderID=${order.order_id}`} 
+                              className="text-[#65aa92] hover:underline" 
+                            >
+                              Order #{order.order_id}
+                            </Link>
                           </h3>
                           <span className="text-sm font-medium text-gray-600">
                             {new Date(order.order_date).toLocaleDateString()}
@@ -178,12 +194,15 @@ const MyProfilePage = () => {
 
                               // Determine the current step and whether it should be highlighted
                               const isCompleted =
-                                (currentStatus === "processing" && index === 0) ||
-                                (currentStatus === "in-transit" && index <= 1) ||
+                                (currentStatus === "processing" &&
+                                  index === 0) ||
+                                (currentStatus === "in-transit" &&
+                                  index <= 1) ||
                                 currentStatus === "delivered";
 
                               const connectorCompleted =
-                                (currentStatus === "in-transit" && index === 0) ||
+                                (currentStatus === "in-transit" &&
+                                  index === 0) ||
                                 currentStatus === "delivered";
 
                               return (
@@ -214,7 +233,7 @@ const MyProfilePage = () => {
                                           ? "bg-[#65aa92]"
                                           : "bg-gray-300"
                                       }`}
-                                      style={{ width: '160px' }} // Adjusted width to properly connect the icons
+                                      style={{ width: "160px" }} // Adjusted width to properly connect the icons
                                     />
                                   )}
                                 </div>
@@ -224,7 +243,10 @@ const MyProfilePage = () => {
                         </div>
 
                         {/* Expand/Collapse Icon */}
-                        <div className="cursor-pointer" onClick={() => handleToggleOrder(order.order_id)}>
+                        <div
+                          className="cursor-pointer"
+                          onClick={() => handleToggleOrder(order.order_id)}
+                        >
                           {expandedOrderId === order.order_id ? (
                             <ChevronUp className="text-[#65aa92]" size={20} />
                           ) : (
@@ -240,7 +262,9 @@ const MyProfilePage = () => {
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Delivery Address</p>
+                          <p className="text-sm text-gray-600">
+                            Delivery Address
+                          </p>
                           <p className="text-sm text-gray-800">
                             {order.address ? (
                               <>
