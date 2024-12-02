@@ -132,7 +132,8 @@ const TopRatedBooks = () => {
   ].slice(0, booksPerPage);
 
   return (
-    <section className="py-16 bg-gradient-to-b from-gray-100 to-white relative overflow-hidden">
+    <section id="top-rated-books" 
+      className="py-16 bg-gradient-to-b from-gray-100 to-white relative overflow-hidden">
       <div className="absolute inset-0 bg-[url('/book-pattern.png')] opacity-5"></div>
       <div className="container mx-auto px-4 relative">
         <h2 className="text-4xl font-bold text-center text-gray-800 mb-12">

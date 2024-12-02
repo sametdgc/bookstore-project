@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import {
   Autoplay,
@@ -20,7 +21,7 @@ import heroCollection from "../../assets/hero2.png";
 const HeroSection = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-
+  const navigate = useNavigate();
   useEffect(() => {
     setIsLoaded(true);
   }, []);
@@ -98,7 +99,16 @@ const HeroSection = () => {
                       <p className="text-xl sm:text-2xl md:text-3xl mb-10 max-w-3xl mx-auto">
                         {slide.subtitle}
                       </p>
-                      <button className="bg-white text-black py-3 px-8 rounded-full text-lg font-semibold hover:bg-opacity-90 transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+                      <button
+                        className="bg-white text-black py-3 px-8 rounded-full text-lg font-semibold hover:bg-opacity-90 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                        onClick={() => {
+                          if (slide.cta === "Start Your Journey") {
+                            document.getElementById("top-rated-books").scrollIntoView({ behavior: "smooth" });
+                          } else if (slide.cta === "Browse Books") {
+                            navigate("/search");
+                          }
+                        }}
+                      >
                         {slide.cta}
                       </button>
                     </motion.div>
