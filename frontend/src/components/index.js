@@ -6,6 +6,7 @@ import SubscriptionBanner from "./common/SubscriptionBanner";
 import Footer from "./common/Footer";
 import MainContent from "./mainPage/MainContent";
 import ReviewWindow from "./ReviewWindow";
+import invoicePDF from "./invoicePDF";  
 
 export {
     LoginForm,
@@ -15,5 +16,6 @@ export {
     SubscriptionBanner,
     Footer,
     MainContent,
-    ReviewWindow
+    ReviewWindow,
+    invoicePDF,
 };
