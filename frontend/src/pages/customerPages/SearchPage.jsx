@@ -193,9 +193,9 @@ const SearchPage = () => {
 
   return (
     <div className="container mx-auto p-6 font-sans">
-      <h1 className="text-4xl font-bold mb-8 text-center text-[#65aa92]">
-        Search Page
-      </h1>
+      
+      {/*Leave some empty sopace*/}
+      <div className="h-16"></div>
 
       <div className="flex gap-4">
         {/* Search Filter */}
