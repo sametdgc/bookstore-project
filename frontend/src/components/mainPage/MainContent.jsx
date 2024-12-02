@@ -40,7 +40,6 @@ const MainContent = () => {
   }, []);
 
 useEffect(() => {
-    console.log("maxCardHeight:", maxCardHeight);
     if (cardsContainerRef.current) {
       const cardElements = cardsContainerRef.current.querySelectorAll(".book-card");
       const heights = Array.from(cardElements).map((el) => el.offsetHeight);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { HeroSection, MainContent } from "../../components";
 import {
   BookOpen,
@@ -10,6 +10,9 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import BookCard from "../../components/common/BookCard";
+import { getTopRatedBooks } from "../../services/api"; // Import the API function
+
 
 const MainPage = () => {
   return (
@@ -64,85 +67,85 @@ const FeatureCard = ({ icon, title, description }) => {
   );
 };
 
-const TopRatedBooks = () => {
-  const books = [
-    {
-      id: 1,
-      title: "The Great Gatsby",
-      author: "F. Scott Fitzgerald",
-      rating: 4.5,
-      cover: "/placeholder.svg?height=300&width=200",
-    },
-    {
-      id: 2,
-      title: "To Kill a Mockingbird",
-      author: "Harper Lee",
-      rating: 4.8,
-      cover: "/placeholder.svg?height=300&width=200",
-    },
-    {
-      id: 3,
-      title: "1984",
-      author: "George Orwell",
-      rating: 4.6,
-      cover: "/placeholder.svg?height=300&width=200",
-    },
-    {
-      id: 4,
-      title: "Pride and Prejudice",
-      author: "Jane Austen",
-      rating: 4.7,
-      cover: "/placeholder.svg?height=300&width=200",
-    },
-    {
-      id: 5,
-      title: "The Catcher in the Rye",
-      author: "J.D. Salinger",
-      rating: 4.3,
-      cover: "/placeholder.svg?height=300&width=200",
-    },
-    {
-      id: 6,
-      title: "One Hundred Years of Solitude",
-      author: "Gabriel García Márquez",
-      rating: 4.7,
-      cover: "/placeholder.svg?height=300&width=200",
-    },
-  ];
 
+const TopRatedBooks = () => {
+  const [books, setBooks] = useState([]);
   const [startIndex, setStartIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const booksPerPage = 4;
+  const containerRef = useRef(null); // Ref for the container to calculate height
+
+  // Fetch top-rated books
+  useEffect(() => {
+    const fetchTopRatedBooks = async () => {
+      try {
+        const topRatedBooks = await getTopRatedBooks();
+        setBooks(topRatedBooks);
+      } catch (error) {
+        console.error("Error fetching top-rated books:", error);
+      }
+    };
+
+    fetchTopRatedBooks();
+  }, []);
+
+  // Ensure the container has a consistent height
+  useEffect(() => {
+    if (containerRef.current) {
+      const cardHeights = Array.from(containerRef.current.children).map(
+        (child) => child.getBoundingClientRect().height
+      );
+      const maxHeight = Math.max(...cardHeights);
+      containerRef.current.style.height = `${maxHeight}px`;
+    }
+  }, [books]);
 
   const nextBooks = () => {
-    setDirection(1);
-    setStartIndex((prevIndex) => (prevIndex + booksPerPage) % books.length);
+    if (startIndex + booksPerPage < books.length) {
+      setDirection(1);
+      setStartIndex((prevIndex) => prevIndex + booksPerPage);
+    }
   };
 
   const prevBooks = () => {
-    setDirection(-1);
-    setStartIndex(
-      (prevIndex) => (prevIndex - booksPerPage + books.length) % books.length
-    );
+    if (startIndex > 0) {
+      setDirection(-1);
+      setStartIndex((prevIndex) => prevIndex - booksPerPage);
+    }
   };
 
-  const visibleBooks = [
-    ...books.slice(startIndex),
-    ...books.slice(0, startIndex),
-  ].slice(0, booksPerPage);
+  const visibleBooks = books.slice(startIndex, startIndex + booksPerPage);
+
+  const variants = {
+    enter: (direction) => ({
+      x: direction > 0 ? "100%" : "-100%",
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      zIndex: 1,
+    },
+    exit: (direction) => ({
+      x: direction < 0 ? "100%" : "-100%",
+      opacity: 0,
+      zIndex: 0,
+    }),
+  };
 
   return (
-    <section id="top-rated-books" 
-      className="py-16 bg-gradient-to-b from-gray-100 to-white relative overflow-hidden">
-      <div className="absolute inset-0 bg-[url('/book-pattern.png')] opacity-5"></div>
+    <section
+      id="top-rated-books"
+      className="py-16 bg-gradient-to-b from-gray-100 to-white relative overflow-hidden"
+    >
       <div className="container mx-auto px-4 relative">
         <h2 className="text-4xl font-bold text-center text-gray-800 mb-12">
           Top Rated <span className="text-[#65aa92]">Books</span>
         </h2>
-        <div className="relative">
+        <div className="relative h-[500px]"> {/* Ensure consistent height */}
           <AnimatePresence initial={false} custom={direction}>
             <motion.div
-              key={startIndex}
+              key={`slide-${startIndex}`} // Unique key for each slide
               custom={direction}
               variants={variants}
               initial="enter"
@@ -152,31 +155,52 @@ const TopRatedBooks = () => {
                 x: { type: "spring", stiffness: 300, damping: 30 },
                 opacity: { duration: 0.2 },
               }}
-              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
+              ref={containerRef} // Attach the ref for height calculation
+              className="absolute inset-0 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
             >
-              {visibleBooks.map((book) => (
-                <BookCard key={book.id} book={book} />
-              ))}
+              {visibleBooks.length > 0 ? (
+                visibleBooks.map((book) => (
+                  <BookCard key={book.book_id} book={book} />
+                ))
+              ) : (
+                <p className="text-center text-gray-500">
+                  No top-rated books available.
+                </p>
+              )}
             </motion.div>
           </AnimatePresence>
-          <button
-            onClick={prevBooks}
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-3 shadow-md z-10 transition-all duration-300 hover:bg-[#65aa92] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#65aa92] focus:ring-opacity-50"
-            aria-label="Previous books"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <button
-            onClick={nextBooks}
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-3 shadow-md z-10 transition-all duration-300 hover:bg-[#65aa92] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#65aa92] focus:ring-opacity-50"
-            aria-label="Next books"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
         </div>
+
+        {/* Pagination Buttons */}
+        <button
+          onClick={prevBooks}
+          disabled={startIndex === 0}
+          className={`absolute left-0 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-3 shadow-md z-10 transition-all duration-300 ${
+            startIndex === 0
+              ? "cursor-not-allowed opacity-50"
+              : "hover:bg-[#65aa92] hover:text-white"
+          }`}
+          aria-label="Previous books"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+        <button
+          onClick={nextBooks}
+          disabled={startIndex + booksPerPage >= books.length}
+          className={`absolute right-0 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-3 shadow-md z-10 transition-all duration-300 ${
+            startIndex + booksPerPage >= books.length
+              ? "cursor-not-allowed opacity-50"
+              : "hover:bg-[#65aa92] hover:text-white"
+          }`}
+          aria-label="Next books"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+
+        {/* View All Link */}
         <div className="text-center mt-12">
           <a
-            href="/books"
+            href="/search"
             className="inline-flex items-center text-[#65aa92] hover:text-[#4a7d6b] transition-colors duration-300"
           >
             <span className="mr-2">View all books</span>
@@ -188,57 +212,5 @@ const TopRatedBooks = () => {
   );
 };
 
-const BookCard = ({ book }) => {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.05 }}
-      className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl"
-    >
-      <div className="relative h-64 overflow-hidden">
-        <img
-          src={book.cover}
-          alt={book.title}
-          className="w-full h-full object-cover transition-transform duration-300 transform hover:scale-110"
-        />
-        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-          <button className="bg-white text-gray-800 px-4 py-2 rounded-full font-semibold hover:bg-[#65aa92] hover:text-white transition-colors duration-300">
-            View Details
-          </button>
-        </div>
-      </div>
-      <div className="p-4">
-        <h3 className="text-xl font-semibold text-gray-800 mb-2 line-clamp-1">
-          {book.title}
-        </h3>
-        <p className="text-gray-600 mb-2 line-clamp-1">{book.author}</p>
-        <div className="flex items-center">
-          <Star className="w-5 h-5 text-yellow-400 mr-1" />
-          <span className="text-gray-700">{book.rating.toFixed(1)}</span>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
-const variants = {
-  enter: (direction) => {
-    return {
-      x: direction > 0 ? 1000 : -1000,
-      opacity: 0,
-    };
-  },
-  center: {
-    zIndex: 1,
-    x: 0,
-    opacity: 1,
-  },
-  exit: (direction) => {
-    return {
-      zIndex: 0,
-      x: direction < 0 ? 1000 : -1000,
-      opacity: 0,
-    };
-  },
-};
 
 export default MainPage;

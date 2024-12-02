@@ -1262,28 +1262,50 @@ MAIN PAGE STUFFFF
 -please divide this api omg
 
 */
-// Fetch top rated books, ordered by average rating, gets the top 8
+// Fetch top rated books, ordered by average rating, gets the top 24
 export const getTopRatedBooks = async () => {
   try {
-    const { data, error } = await supabase
-      .from("books")
-      .select(
-        `
-        *,
-        avg_rating:reviews!inner.avg(rating)
-      `
-      )
-      .order("avg_rating", { ascending: false })
-      .limit(8);
+    // Fetch books and reviews
+    const { data: books, error: booksError } = await supabase.from("books").select("*");
+    const { data: reviews, error: reviewsError } = await supabase.from("reviews").select("*");
 
-    if (error) {
-      console.error("Error fetching top rated books:", error);
+    if (booksError || reviewsError) {
+      console.error("Error fetching data:", booksError || reviewsError);
       return [];
     }
 
-    return data;
+    // Create a map to store ratings for each book
+    const ratingsMap = {};
+
+    reviews.forEach((review) => {
+      const bookId = review.book_id;
+      if (!ratingsMap[bookId]) {
+        ratingsMap[bookId] = { totalRating: 0, count: 0 };
+      }
+      ratingsMap[bookId].totalRating += review.rating;
+      ratingsMap[bookId].count += 1;
+    });
+
+    // Calculate the average rating for each book
+    const booksWithRatings = books.map((book) => {
+      const ratingData = ratingsMap[book.book_id] || { totalRating: 0, count: 0 };
+      const avgRating =
+        ratingData.count > 0 ? ratingData.totalRating / ratingData.count : 0;
+
+      return {
+        ...book,
+        avg_rating: avgRating,
+      };
+    });
+
+    // Sort books by average rating in descending order and take the top 24
+    const topRatedBooks = booksWithRatings
+      .sort((a, b) => b.avg_rating - a.avg_rating)
+      .slice(0, 24);
+
+    return topRatedBooks;
   } catch (err) {
-    console.error("Error fetching top rated books:", err);
+    console.error("Error calculating top rated books:", err);
     return [];
   }
 };
