@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { getOrderDetailsById } from "../../services/api";
+import { invoicePDF } from "../../components";
+
+
+
+const sendEmail = async () => {
+  console.log("Sending email is not yet implemented");
+};
 
 const InvoicePage = () => {
   const [searchParams] = useSearchParams();
@@ -31,83 +38,117 @@ const InvoicePage = () => {
     fetchOrderDetails();
   }, [orderID]);
 
-  if (loading) return <div>Loading...</div>;
-  if (!orderDetails) return <div>No order details found</div>;
+  if (loading) return <div className="text-center mt-20">Loading...</div>;
+  if (!orderDetails) return <div className="text-center mt-20">No order details found</div>;
+
+  const calculateTax = (total) => (total * 0.1).toFixed(2);
+  const calculateTotalWithTax = (total) => (total * 1.1).toFixed(2);
 
   return (
-    <div className="container mx-auto py-16">
-      <h1 className="text-4xl font-semibold text-[#65aa92]">Invoice</h1>
-      <p className="text-sm text-gray-600 mt-2">Order ID: {orderDetails.order_id}</p>
-      <p className="text-sm text-gray-600">
-        Date: {new Date(orderDetails.order_date).toLocaleDateString()}
-      </p>
-
-      {/* Customer Info */}
-      <div className="bg-[#f0fdf4] p-6 rounded-lg shadow-md mt-6">
-        <h2 className="text-lg font-semibold text-[#065f46]">Customer Details</h2>
-        <p className="text-gray-700 mt-2">
-          <strong>Name:</strong> {orderDetails.users.full_name}
-        </p>
-        <p className="text-gray-700">
-          <strong>Email:</strong> {orderDetails.users.email}
-        </p>
-        <p className="text-gray-700">
-          <strong>Phone:</strong> {orderDetails.users.phone_number}
-        </p>
+    <div className="container mx-auto py-16 px-8 bg-gray-50 shadow-md rounded-lg">
+      {/* Invoice Information */}
+      <div className="flex justify-between items-center border-b pb-4 mb-6">
+        <div>
+          <p className="text-sm text-gray-600">
+            <strong>Invoice #:</strong> {orderDetails.order_id}
+          </p>
+          <p className="text-sm text-gray-600">
+            <strong>Date:</strong> {new Date(orderDetails.order_date).toLocaleDateString()}
+          </p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-600">
+            <strong>Customer:</strong> {orderDetails.users.full_name}
+          </p>
+          <p className="text-sm text-gray-600">
+            <strong>Email:</strong> {orderDetails.users.email}
+          </p>
+        </div>
       </div>
 
-      {/* Address */}
-      <div className="bg-[#f0fdf4] p-6 rounded-lg shadow-md mt-6">
-        <h2 className="text-lg font-semibold text-[#065f46]">Shipping Address</h2>
-        <p className="text-gray-700 mt-2">
-          <strong>City:</strong> {orderDetails.addresses.city}
+      {/* Customer Details */}
+      <div className="bg-gray-100 p-4 rounded-md mb-8 shadow-sm">
+        <h3 className="text-lg font-semibold text-gray-700 mb-2">Bill To:</h3>
+        <p className="text-sm text-gray-600">{orderDetails.users.full_name}</p>
+        <p className="text-sm text-gray-600">{orderDetails.addresses.address_details}</p>
+        <p className="text-sm text-gray-600">
+          {orderDetails.addresses.city}, {orderDetails.addresses.district}
         </p>
-        <p className="text-gray-700">
-          <strong>District:</strong> {orderDetails.addresses.district}
-        </p>
-        <p className="text-gray-700">
-          <strong>Details:</strong> {orderDetails.addresses.address_details}
-        </p>
-        <p className="text-gray-700">
-          <strong>Zip Code:</strong> {orderDetails.addresses.zip_code}
-        </p>
+        <p className="text-sm text-gray-600">Phone: {orderDetails.users.phone_number}</p>
       </div>
 
-      {/* Order Items */}
-      <div className="mt-6">
-        <h2 className="text-2xl font-semibold text-[#65aa92] mb-4">Order Items</h2>
-        <table className="table-auto w-full border-collapse border border-gray-200">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border border-gray-200 px-4 py-2 text-left">Product</th>
-              <th className="border border-gray-200 px-4 py-2 text-center">Quantity</th>
-              <th className="border border-gray-200 px-4 py-2 text-right">Unit Price</th>
-              <th className="border border-gray-200 px-4 py-2 text-right">Subtotal</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orderDetails.orderitems.map((item, index) => (
-              <tr key={index}>
-                <td className="border border-gray-200 px-4 py-2">{item.books.title}</td>
-                <td className="border border-gray-200 px-4 py-2 text-center">{item.quantity}</td>
-                <td className="border border-gray-200 px-4 py-2 text-right">
-                  ${item.item_price.toFixed(2)}
-                </td>
-                <td className="border border-gray-200 px-4 py-2 text-right">
-                  ${(item.quantity * item.item_price).toFixed(2)}
-                </td>
+      {/* Order Items Table */}
+      <div>
+        <h3 className="text-lg font-semibold text-gray-700 mb-4">Order Items</h3>
+        {orderDetails.orderitems.length > 0 ? (
+          <table className="table-auto w-full border border-gray-300">
+            <thead className="bg-gray-200">
+              <tr>
+                <th className="border border-gray-300 px-4 py-2 text-left">Product</th>
+                <th className="border border-gray-300 px-4 py-2 text-center">Quantity</th>
+                <th className="border border-gray-300 px-4 py-2 text-right">Unit Price</th>
+                <th className="border border-gray-300 px-4 py-2 text-right">Subtotal</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {orderDetails.orderitems.map((item, index) => (
+                <tr
+                  key={index}
+                  className={index % 2 === 0 ? "bg-white" : "bg-gray-100"}
+                >
+                  <td className="border border-gray-300 px-4 py-2">{item.books.title}</td>
+                  <td className="border border-gray-300 px-4 py-2 text-center">{item.quantity}</td>
+                  <td className="border border-gray-300 px-4 py-2 text-right">
+                    ${item.item_price.toFixed(2)}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-right">
+                    ${(item.quantity * item.item_price).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="text-sm text-gray-600">No items found in the order.</p>
+        )}
       </div>
 
-      {/* Payment Details */}
-      <div className="text-left bg-[#f0fdf4] p-6 rounded-lg shadow-md mt-6">
-        <h2 className="text-lg font-semibold text-[#065f46]">Payment Details</h2>
-        <p className="text-gray-700 mt-2">
-          <strong>Total Amount:</strong> ${orderDetails.total_price.toFixed(2)}
-        </p>
+      {/* Payment Summary */}
+      <div className="flex justify-between items-start mt-8">
+        <button
+          onClick={() => invoicePDF(orderDetails)}
+          className="px-4 py-2 bg-[#65aa92] text-white font-semibold rounded shadow hover:bg-[#579d7b]"
+        >
+          Download PDF
+        </button>
+        <button
+          onClick={() =>
+            sendEmail()
+          }
+          className="px-4 py-2 bg-[#65aa92] text-white font-semibold rounded shadow hover:bg-[#579d7b]"
+        >
+          Send Email
+        </button>
+
+
+        <div className="bg-gray-100 p-4 rounded-md w-1/3 shadow-sm">
+          <p className="text-sm text-gray-600">
+            <strong>Subtotal:</strong> ${orderDetails.total_price.toFixed(2)}
+          </p>
+          <p className="text-sm text-gray-600">
+            <strong>Tax (10%):</strong> ${calculateTax(orderDetails.total_price)}
+          </p>
+          <p className="text-lg font-bold text-gray-800 mt-2">
+            <strong>Total:</strong> ${calculateTotalWithTax(orderDetails.total_price)}
+          </p>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="text-center text-gray-600 mt-8">
+        <p>Thank you for your business!</p>
+        <p>Please make all checks payable to Your Company Name.</p>
+        <p>www.yourwebsite.com || chzero@gmail.com</p>
       </div>
     </div>
   );
