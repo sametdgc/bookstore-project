@@ -56,7 +56,7 @@ const OrderSummary = ({ cart, shippingCost, calculateTotalPrice }) => {
         <div className="flex justify-between items-center border-t border-[#c7f3e0] pt-4">
           <span className="text-xl font-bold text-[#065f46]">Total:</span>
           <span className="text-xl font-extrabold text-[#065f46]">
-            ${calculateTotalPrice()}
+            ${Number(calculateTotalPrice().toFixed(2))}
           </span>
         </div>
       </div>
