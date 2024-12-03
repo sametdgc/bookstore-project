@@ -43,3 +43,4 @@ dist-ssr/
 .pytest_cache/
 htmlcov/
 coverage.xml
+frontend/src/services/resendApi.js

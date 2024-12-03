@@ -372,6 +372,7 @@ export const getUserData = async () => {
     // Get the current session
     const user = await fetchUser();
     // Extract the user_id from the session metadata
+    console.log(user)
     const userId = user.user_metadata.custom_incremented_id;
     // Query the users table with the user_id
     const { data, error } = await supabase
@@ -1205,6 +1206,54 @@ export const getPendingReviews = async ({
   return data;
 };
 
+// get delivered books to allow reviewing
+export const getDeliveredBooks = async (userId) => {
+  try {
+      // orders associated with the user
+      const { data: orders, error: orderError } = await supabase
+          .from("orders")
+          .select("order_id")
+          .eq("user_id", userId);
+      if (orderError) {
+          console.error("Error fetching orders:", orderError.message);
+          return [];
+      }
+      if (!orders || orders.length === 0) {
+          return [];
+      }
+      const orderIds = orders.map((order) => order.order_id);
+
+      // delivery statuses for the user's orders
+      const { data: deliveries, error: deliveryError } = await supabase
+          .from("deliverystatuses")
+          .select("order_id")
+          .in("order_id", orderIds)
+          .eq("status", "delivered");
+      if (deliveryError) {
+          console.error("Error fetching delivery statuses:", deliveryError.message);
+          return [];
+      }
+      if (!deliveries || deliveries.length === 0) {
+          return [];
+      }
+      const deliveredOrderIds = deliveries.map((delivery) => delivery.order_id);
+
+      // books associated with the delivered orders
+      const { data: deliveredBooks, error: bookError } = await supabase
+          .from("orderitems")
+          .select("book_id")
+          .in("order_id", deliveredOrderIds);
+      if (bookError) {
+          console.error("Error fetching delivered books:", bookError.message);
+          return [];
+      }
+      return deliveredBooks || [];
+  } catch (err) {
+      console.error("Unexpected error fetching delivered books:", err);
+      return [];
+  }
+};
+
 
 /*
 
@@ -1386,5 +1435,42 @@ export const getNewBooks = async () => {
   } catch (err) {
     console.error("Error fetching new books:", err);
     return [];
+  }
+};
+
+
+/*
+    Product Management Services
+*/
+
+// Fetch delivery statuses, and customer name form the order table
+export const getDeliveryStatuses = async () => {
+  const { data, error } = await supabase
+    .from("deliverystatuses")
+    .select(
+      `
+      *,
+      order:orders (order_id, order_date, total_price, user_id, users:users (full_name))
+    `
+    );
+
+  if(error) {
+    console.error("Error fetching delivery statuses:", error.message);
+    return [];
+  }
+  else {
+    return data;
+  } 
+}
+
+// Update delivery status
+export const updateDeliveryStatus = async (orderId, newStatus) => {
+  const { error } = await supabase
+    .from('deliverystatuses')
+    .update({ status: newStatus })
+    .eq('order_id', orderId);
+
+  if (error) {
+    throw error;
   }
 };

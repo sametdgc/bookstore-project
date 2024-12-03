@@ -1,14 +1,15 @@
 /** @type {import('jest').Config} */
 const config = {
-    "testMatch": ["**/?(*.)+(test).[jt]s?(x)"],
+
     transform: {
       "^.+\\.jsx?$": "babel-jest",
     },
-    testEnvironment: "jsdom", // it uses jsdom for DOM-related tests
+    testEnvironment: "jsdom", // Ensure it uses jsdom for DOM-related tests
     moduleFileExtensions: ["js", "jsx"],
-    rootDir: ".", 
+    rootDir: ".", // Set the root directory for the tests
   };
   
-  module.exports = config;
-
-  
+  module.exports = {
+    testEnvironment: "jsdom",
+    setupFilesAfterEnv: ["<rootDir>/src/setupTests.js"], // Ensure your setupTests.js file is included
+  }; 
