@@ -1,5 +1,6 @@
 /** @type {import('jest').Config} */
 const config = {
+
     transform: {
       "^.+\\.jsx?$": "babel-jest",
     },
@@ -11,8 +12,4 @@ const config = {
   module.exports = {
     testEnvironment: "jsdom",
     setupFilesAfterEnv: ["<rootDir>/src/setupTests.js"], // Ensure your setupTests.js file is included
-  };
-  
-  
-
-  
+  }; 
