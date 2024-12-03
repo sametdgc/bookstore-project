@@ -75,24 +75,20 @@ export const invoicePDF = (orderDetails) => {
     pdf.text(`$${(item.quantity * item.item_price).toFixed(2)}`, 200, y, { align: "right" });
     y += 10;
   });
+  pdf.text("Shipping", 10, y,);
+  pdf.text("1", 120, y, { align: "center" });
+  pdf.text(`$10`, 150, y, { align: "right" });
+  pdf.text(`$10`, 200, y, { align: "right" });
+  y += 10;
 
   // Separator after table
   pdf.line(10, y, 200, y);
-  y += 10;
+  y += 16;
 
   // Summary
-  pdf.setFontSize(12);
-  pdf.text("Subtotal:", 150, y, { align: "right" });
-  pdf.text(`$${orderDetails.total_price.toFixed(2)}`, 200, y, { align: "right" });
-  y += 10;
-
-  pdf.text("Tax (10%):", 150, y, { align: "right" });
-  pdf.text(`$${(orderDetails.total_price * 0.1).toFixed(2)}`, 200, y, { align: "right" });
-  y += 10;
-
   pdf.setFont("helvetica", "bold");
-  pdf.text("Total:", 150, y, { align: "right" });
-  pdf.text(`$${(orderDetails.total_price * 1.1).toFixed(2)}`, 200, y, { align: "right" });
+  pdf.text("Total(VAT included):", 150, y, { align: "right" });
+  pdf.text(`$${(orderDetails.total_price).toFixed(2)}`, 200, y, { align: "right" });
   y += 20;
 
   // Footer

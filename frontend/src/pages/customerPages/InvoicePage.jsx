@@ -41,9 +41,6 @@ const InvoicePage = () => {
   if (loading) return <div className="text-center mt-20">Loading...</div>;
   if (!orderDetails) return <div className="text-center mt-20">No order details found</div>;
 
-  const calculateTax = (total) => (total * 0.1).toFixed(2);
-  const calculateTotalWithTax = (total) => (total * 1.1).toFixed(2);
-
   return (
     <div className="container mx-auto py-16 px-8 bg-gray-50 shadow-md rounded-lg">
       {/* Invoice Information */}
@@ -106,11 +103,21 @@ const InvoicePage = () => {
                   </td>
                 </tr>
               ))}
+              {/* Table row for the shipping */}
+              <tr className="bg-gray-200">
+                <td colSpan="3" className="border border-gray-300 px-4 py-2 text-right">
+                  Shipping 
+                </td>
+                <td className="border border-gray-300 px-4 py-2 text-right">
+                  $10.00
+                </td>
+              </tr>
             </tbody>
           </table>
         ) : (
           <p className="text-sm text-gray-600">No items found in the order.</p>
         )}
+
       </div>
 
       {/* Payment Summary */}
@@ -133,13 +140,16 @@ const InvoicePage = () => {
 
         <div className="bg-gray-100 p-4 rounded-md w-1/3 shadow-sm">
           <p className="text-sm text-gray-600">
-            <strong>Subtotal:</strong> ${orderDetails.total_price.toFixed(2)}
+            <strong>Subtotal:</strong> ${(orderDetails.total_price-10).toFixed(2)}
           </p>
           <p className="text-sm text-gray-600">
-            <strong>Tax (10%):</strong> ${calculateTax(orderDetails.total_price)}
+            <strong>Shipping:</strong> $10.00
           </p>
           <p className="text-lg font-bold text-gray-800 mt-2">
-            <strong>Total:</strong> ${calculateTotalWithTax(orderDetails.total_price)}
+            <strong>Total:</strong> ${orderDetails.total_price.toFixed(2)}
+            <p className="text-sm text-gray-600">
+            VAT included
+            </p>
           </p>
         </div>
       </div>
@@ -147,8 +157,8 @@ const InvoicePage = () => {
       {/* Footer */}
       <div className="text-center text-gray-600 mt-8">
         <p>Thank you for your business!</p>
-        <p>Please make all checks payable to Your Company Name.</p>
-        <p>www.yourwebsite.com || chzero@gmail.com</p>
+        <p>Please make all checks payable to ChapterZero.</p>
+        <p>www.chzero.com || chzero@gmail.com</p>
       </div>
     </div>
   );
