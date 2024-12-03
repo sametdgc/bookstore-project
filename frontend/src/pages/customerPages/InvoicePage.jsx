@@ -5,9 +5,35 @@ import { invoicePDF } from "../../components";
 
 
 
-const sendEmail = async () => {
-  console.log("Sending email is not yet implemented");
+const sendEmail = async (orderDetails) => {
+  try {
+    const response = await fetch("http://localhost:5000/api/send-invoice-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: orderDetails.users.email,
+        orderId: orderDetails.order_id,
+        orderDetails: orderDetails, // Pass all order details for PDF generation
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error("Failed to send email:", result.error);
+      alert("Failed to send the email. Please try again.");
+    } else {
+      console.log("Email sent successfully:", result);
+      alert("Email sent successfully!");
+    }
+  } catch (error) {
+    console.error("Error sending email:", error.message);
+    alert("An error occurred while sending the email.");
+  }
 };
+
 
 const InvoicePage = () => {
   const [searchParams] = useSearchParams();
@@ -130,7 +156,7 @@ const InvoicePage = () => {
         </button>
         <button
           onClick={() =>
-            sendEmail()
+            sendEmail(orderDetails)
           }
           className="px-4 py-2 bg-[#65aa92] text-white font-semibold rounded shadow hover:bg-[#579d7b]"
         >
