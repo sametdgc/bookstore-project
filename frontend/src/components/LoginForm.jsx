@@ -42,11 +42,12 @@ const LoginForm = () => {
         case 'Product Manager':
           navigate('/pm-dashboard'); 
           break;
-        case 'customer':
+        case 'Customer':
           
         
           const localCart = getLocalCartItems();
           await syncLocalCartToDatabase(localCart, userId);
+          console.log(localCart)
           navigate('/shopping-cart'); 
           break;
         default:
