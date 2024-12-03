@@ -1388,3 +1388,40 @@ export const getNewBooks = async () => {
     return [];
   }
 };
+
+
+/*
+    Product Management Services
+*/
+
+// Fetch delivery statuses, and customer name form the order table
+export const getDeliveryStatuses = async () => {
+  const { data, error } = await supabase
+    .from("deliverystatuses")
+    .select(
+      `
+      *,
+      order:orders (order_id, order_date, total_price, user_id, users:users (full_name))
+    `
+    );
+
+  if(error) {
+    console.error("Error fetching delivery statuses:", error.message);
+    return [];
+  }
+  else {
+    return data;
+  } 
+}
+
+// Update delivery status
+export const updateDeliveryStatus = async (orderId, newStatus) => {
+  const { error } = await supabase
+    .from('deliverystatuses')
+    .update({ status: newStatus })
+    .eq('order_id', orderId);
+
+  if (error) {
+    throw error;
+  }
+};
