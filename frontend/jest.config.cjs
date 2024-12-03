@@ -8,6 +8,11 @@ const config = {
     rootDir: ".", // Set the root directory for the tests
   };
   
-  module.exports = config;
+  module.exports = {
+    testEnvironment: "jsdom",
+    setupFilesAfterEnv: ["<rootDir>/src/setupTests.js"], // Ensure your setupTests.js file is included
+  };
+  
+  
 
   
