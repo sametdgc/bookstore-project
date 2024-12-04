@@ -47,7 +47,7 @@ describe("MainContent Component", () => {
       // Category Headers
       expect(screen.getByText("New Releases")).toBeInTheDocument();
       expect(screen.getByText("Bestsellers")).toBeInTheDocument();
-      expect(screen.getByText("Staff Picks")).toBeInTheDocument();
+      expect(screen.getByText("Baran's Picks")).toBeInTheDocument();
 
       // Check New Releases
       expect(screen.getByText("New Book")).toBeInTheDocument();
@@ -98,7 +98,7 @@ describe("MainContent Component", () => {
       // The categories should still render even if there are errors
       expect(screen.getByText("New Releases")).toBeInTheDocument();
       expect(screen.getByText("Bestsellers")).toBeInTheDocument();
-      expect(screen.getByText("Staff Picks")).toBeInTheDocument();
+      expect(screen.getByText("Baran's Picks")).toBeInTheDocument();
       // Error handling should result in no books being displayed
       expect(screen.getAllByText("No books available").length).toBe(3);
     });
