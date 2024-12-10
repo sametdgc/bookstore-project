@@ -19,10 +19,14 @@ import {
   InvoicePage,
 } from "./pages/customerPages";
 
-import { ContactPage, AboutPage, ReturnRefundPolicyPage } from "./pages/footerPages";
+import {
+  ContactPage,
+  AboutPage,
+  ReturnRefundPolicyPage,
+  SustainabilityPage,
+} from "./pages/footerPages";
 import { PMDashboard } from "./pages/pmPages";
 import { TopNavBar, SubscriptionBanner, Footer } from "./components";
-
 
 function App() {
   const location = useLocation();
@@ -47,14 +51,17 @@ function App() {
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/cart" element={<ShoppingCart />} />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/return-refund-policy"element={<ReturnRefundPolicyPage />}/>
+          <Route
+            path="/return-refund-policy"
+            element={<ReturnRefundPolicyPage />}
+          />
           <Route path="/profile" element={<MyProfilePage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/invoice" element={<InvoicePage />} />
           <Route path="/help-and-support" element={<HelpAndSupportPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/sustainability" element={<SustainabilityPage />} />
           <Route path="*" element={<MainPage />} />
-
           <Route path="/pm-dashboard" element={<PMDashboard />} />{" "}
         </Routes>
       </div>

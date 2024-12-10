@@ -7,6 +7,7 @@ import {
 } from "../../components/Accordion";
 import Button from "../../components/Button";
 import Input from "../../components/Input";
+import { Link } from "react-router-dom";
 
 const ContactPage = () => {
   return (
@@ -132,10 +133,15 @@ const ContactPage = () => {
             <AccordionItem value="item-4">
               <AccordionTrigger>What is your return policy?</AccordionTrigger>
               <AccordionContent>
-                We offer a hassle-free 30-day return policy for most items. If
-                you are not satisfied with your purchase, simply contact us
-                within 30 days of receiving your order to initiate a return or
-                exchange.
+                For detailed information about our return policy, please visit
+                our{" "}
+                <Link
+                  to="/return-refund-policy"
+                  className="text-[#65aa92] hover:underline"
+                >
+                  Return & Refund Policy
+                </Link>{" "}
+                page.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-5">
