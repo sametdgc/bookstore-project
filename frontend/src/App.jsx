@@ -17,6 +17,7 @@ import {
   SearchPage,
   HelpAndSupportPage,
   InvoicePage,
+  ReturnPage
 } from "./pages/customerPages";
 
 import {
@@ -51,13 +52,11 @@ function App() {
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/cart" element={<ShoppingCart />} />
           <Route path="/about" element={<AboutPage />} />
-          <Route
-            path="/return-refund-policy"
-            element={<ReturnRefundPolicyPage />}
-          />
+          <Route path="/return-refund-policy" element={<ReturnRefundPolicyPage />}/>
           <Route path="/profile" element={<MyProfilePage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/invoice" element={<InvoicePage />} />
+          <Route path="/return/:order_id" element={<ReturnPage />} />
           <Route path="/help-and-support" element={<HelpAndSupportPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/sustainability" element={<SustainabilityPage />} />

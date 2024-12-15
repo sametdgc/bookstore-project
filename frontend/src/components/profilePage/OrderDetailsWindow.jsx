@@ -1,8 +1,22 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
+// Helper function to check return eligibility (within 30 days)
+const isOrderReturnable = (orderDate) => {
+  const currentDate = new Date();
+  const orderDateObj = new Date(orderDate);
+  const differenceInTime = currentDate - orderDateObj;
+  const differenceInDays = differenceInTime / (1000 * 3600 * 24); // Convert milliseconds to days
+  return differenceInDays <= 30;
+};
+
 const OrderDetailsWindow = ({ order }) => {
   const navigate = useNavigate();
+
+  // Navigate to the Return Page
+  const handleReturnClick = () => {
+    navigate(`/return/${order.order_id}`); // Pass order ID as route parameter
+  };
 
   return (
     <div className="mt-6">
@@ -51,6 +65,18 @@ const OrderDetailsWindow = ({ order }) => {
           </div>
         ))}
       </div>
+
+      {/* Return Button - Only for eligible orders */}
+      {isOrderReturnable(order.order_date) && (
+        <div className="mt-6 text-right">
+          <button
+            onClick={handleReturnClick}
+            className="bg-red-500 text-white font-semibold px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+          >
+            Return Item(s)
+          </button>
+        </div>
+      )}
     </div>
   );
 };

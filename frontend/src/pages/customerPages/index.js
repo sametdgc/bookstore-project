@@ -9,6 +9,7 @@ import CheckoutPage from "./CheckoutPage";
 import HelpAndSupportPage from "./HelpAndSupportPage";
 import SearchPage from "./SearchPage";
 import InvoicePage from "./InvoicePage";
+import ReturnPage from "./ReturnPage";
 
 export {
   LoginPage,
@@ -22,4 +23,5 @@ export {
   HelpAndSupportPage,
   SearchPage,
   InvoicePage,
+  ReturnPage
 };
