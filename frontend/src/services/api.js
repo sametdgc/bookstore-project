@@ -1512,15 +1512,26 @@ export const createReturnRequest = async (
   }
 };
 
-// Fetch return history for a specific order
+// Fetch return history for a specific order with book details
 export const getReturnHistoryByOrder = async (orderId) => {
   try {
     const { data, error } = await supabase
       .from("returns")
-      .select(`
+      .select(
+        `
         book_id,
-        quantity
-      `)
+        quantity,
+        item_price,
+        reason,
+        other_reason,
+        return_status,
+        request_date,
+        books (
+          title,
+          image_url
+        )
+      `
+      )
       .eq("order_id", orderId);
 
     if (error) throw error;
@@ -1531,3 +1542,4 @@ export const getReturnHistoryByOrder = async (orderId) => {
     return { data: null, error: err.message };
   }
 };
+

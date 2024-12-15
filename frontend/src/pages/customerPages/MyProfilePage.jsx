@@ -7,18 +7,9 @@ import {
 } from "../../services/api";
 import AddressesWindow from "../../components/profilePage/AddressesWindow";
 import PersonalDetailsWindow from "../../components/profilePage/PersonalDetailsWindow";
-import OrderDetailsWindow from "../../components/profilePage/OrderDetailsWindow"; // Import the OrderDetailsWindow
+import OrderDetailsWindow from "../../components/profilePage/OrderDetailsWindow";
 import { Link } from "react-router-dom";
-import {
-  User,
-  Book,
-  ShoppingBag,
-  ChevronDown,
-  ChevronUp,
-  Clipboard,
-  Truck,
-  Home,
-} from "lucide-react"; // Import new icons
+import { User, Book, ShoppingBag, Clipboard, Truck, Home } from "lucide-react"; // Icons
 
 const MyProfilePage = () => {
   const [user, setUser] = useState(null);
@@ -27,8 +18,8 @@ const MyProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("personal");
-  const [expandedOrderId, setExpandedOrderId] = useState(null); // State for expanded order
 
+  // Fetch user profile and order data
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
@@ -54,10 +45,6 @@ const MyProfilePage = () => {
 
     fetchProfileData();
   }, []);
-
-  const handleToggleOrder = (orderId) => {
-    setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
-  };
 
   if (loading) {
     return (
@@ -99,6 +86,7 @@ const MyProfilePage = () => {
         </div>
 
         <div className="bg-white shadow-xl rounded-lg overflow-hidden">
+          {/* Tabs */}
           <div className="flex border-b">
             <button
               className={`flex-1 py-4 px-6 text-center font-medium ${
@@ -130,12 +118,14 @@ const MyProfilePage = () => {
               }`}
               onClick={() => setActiveTab("orders")}
             >
-              <ShoppingBag className="inline-block mr-2" size={20} />
+              <ShoppingBag className="inline-block mr-2 text-6xl" size={20} />
               Order History
             </button>
           </div>
 
+          {/* Content */}
           <div className="p-6">
+            {/* Personal Details */}
             {activeTab === "personal" && (
               <PersonalDetailsWindow
                 userData={userData}
@@ -151,12 +141,14 @@ const MyProfilePage = () => {
               />
             )}
 
+            {/* Addresses */}
             {activeTab === "addresses" && (
               <AddressesWindow
                 userId={user?.user_metadata?.custom_incremented_id}
               />
             )}
 
+            {/* Order History */}
             {activeTab === "orders" && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-semibold text-[#65aa92] mb-4">
@@ -173,8 +165,8 @@ const MyProfilePage = () => {
                         <div>
                           <h3 className="text-lg font-semibold text-gray-800">
                             <Link
-                              to={`/invoice?orderID=${order.order_id}`} 
-                              className="text-[#65aa92] hover:underline" 
+                              to={`/invoice?orderID=${order.order_id}`}
+                              className="text-[#65aa92] hover:underline text-2xl"
                             >
                               Order #{order.order_id}
                             </Link>
@@ -192,7 +184,6 @@ const MyProfilePage = () => {
                                 order.delivery_status?.status.toLowerCase() ||
                                 "processing";
 
-                              // Determine the current step and whether it should be highlighted
                               const isCompleted =
                                 (currentStatus === "processing" &&
                                   index === 0) ||
@@ -207,14 +198,12 @@ const MyProfilePage = () => {
 
                               return (
                                 <div key={step} className="flex items-center">
-                                  {/* Status Icon */}
                                   <div
                                     className={`w-12 h-12 rounded-full flex items-center justify-center ${
                                       isCompleted
                                         ? "bg-[#65aa92] text-white"
                                         : "bg-gray-300 text-gray-700"
                                     }`}
-                                    title={step} // Tooltip text to show the status
                                   >
                                     {index === 0 ? (
                                       <Clipboard size={20} />
@@ -225,7 +214,7 @@ const MyProfilePage = () => {
                                     )}
                                   </div>
 
-                                  {/* Connector Line */}
+                                  {/* Connector */}
                                   {index < 2 && (
                                     <div
                                       className={`h-1 ${
@@ -233,7 +222,7 @@ const MyProfilePage = () => {
                                           ? "bg-[#65aa92]"
                                           : "bg-gray-300"
                                       }`}
-                                      style={{ width: "160px" }} // Adjusted width to properly connect the icons
+                                      style={{ width: "160px" }}
                                     />
                                   )}
                                 </div>
@@ -241,19 +230,9 @@ const MyProfilePage = () => {
                             }
                           )}
                         </div>
-
-                        {/* Expand/Collapse Icon */}
-                        <div
-                          className="cursor-pointer"
-                          onClick={() => handleToggleOrder(order.order_id)}
-                        >
-                          {expandedOrderId === order.order_id ? (
-                            <ChevronUp className="text-[#65aa92]" size={20} />
-                          ) : (
-                            <ChevronDown className="text-[#65aa92]" size={20} />
-                          )}
-                        </div>
                       </div>
+
+                      {/* Total Price and Address */}
                       <div className="grid grid-cols-2 gap-4 mt-4">
                         <div>
                           <p className="text-sm text-gray-600">Total Price</p>
@@ -266,43 +245,21 @@ const MyProfilePage = () => {
                             Delivery Address
                           </p>
                           <p className="text-sm text-gray-800">
-                            {order.address ? (
-                              <>
-                                {order.address.address_details}
-                                <br />
-                                {order.address.zip_code}
-                                <br />
-                                {order.address.city}, {order.address.district}
-                              </>
-                            ) : (
-                              "Address not available"
-                            )}
+                            {order.address
+                              ? `${order.address.address_details}, ${order.address.city}, ${order.address.district}`
+                              : "Address not available"}
                           </p>
                         </div>
                       </div>
-                      {expandedOrderId === order.order_id && (
-                        <OrderDetailsWindow order={order} />
-                      )}
+
+                      {/* OrderDetailsWindow */}
+                      <OrderDetailsWindow order={order} />
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-12">
-                    <ShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">
-                      No orders
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      You haven't placed any orders yet.
-                    </p>
-                    <div className="mt-6">
-                      <Link
-                        to="/books"
-                        className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#65aa92] hover:bg-[#4a886e]"
-                      >
-                        Start shopping
-                      </Link>
-                    </div>
-                  </div>
+                  <p className="text-center text-gray-600">
+                    No orders have been placed yet.
+                  </p>
                 )}
               </div>
             )}
