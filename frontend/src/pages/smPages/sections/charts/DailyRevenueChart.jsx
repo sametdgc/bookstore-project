@@ -63,7 +63,7 @@ const TotalRevenueChart = () => {
         </div>
         <button
           onClick={handleFilter}
-          className="px-4 py-2 bg-[#65aa92] text-white rounded-md hover:bg-green-600 transition"
+          className="px-4 py-2 bg-[#65aa92] text-white rounded-md hover:bg-green-600 transition mt-6"
         >
           Filter
         </button>
