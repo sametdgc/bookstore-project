@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../../../services/supabaseClient";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const AddBookPage = () => {
   const navigate = useNavigate();
@@ -135,12 +135,9 @@ const AddBookPage = () => {
 
       {/* Buttons */}
       <div className="flex justify-end mt-6 space-x-2">
-        <button
-          onClick={() => navigate("/pm/manage-products")}
-          className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
-        >
+        <Link to="/pm-dashboard" className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">
           Cancel
-        </button>
+        </Link>
         <button
           onClick={handleAddBook}
           className="bg-[#65aa92] text-white px-4 py-2 rounded hover:bg-[#4a886e]"

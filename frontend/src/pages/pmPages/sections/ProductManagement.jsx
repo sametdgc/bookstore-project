@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getAllBooks, searchBooks } from "../../../services/api/bookServices";
 import { supabase } from "../../../services/supabaseClient";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
 
 const ProductManagement = () => {
   const [books, setBooks] = useState([]); // State for displaying books
@@ -57,12 +57,9 @@ const ProductManagement = () => {
       {/* Header with Add Book Button */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Manage Books</h2>
-        <button
-          onClick={() => navigate("/pm/add-book")} // Navigate to AddBookPage
-          className="bg-[#65aa92] text-white px-4 py-2 rounded hover:bg-[#4a886e]"
-        >
+        <Link to="/pm/add-book" className="bg-[#65aa92] text-white px-4 py-2 rounded hover:bg-[#4a886e]">
           Add Book
-        </button>
+        </Link>
       </div>
 
       {/* Search Bar */}

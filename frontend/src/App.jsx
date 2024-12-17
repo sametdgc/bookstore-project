@@ -26,8 +26,8 @@ import {
   ReturnRefundPolicyPage,
   SustainabilityPage,
 } from "./pages/footerPages";
-import { PMDashboard } from "./pages/pmPages";
-import { TopNavBar, SubscriptionBanner, Footer } from "./components";
+import { PMDashboard, AddBookPage  } from "./pages/pmPages";
+import { TopNavBar, Footer } from "./components";
 
 function App() {
   const location = useLocation();
@@ -62,6 +62,8 @@ function App() {
           <Route path="/sustainability" element={<SustainabilityPage />} />
           <Route path="*" element={<MainPage />} />
           <Route path="/pm-dashboard" element={<PMDashboard />} />{" "}
+          <Route path="/pm/add-book" element={<AddBookPage />} />{" "}
+
         </Routes>
       </div>
 
