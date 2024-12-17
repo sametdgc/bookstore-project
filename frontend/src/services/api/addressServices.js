@@ -1,4 +1,6 @@
 import { supabase } from "../supabaseClient";
+import { fetchUser } from "./authServices";
+
 
 // GET user addresses
 export const getUserAddresses = async () => {

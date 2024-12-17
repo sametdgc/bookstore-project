@@ -1,4 +1,5 @@
 import { supabase } from "../supabaseClient";
+import { decrementBookStock } from "../api";
 
 export const placeOrder = async (orderDetails, cartItems) => {
     // Step 1: Check stock for all cart items
