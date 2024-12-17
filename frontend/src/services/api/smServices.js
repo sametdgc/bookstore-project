@@ -159,3 +159,45 @@ export const getTopCustomers = async () => {
     return [];
   }
 };
+
+export const getBestSellingBooksComposition = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("orderitems")
+      .select(
+        `
+        book_id,
+        quantity,
+        item_price,
+        books (title)
+      `
+      );
+
+    if (error) {
+      console.error("Error fetching best-selling books:", error.message);
+      return [];
+    }
+
+    // Aggregate total revenue for each book
+    const revenueByBook = {};
+
+    data.forEach((item) => {
+      const bookTitle = item.books?.title || "Unknown Book";
+      const revenue = item.quantity * item.item_price;
+
+      // Accumulate revenue for each book
+      revenueByBook[bookTitle] = (revenueByBook[bookTitle] || 0) + revenue;
+    });
+
+    // Format as an array and sort by revenue descending
+    return Object.keys(revenueByBook)
+      .map((title) => ({
+        title,
+        revenue: parseFloat(revenueByBook[title].toFixed(2)), // 2 decimal precision
+      }))
+      .sort((a, b) => b.revenue - a.revenue); // Sort by total revenue
+  } catch (err) {
+    console.error("Unexpected error fetching best-selling books:", err.message);
+    return [];
+  }
+};
