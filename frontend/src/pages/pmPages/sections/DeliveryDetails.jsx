@@ -3,17 +3,28 @@ import { getDeliveryStatuses, updateDeliveryStatus } from "../../../services/api
 
 const DeliveryDetails = () => {
   const [deliveryData, setDeliveryData] = useState([]);
-  const [selectedStatus, setSelectedStatus] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const itemsPerPage = 5; // Set the number of rows per page
+
+  const fetchData = async (page) => {
+    setLoading(true);
+    try {
+      const { data, count } = await getDeliveryStatuses(page, itemsPerPage); // Fetch with pagination
+      setDeliveryData(data);
+      setTotalPages(Math.ceil(count / itemsPerPage));
+    } catch (error) {
+      console.error("Error fetching delivery statuses:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    getDeliveryStatuses()
-      .then((response) => {
-        setDeliveryData(response);
-      })
-      .catch((error) => {
-        console.error("Error fetching delivery statuses:", error);
-      });
-  }, []);
+    fetchData(currentPage);
+  }, [currentPage]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
@@ -42,7 +53,13 @@ const DeliveryDetails = () => {
             </tr>
           </thead>
           <tbody>
-            {deliveryData.length > 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan="4" className="p-4 text-center">
+                  Loading...
+                </td>
+              </tr>
+            ) : deliveryData.length > 0 ? (
               deliveryData.map((item) => (
                 <tr key={item.order_id}>
                   <td className="border-b p-4">{item.order_id}</td>
@@ -59,7 +76,6 @@ const DeliveryDetails = () => {
                       <option value="in-transit">In Transit</option>
                       <option value="delivered">Delivered</option>
                       <option value="processing">Processing</option>
-                      {/* Add other statuses here */}
                     </select>
                   </td>
                 </tr>
@@ -73,6 +89,31 @@ const DeliveryDetails = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-center mt-6 space-x-2">
+        <button
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className={`px-4 py-2 rounded ${
+            currentPage === 1 ? "bg-gray-300" : "bg-[#65aa92] text-white"
+          }`}
+        >
+          Previous
+        </button>
+        <span className="text-gray-700 py-2">
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          className={`px-4 py-2 rounded ${
+            currentPage === totalPages ? "bg-gray-300" : "bg-[#65aa92] text-white"
+          }`}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

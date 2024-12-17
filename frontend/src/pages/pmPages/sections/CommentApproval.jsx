@@ -1,26 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { getPendingReviews, approveReview, disapproveReview } from '../../../services/api';
-import CommentCard from '../../../components/pmComponents/CommentCard';
+import React, { useState, useEffect } from "react";
+import { getPendingReviews, approveReview, disapproveReview } from "../../../services/api";
+import CommentCard from "../../../components/pmComponents/CommentCard";
 
 const CommentApproval = () => {
   const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [filters, setFilters] = useState({
-    bookId: '',
-    rating: '',
-    searchQuery: '',
-    sortBy: 'created_at',
-    sortDirection: 'desc',
+    bookId: "",
+    rating: "",
+    searchQuery: "",
+    sortBy: "created_at",
+    sortDirection: "desc",
     limit: 10,
     offset: 0,
   });
 
   const fetchReviews = async () => {
-    const data = await getPendingReviews(filters);
-    setReviews(data);
+    setLoading(true);
+    setError("");
+    try {
+      const data = await getPendingReviews(filters);
+      setReviews(data);
+    } catch (err) {
+      setError("Failed to load reviews. Please try again.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    fetchReviews();
+    const debounceFetch = setTimeout(fetchReviews, 300); // Debounce for 300ms
+    return () => clearTimeout(debounceFetch);
   }, [filters]);
 
   const handleApprove = async (reviewId) => {
@@ -34,18 +46,11 @@ const CommentApproval = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      [field]: value,
-      offset: 0, // Reset pagination
-    }));
+    setFilters((prev) => ({ ...prev, [field]: value, offset: 0 }));
   };
 
   const handlePaginationChange = (newOffset) => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      offset: newOffset,
-    }));
+    setFilters((prev) => ({ ...prev, offset: newOffset }));
   };
 
   return (
@@ -58,13 +63,12 @@ const CommentApproval = () => {
           type="text"
           placeholder="Search by book/user/review ID"
           value={filters.searchQuery}
-          onChange={(e) => handleFilterChange('searchQuery', e.target.value)}
+          onChange={(e) => handleFilterChange("searchQuery", e.target.value)}
           className="p-2 border rounded"
         />
-
         <select
           value={filters.rating}
-          onChange={(e) => handleFilterChange('rating', e.target.value)}
+          onChange={(e) => handleFilterChange("rating", e.target.value)}
           className="p-2 border rounded"
         >
           <option value="">All Ratings</option>
@@ -74,10 +78,9 @@ const CommentApproval = () => {
             </option>
           ))}
         </select>
-
         <select
           value={filters.sortBy}
-          onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+          onChange={(e) => handleFilterChange("sortBy", e.target.value)}
           className="p-2 border rounded"
         >
           <option value="created_at">Sort by Date</option>
@@ -85,35 +88,42 @@ const CommentApproval = () => {
         </select>
       </div>
 
-      {/* Comments */}
-      <div className="space-y-4">
-        {reviews.length === 0 ? (
-          <p>No pending comments to approve.</p>
-        ) : (
-          reviews.map((review) => (
+      {/* Loading & Error */}
+      {loading ? (
+        <p className="text-center text-gray-500">Loading...</p>
+      ) : error ? (
+        <p className="text-center text-red-500">{error}</p>
+      ) : reviews.length === 0 ? (
+        <p className="text-center text-gray-500">No pending comments to approve.</p>
+      ) : (
+        <div className="space-y-4">
+          {reviews.map((review) => (
             <CommentCard
               key={review.review_id}
               review={review}
               onApprove={handleApprove}
               onDisapprove={handleDisapprove}
             />
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Pagination */}
-      <div className="mt-6 flex justify-between">
+      <div className="mt-6 flex justify-between items-center">
         <button
           disabled={filters.offset === 0}
           onClick={() => handlePaginationChange(filters.offset - filters.limit)}
-          className="bg-gray-300 p-2 rounded"
+          className="bg-gray-300 p-2 rounded disabled:opacity-50"
         >
           Previous
         </button>
+        <span className="text-gray-700">
+          Page {Math.floor(filters.offset / filters.limit) + 1}
+        </span>
         <button
           disabled={reviews.length < filters.limit}
           onClick={() => handlePaginationChange(filters.offset + filters.limit)}
-          className="bg-gray-300 p-2 rounded"
+          className="bg-gray-300 p-2 rounded disabled:opacity-50"
         >
           Next
         </button>
