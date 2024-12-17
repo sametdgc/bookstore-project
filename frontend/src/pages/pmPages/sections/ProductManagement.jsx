@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getAllBooks, searchBooks } from "../../../services/api/bookServices";
 import { supabase } from "../../../services/supabaseClient";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const ProductManagement = () => {
   const [books, setBooks] = useState([]); // State for displaying books
@@ -8,6 +9,7 @@ const ProductManagement = () => {
   const [page, setPage] = useState(1); // Current page
   const booksPerPage = 10; // Number of books per page
   const [searchQuery, setSearchQuery] = useState(""); // Search input value
+  const navigate = useNavigate(); // Initialize navigate function
 
   // Fetch books from the database
   const fetchBooks = async () => {
@@ -23,11 +25,10 @@ const ProductManagement = () => {
   // Search books by title
   const handleSearch = async () => {
     if (searchQuery.trim() === "") {
-      // If search query is empty, fetch all books
       fetchBooks();
     } else {
       setLoading(true);
-      const data = await searchBooks(searchQuery); // Use the searchBooks function
+      const data = await searchBooks(searchQuery);
       if (data) {
         setBooks(data);
       }
@@ -43,18 +44,26 @@ const ProductManagement = () => {
       alert("Failed to delete the book. Please try again.");
     } else {
       alert("Book removed successfully!");
-      fetchBooks(); // Refresh the list after removal
+      fetchBooks();
     }
   };
 
-  // Initial data fetch and fetch on page change
   useEffect(() => {
     fetchBooks();
   }, [page]);
 
   return (
     <div className="bg-white shadow-md rounded-lg p-6">
-      <h2 className="text-2xl font-bold mb-4">Manage Books</h2>
+      {/* Header with Add Book Button */}
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Manage Books</h2>
+        <button
+          onClick={() => navigate("/pm/add-book")} // Navigate to AddBookPage
+          className="bg-[#65aa92] text-white px-4 py-2 rounded hover:bg-[#4a886e]"
+        >
+          Add Book
+        </button>
+      </div>
 
       {/* Search Bar */}
       <div className="flex items-center mb-4">
