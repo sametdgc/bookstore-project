@@ -81,37 +81,37 @@ const InvoiceManager = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-semibold text-green-700 mb-6">
+      <h1 className="text-3xl font-semibold text-[#65aa92] mb-6">
         Invoice Manager
       </h1>
 
       {/* Date Filter */}
-      <div className="flex items-center space-x-4 mb-6">
-        <div>
-          <label className="block text-gray-700">Start Date</label>
-          <input
-            type="date"
-            value={startDateInput}
-            onChange={(e) => setStartDateInput(e.target.value)}
-            className="p-2 border rounded-md"
-          />
-        </div>
-        <div>
-          <label className="block text-gray-700">End Date</label>
-          <input
-            type="date"
-            value={endDateInput}
-            onChange={(e) => setEndDateInput(e.target.value)}
-            className="p-2 border rounded-md"
-          />
-        </div>
-        <button
-          onClick={handleFilter}
-          className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition"
-        >
-          Filter
-        </button>
+      <div className="flex items-end space-x-4 mb-6">
+      <div>
+        <label className="block text-gray-700 mb-1">Start Date</label>
+        <input
+          type="date"
+          value={startDateInput}
+          onChange={(e) => setStartDateInput(e.target.value)}
+          className="p-2 border rounded-md h-10"
+        />
       </div>
+      <div>
+        <label className="block text-gray-700 mb-1">End Date</label>
+        <input
+          type="date"
+          value={endDateInput}
+          onChange={(e) => setEndDateInput(e.target.value)}
+          className="p-2 border rounded-md h-10"
+        />
+      </div>
+      <button
+        onClick={handleFilter}
+        className="px-4 py-2 bg-[#65aa92] text-white rounded-md hover:bg-green-600 transition h-10"
+      >
+        Filter
+      </button>
+    </div>
 
       {/* Invoice List */}
       <div className="space-y-4">

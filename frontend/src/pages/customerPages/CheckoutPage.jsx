@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchUser, getCartItems, placeOrder } from "../../services/api";
+import { fetchUser, getCartItems, placeOrder,decrementBookStock} from "../../services/api";
 import {
   AddressSelector,
   PaymentForm,
@@ -7,6 +7,7 @@ import {
 } from "../../components/checkoutPage";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
+
 
 const CheckoutPage = () => {
   const [cardDetails, setCardDetails] = useState({

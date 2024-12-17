@@ -73,7 +73,7 @@ useEffect(() => {
           {[
             { category: "New Releases", books: newReleases },
             { category: "Bestsellers", books: bestsellers },
-            { category: "Baran's Picks", books: staffPicks },
+            { category: "Staff Picks", books: staffPicks },
           ].map(({ category, books }, index) => (
             <div
               key={category}
