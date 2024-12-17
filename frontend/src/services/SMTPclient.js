@@ -15,7 +15,7 @@ app.use(bodyParser.json());
 // CORS Configuration
 app.use(
   cors({
-    origin: "http://localhost:5174", // Allow requests from your frontend origin
+    origin: ["http://localhost:5173", "http://localhost:5174"], // Allow requests from your frontend origin
     methods: ["GET", "POST", "PUT", "DELETE"], // Allow these HTTP methods
     allowedHeaders: ["Content-Type", "Authorization"], // Allow these headers
   })

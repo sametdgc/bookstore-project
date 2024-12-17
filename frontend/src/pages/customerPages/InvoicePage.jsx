@@ -51,7 +51,6 @@ const InvoicePage = () => {
       }
 
       const { data, error } = await getOrderDetailsById(orderID);
-
       if (error) {
         console.error("Error fetching order details:", error.message);
       } else {
@@ -149,7 +148,8 @@ const InvoicePage = () => {
       {/* Payment Summary */}
       <div className="flex justify-between items-start mt-8">
         <button
-          onClick={() => invoicePDF(orderDetails)}
+          onClick={
+            () => invoicePDF(orderDetails).save(`Invoice_${orderDetails.order_id}.pdf`)}
           className="px-4 py-2 bg-[#65aa92] text-white font-semibold rounded shadow hover:bg-[#579d7b]"
         >
           Download PDF

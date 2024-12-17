@@ -29,10 +29,13 @@ import {
 import { PMDashboard } from "./pages/pmPages";
 import { TopNavBar, SubscriptionBanner, Footer } from "./components";
 
+import { SMDashboard } from "./pages/smPages";
+
+
 function App() {
   const location = useLocation();
 
-  const hideLayoutPaths = ["/pm-dashboard"];
+  const hideLayoutPaths = ["/pm-dashboard", "/sm-dashboard"];
 
   const shouldHideLayout = hideLayoutPaths.includes(location.pathname);
 
@@ -62,6 +65,7 @@ function App() {
           <Route path="/sustainability" element={<SustainabilityPage />} />
           <Route path="*" element={<MainPage />} />
           <Route path="/pm-dashboard" element={<PMDashboard />} />{" "}
+          <Route path="/sm-dashboard" element={<SMDashboard />} />{" "}
         </Routes>
       </div>
 

@@ -1293,8 +1293,6 @@ export const getOrderDetailsById = async (orderId) => {
         `)
         .eq('order_id', orderId)
         .single();
-
-      console.log(data);
     if (error) {
       console.error('Error fetching order details:', error.message);
       return { data: null, error };
@@ -1542,4 +1540,127 @@ export const getReturnHistoryByOrder = async (orderId) => {
     return { data: null, error: err.message };
   }
 };
+
+
+/*   SALES MANAGER SERVICES  */
+
+// fetc all invoices
+export const getAllInvoices = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        order_id,
+        order_date,
+        total_price,
+        users (
+          full_name,
+          email,
+          phone_number
+        ),
+        addresses (
+          city,
+          district,
+          address_details,
+          zip_code
+        ),
+        orderitems (
+          book_id,
+          quantity,
+          item_price,
+          books (
+            title,
+            image_url
+          )
+        )
+      `)
+    if (error) {
+      console.error('Error fetching invoices:', error.message);
+      return [];
+    }
+
+    return data;
+  } catch (err) {
+    console.error('Unexpected error fetching invoices:', err);
+    return [];
+  }
+};
+
+// calculates revenue for given start and end date
+export const calculateRevenue = async (startDate, endDate) => {
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('total_price')
+      .gte('order_date', startDate)
+      .lte('order_date', endDate);
+
+    if (error) {
+      console.error('Error calculating revenue:', error.message);
+      return null;
+    }
+
+    const totalRevenue = data.reduce((acc, order) => acc + order.total_price, 0);
+    return totalRevenue;
+  } catch (err) {
+    console.error('Unexpected error calculating revenue:', err);
+    return null;
+  }
+};
+
+// calculates the revenue for the given day 
+export const calculateDailyRevenue = async (date) => {
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('total_price')
+      .eq('order_date', date);
+
+    if (error) {
+      console.error('Error calculating daily revenue:', error.message);
+      return null;
+    }
+
+    const dailyRevenue = data.reduce((acc, order) => acc + order.total_price, 0);
+    return dailyRevenue;
+  } catch (err) {
+    console.error('Unexpected error calculating daily revenue:', err);
+    return null;
+  }
+};
+
+
+// Fetch daily revenue for all days in ascending order
+export const getDailyRevenue = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("orders")
+      .select("order_date, total_price")
+      .order("order_date", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching orders:", error.message);
+      return [];
+    }
+
+    // Group and sum revenue by day
+    const revenueByDate = data.reduce((acc, order) => {
+      const date = new Date(order.order_date).toISOString().split("T")[0]; // Format: YYYY-MM-DD
+      acc[date] = (acc[date] || 0) + order.total_price;
+      return acc;
+    }, {});
+
+    // Convert to an array of { date, revenue }
+    const formattedData = Object.keys(revenueByDate).map((date) => ({
+      date,
+      revenue: parseFloat(revenueByDate[date].toFixed(2)), // Fix to 2 decimal places
+    }));
+
+    return formattedData;
+  } catch (error) {
+    console.error("Unexpected error fetching daily revenue:", error.message);
+    return [];
+  }
+};
+
 

@@ -206,7 +206,7 @@ const RegisterForm = () => {
         </div>
 
         {/* Role */}
-        {/* <div>
+        <div>
           <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role</label>
           <div className="flex space-x-6 mt-2">
             <div className="flex items-center">
@@ -246,7 +246,7 @@ const RegisterForm = () => {
               <label htmlFor="productManager" className="ml-2 text-gray-700">Product Manager</label>
             </div>
           </div>
-        </div> */}
+        </div>
 
         {/* Error & Success Messages */}
         {error && <div className="text-red-500 text-sm mt-2">{error}</div>}

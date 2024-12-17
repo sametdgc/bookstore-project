@@ -42,6 +42,9 @@ const LoginForm = () => {
         case 'Product Manager':
           navigate('/pm-dashboard'); 
           break;
+        case 'Sales Manager':
+          navigate('/sm-dashboard'); 
+        break;
         case 'Customer':
           
         
