@@ -10,7 +10,6 @@ const RevenueByCategoryChart = () => {
   useEffect(() => {
     const fetchData = async () => {
       const data = await getRevenueByCategory();
-      console.log(data);
       setRevenueByCategory(data);
     };
     fetchData();

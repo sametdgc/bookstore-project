@@ -9,7 +9,7 @@ import { createReturnRequest,getReturnHistoryByOrder } from "./api/returnService
 import { getBooksWithStock,getDeliveryStatuses,updateBookStock,updateDeliveryStatus } from "./api/pmServices";
 import { approveReview,disapproveReview,getPendingReviews,getPendingReviewsForBook,getReviewsForBook,submitReview } from "./api/reviewServices";
 import { getUserRoleById,updateUserData } from "./api/userServices";
-import { getAllInvoices, getDailyRevenue, getRevenueByCategory, getTopCustomers, getBestSellingBooksComposition} from "./api/smServices";
+import { getAllInvoices, getRevenueByCategory, getTopCustomers, getBestSellingBooksComposition,getDailyTotalRevenue, getTotalRevenue} from "./api/smServices";
 
 export {
   getUserAddresses,
@@ -71,8 +71,9 @@ export {
   getUserRoleById,
   updateUserData,
   getAllInvoices,
-  getDailyRevenue,
   getRevenueByCategory,
   getTopCustomers,
   getBestSellingBooksComposition,
+  getDailyTotalRevenue,
+  getTotalRevenue,
 }

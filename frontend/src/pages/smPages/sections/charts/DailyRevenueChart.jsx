@@ -1,61 +1,48 @@
 import React, { useEffect, useState } from "react";
 import {
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
   CartesianGrid,
+  ResponsiveContainer,
 } from "recharts";
-import { getDailyRevenue } from "../../../../services/api";
+import { getDailyTotalRevenue } from "../../../../services/api";
 import { useSearchParams } from "react-router-dom";
 
-const DailyRevenueChart = () => {
+const TotalRevenueChart = () => {
   const [dailyRevenue, setDailyRevenue] = useState([]);
-  const [filteredRevenue, setFilteredRevenue] = useState([]);
-
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Read date range from URL params
   const startDateQuery = searchParams.get("startDate") || "";
   const endDateQuery = searchParams.get("endDate") || "";
 
   const [startDateInput, setStartDateInput] = useState(startDateQuery);
   const [endDateInput, setEndDateInput] = useState(endDateQuery);
 
-  // Load revenue data
+  // Fetch revenue data
   useEffect(() => {
-    const loadDailyRevenue = async () => {
-      const revenueData = await getDailyRevenue();
-      setDailyRevenue(revenueData);
-      applyFilters(revenueData, startDateQuery, endDateQuery);
+    const fetchDailyRevenue = async () => {
+      const data = await getDailyTotalRevenue(startDateQuery, endDateQuery);
+      setDailyRevenue(data);
     };
-    loadDailyRevenue();
-  }, []);
 
-  // Update filters when searchParams or revenue data changes
-  useEffect(() => {
-    applyFilters(dailyRevenue, startDateQuery, endDateQuery);
-  }, [searchParams, dailyRevenue]);
+    fetchDailyRevenue();
+  }, [startDateQuery, endDateQuery]);
 
-  const applyFilters = (revenueData, startDate, endDate) => {
-    const filtered = revenueData.filter((revenue) => {
-      const revenueDate = new Date(revenue.date);
-      const start = startDate && !isNaN(new Date(startDate)) ? new Date(startDate) : null;
-      const end = endDate && !isNaN(new Date(endDate)) ? new Date(endDate) : null;
-
-      return (!start || revenueDate >= start) && (!end || revenueDate <= end);
-    });
-    setFilteredRevenue(filtered);
-  };
-
+  // Update URL when filters are applied
   const handleFilter = () => {
     setSearchParams({ startDate: startDateInput, endDate: endDateInput });
   };
 
   return (
     <div className="w-full p-4">
+      <h2 className="text-xl font-semibold mb-4 text-center">Daily Revenue Over Time</h2>
+
       {/* Date Filter */}
-      <div className="flex items-center space-x-4 mb-6">
+      <div className="flex items-center space-x-4 mb-6 justify-center">
         <div>
           <label className="block text-gray-700">Start Date</label>
           <input
@@ -82,28 +69,30 @@ const DailyRevenueChart = () => {
         </button>
       </div>
 
-      {/* Chart */}
-      <div className="w-full p-4">
-        <h2 className="text-xl font-semibold mb-4 text-center">Daily Revenue Chart</h2>
-        {filteredRevenue.length > 0 ? (
+      {/* Line Chart */}
+      <div className="w-full">
+        {dailyRevenue.length > 0 ? (
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart
-              data={filteredRevenue}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
+            <LineChart data={dailyRevenue} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
+              <XAxis dataKey="date" tick={{ fontSize: 12 }} />
               <YAxis />
-              <Tooltip />
-              <Bar dataKey="revenue" fill="#65aa92" barSize={50} />
-            </BarChart>
+              <Tooltip formatter={(value) => `$${value}`} />
+              <Line
+                type="monotone"
+                dataKey="revenue"
+                stroke="#65aa92"
+                strokeWidth={3}
+                dot={{ r: 4 }}
+              />
+            </LineChart>
           </ResponsiveContainer>
         ) : (
-          <p className="text-center text-gray-500">No revenue data for the selected dates.</p>
+          <p className="text-center text-gray-500">No revenue data for the selected range.</p>
         )}
       </div>
     </div>
   );
 };
 
-export default DailyRevenueChart;
+export default TotalRevenueChart;

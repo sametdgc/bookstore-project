@@ -46,39 +46,6 @@ export const getAllInvoices = async () => {
     }
   };
 
-// Fetch daily revenue for all days in ascending order
-export const getDailyRevenue = async () => {
-  try {
-    const { data, error } = await supabase
-      .from("orders")
-      .select("order_date, total_price")
-      .order("order_date", { ascending: true });
-
-    if (error) {
-      console.error("Error fetching orders:", error.message);
-      return [];
-    }
-
-    // Group and sum revenue by day
-    const revenueByDate = data.reduce((acc, order) => {
-      const date = new Date(order.order_date).toISOString().split("T")[0]; // Format: YYYY-MM-DD
-      acc[date] = (acc[date] || 0) + order.total_price;
-      return acc;
-    }, {});
-
-    // Convert to an array of { date, revenue }
-    const formattedData = Object.keys(revenueByDate).map((date) => ({
-      date,
-      revenue: parseFloat(revenueByDate[date].toFixed(2)), // Fix to 2 decimal places
-    }));
-
-    return formattedData;
-  } catch (error) {
-    console.error("Unexpected error fetching daily revenue:", error.message);
-    return [];
-  }
-};
-
 // get revenue amount for a category of books
 export const getRevenueByCategory = async () => {
   try {
@@ -201,3 +168,98 @@ export const getBestSellingBooksComposition = async () => {
     return [];
   }
 };
+
+export const getDailyTotalRevenue = async (startDate = null, endDate = null) => {
+  try {
+    let query = supabase
+      .from("orders")
+      .select("order_date, total_price");
+
+    // Apply date filters if provided
+    if (startDate) {
+      query = query.gte("order_date", startDate);
+    }
+    if (endDate) {
+      query = query.lte("order_date", endDate);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching daily revenue:", error.message);
+      return [];
+    }
+
+    // Group and sum revenue by day
+    const revenueByDay = {};
+
+    data.forEach((order) => {
+      const date = order.order_date.split("T")[0]; // Extract just the date part
+      revenueByDay[date] = (revenueByDay[date] || 0) + order.total_price;
+    });
+
+    // Convert to array format for Recharts
+    return Object.keys(revenueByDay)
+      .map((date) => ({
+        date,
+        revenue: parseFloat(revenueByDay[date].toFixed(2)),
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by date
+  } catch (err) {
+    console.error("Unexpected error fetching daily revenue:", err.message);
+    return [];
+  }
+};
+
+//claculates the total revenue so far, what it does is that it fetches all the orders and gorups the total price of orders in the same day
+// and then sums them up, then each day gets the revenue of tat day and all the past days, so the last day will have the total revenue
+//we just returned the given date range
+export const getTotalRevenue = async (startDate = null, endDate = null) => {
+  try {
+    let query = supabase
+      .from("orders")
+      .select("order_date, total_price");
+
+    if (startDate) query = query.gte("order_date", startDate);
+    if (endDate) query = query.lte("order_date", endDate);
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching data:", error);
+      throw error;
+    }
+
+    // Generate all dates in range
+    const allDates = [];
+    let currentDate = new Date(startDate);
+    const end = new Date(endDate);
+
+    while (currentDate <= end) {
+      allDates.push(currentDate.toISOString().split("T")[0]); // Add date string
+      currentDate.setDate(currentDate.getDate() + 1); // Increment day
+    }
+
+    // Group orders by date
+    const revenueMap = {};
+    data.forEach(({ order_date, total_price }) => {
+      const date = order_date.split("T")[0];
+      if (!revenueMap[date]) revenueMap[date] = 0;
+      revenueMap[date] += parseFloat(total_price);
+    });
+
+    // Fill in missing dates with 0 revenue
+    let cumulativeRevenue = 0;
+    const result = allDates.map((date) => {
+      const dailyRevenue = revenueMap[date] || 0;
+      cumulativeRevenue += dailyRevenue;
+      return { date, revenue: cumulativeRevenue };
+    });
+
+    return result;
+  } catch (error) {
+    console.error("Error calculating total revenue:", error);
+    throw error;
+  }
+};
+
