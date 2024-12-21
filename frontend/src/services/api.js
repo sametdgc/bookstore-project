@@ -11,6 +11,8 @@ import { approveReview,disapproveReview,getPendingReviews,getPendingReviewsForBo
 import { getUserRoleById,updateUserData } from "./api/userServices";
 import { getAllInvoices, getRevenueByCategory, getTopCustomers, 
   getBestSellingBooksComposition,getDailyTotalRevenue, getTotalRevenue,updateBookPrice, getAllBooksRaw} from "./api/smServices";
+import {applyDiscountToBook,getCurrentDiscount, endAllActiveDiscounts} from "./api/discountServices";
+
 
 export {
   getUserAddresses,
@@ -79,4 +81,7 @@ export {
   getTotalRevenue,
   updateBookPrice,
   getAllBooksRaw,
+  applyDiscountToBook,
+  getCurrentDiscount,
+  endAllActiveDiscounts,
 }

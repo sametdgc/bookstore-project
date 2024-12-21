@@ -263,3 +263,44 @@ export const getTotalRevenue = async (startDate = null, endDate = null) => {
   }
 };
 
+//update the price of a book with the given id
+export const updateBookPrice = async (id, newPrice) => {
+  try {
+    const { error } = await supabase
+      .from("books")
+      .update({ price: newPrice })
+      .eq("book_id", id);
+
+    if (error) {
+      console.error("Error updating book price:", error.message);
+      return { error: error.message };
+    }
+
+    return { error: null };
+  } catch (err) {
+    console.error("Unexpected error updating book price:", err);
+    return { error: err.message };
+  }
+};
+
+//get all books from the database
+export const getAllBooksRaw = async () => {
+  try {
+    const { data, error } = await supabase
+    .from("books")
+    .select(`
+      *,
+      author:authors (author_name),
+      genre:genres (genre_name),
+      language:languages (language_name)
+    `);
+    if (error) {
+      console.error("Error fetching books:", error.message);
+      return { data: [] };
+    }
+    return { data };
+  } catch (err) {
+    console.error("Unexpected error fetching books:", err);
+    return { data: [] };
+  }
+};

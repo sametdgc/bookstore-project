@@ -3,6 +3,7 @@ import PriceManager from "./sections/priceManager";
 import InvoiceManager from "./sections/invoiceManager";
 import RevenueManager from "./sections/revenueManager";
 import RefundManager from "./sections/refundManager";
+import BulkDiscountUpdate from "./sections/bulkDiscountManager";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../services/supabaseClient";
 
@@ -16,6 +17,7 @@ const SMDashboard = () => {
     { id: "price", label: "Manage Prices" },
     { id: "revenue", label: "Revenue Management" },
     { id: "refund", label: "Refund Management" },
+    { id: "bulkDiscount", label: "Bulk Discount Update" },
   ];
 
   const handleLogout = async () => {
@@ -68,6 +70,7 @@ const SMDashboard = () => {
         {activeSection === "price" && <PriceManager />}
         {activeSection === "revenue" && <RevenueManager />}
         {activeSection === "refund" && <RefundManager />}
+        {activeSection === "bulkDiscount" && <BulkDiscountUpdate />}
       </main>
     </div>
   );
