@@ -81,7 +81,7 @@ export const getBestSellingBooks = async () => {
     // Fetch book details for the top book IDs
     const { data: books, error: booksError } = await supabase
       .from("books")
-      .select("book_id, title, price, image_url")
+      .select("*")
       .in("book_id", topBookIds);
 
     if (booksError) {
