@@ -17,7 +17,7 @@ import {
   SearchPage,
   HelpAndSupportPage,
   InvoicePage,
-  ReturnPage
+  ReturnPage,
 } from "./pages/customerPages";
 
 import {
@@ -25,8 +25,9 @@ import {
   AboutPage,
   ReturnRefundPolicyPage,
   SustainabilityPage,
+  CareersPage, // Added CareersPage
 } from "./pages/footerPages";
-import { PMDashboard, AddBookPage  } from "./pages/pmPages";
+import { PMDashboard, AddBookPage } from "./pages/pmPages";
 import { TopNavBar, Footer } from "./components";
 
 function App() {
@@ -52,7 +53,10 @@ function App() {
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/cart" element={<ShoppingCart />} />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/return-refund-policy" element={<ReturnRefundPolicyPage />}/>
+          <Route
+            path="/return-refund-policy"
+            element={<ReturnRefundPolicyPage />}
+          />
           <Route path="/profile" element={<MyProfilePage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/invoice" element={<InvoicePage />} />
@@ -60,10 +64,10 @@ function App() {
           <Route path="/help-and-support" element={<HelpAndSupportPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/sustainability" element={<SustainabilityPage />} />
+          <Route path="/careers" element={<CareersPage />} /> {/* Added this */}
           <Route path="*" element={<MainPage />} />
           <Route path="/pm-dashboard" element={<PMDashboard />} />{" "}
           <Route path="/pm/add-book" element={<AddBookPage />} />{" "}
-
         </Routes>
       </div>
 
