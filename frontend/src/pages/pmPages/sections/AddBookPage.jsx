@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../../../services/supabaseClient";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -7,6 +7,7 @@ const AddBookPage = () => {
 
   // State for book fields
   const [bookData, setBookData] = useState({
+    book_id: "", // Automatically determined
     title: "",
     description: "",
     price: "",
@@ -17,6 +18,30 @@ const AddBookPage = () => {
     language_id: "",
     genre_id: "",
   });
+
+  // Fetch the largest book_id from the database and increment it
+  useEffect(() => {
+    const fetchMaxBookId = async () => {
+      const { data, error } = await supabase
+        .from("books")
+        .select("book_id")
+        .order("book_id", { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error("Error fetching max book_id:", error.message);
+      } else if (data && data.length > 0) {
+        setBookData((prev) => ({
+          ...prev,
+          book_id: parseInt(data[0].book_id, 10) + 1, // Increment the largest ID by 1
+        }));
+      } else {
+        setBookData((prev) => ({ ...prev, book_id: 1 })); // Default to 1 if no books exist
+      }
+    };
+
+    fetchMaxBookId();
+  }, []);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -32,28 +57,35 @@ const AddBookPage = () => {
       return;
     }
 
-    const { error } = await supabase.from("books").insert([
-      {
-        title: bookData.title,
-        description: bookData.description,
-        price: parseFloat(bookData.price),
-        image_url: bookData.image_url || null,
-        available_quantity: bookData.available_quantity
-          ? parseInt(bookData.available_quantity)
-          : null,
-        author_id: bookData.author_id || null,
-        isbn: bookData.isbn || null,
-        language_id: bookData.language_id || null,
-        genre_id: bookData.genre_id || null,
-      },
-    ]);
+    // Prepare the data for insertion
+    const dataToInsert = {
+      book_id: bookData.book_id, // Automatically assigned
+      title: bookData.title,
+      description: bookData.description,
+      price: parseFloat(bookData.price), // Ensure price is a float
+      image_url: bookData.image_url || null, // Allow null for optional fields
+      available_quantity: bookData.available_quantity
+        ? parseInt(bookData.available_quantity)
+        : null, // Convert to integer or null
+      author_id: bookData.author_id ? parseInt(bookData.author_id) : null, // Convert to integer or null
+      isbn: bookData.isbn || null, // Allow null for optional fields
+      language_id: bookData.language_id
+        ? parseInt(bookData.language_id)
+        : null, // Convert to integer or null
+      genre_id: bookData.genre_id ? parseInt(bookData.genre_id) : null, // Convert to integer or null
+    };
+
+    console.log("Data to insert:", dataToInsert); // Debugging log
+
+    // Insert the book into the database
+    const { error } = await supabase.from("books").insert([dataToInsert]);
 
     if (error) {
       console.error("Error adding book:", error.message);
-      alert("Failed to add the book. Please try again.");
+      alert(`Failed to add the book: ${error.message}`);
     } else {
       alert("Book added successfully!");
-      navigate("/pm/manage-products"); // Navigate back to the Product Management page
+      navigate("/pm/manage-products"); // Navigate back to Product Management page
     }
   };
 
@@ -63,6 +95,15 @@ const AddBookPage = () => {
 
       {/* Input Form */}
       <div className="space-y-4">
+        {/* Display the auto-assigned Book ID */}
+        <input
+          name="book_id"
+          placeholder="Book ID *"
+          value={bookData.book_id}
+          readOnly
+          className="w-full p-2 border rounded bg-gray-200 cursor-not-allowed"
+        />
+
         {/* Required Fields */}
         <input
           name="title"
@@ -106,6 +147,7 @@ const AddBookPage = () => {
         <input
           name="author_id"
           placeholder="Author ID (Optional)"
+          type="number"
           value={bookData.author_id}
           onChange={handleChange}
           className="w-full p-2 border rounded"
@@ -120,6 +162,7 @@ const AddBookPage = () => {
         <input
           name="language_id"
           placeholder="Language ID (Optional)"
+          type="number"
           value={bookData.language_id}
           onChange={handleChange}
           className="w-full p-2 border rounded"
@@ -127,6 +170,7 @@ const AddBookPage = () => {
         <input
           name="genre_id"
           placeholder="Genre ID (Optional)"
+          type="number"
           value={bookData.genre_id}
           onChange={handleChange}
           className="w-full p-2 border rounded"
@@ -135,7 +179,10 @@ const AddBookPage = () => {
 
       {/* Buttons */}
       <div className="flex justify-end mt-6 space-x-2">
-        <Link to="/pm-dashboard" className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">
+        <Link
+          to="/pm-dashboard"
+          className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300"
+        >
           Cancel
         </Link>
         <button
