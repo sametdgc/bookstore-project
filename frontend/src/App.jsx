@@ -27,7 +27,7 @@ import {
   SustainabilityPage,
   CareersPage, // Added CareersPage
 } from "./pages/footerPages";
-import { PMDashboard, AddBookPage } from "./pages/pmPages";
+import { PMDashboard, AddBookPage,DeleteByGenrePage } from "./pages/pmPages";
 import { TopNavBar, Footer } from "./components";
 
 function App() {
@@ -68,6 +68,7 @@ function App() {
           <Route path="*" element={<MainPage />} />
           <Route path="/pm-dashboard" element={<PMDashboard />} />{" "}
           <Route path="/pm/add-book" element={<AddBookPage />} />{" "}
+          <Route path="/pm/delete-genre" element={<DeleteByGenrePage />} />{" "}
         </Routes>
       </div>
 

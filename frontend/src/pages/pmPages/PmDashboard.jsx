@@ -3,6 +3,7 @@ import ProductManagement from "./sections/ProductManagement";
 import CommentApproval from "./sections/CommentApproval";
 import StockManagement from "./sections/StockManagement";
 import DeliveryDetails from "./sections/DeliveryDetails";
+import DeleteByGenrePage from "./sections/DeleteByGenrePage"; // Import the new page
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../services/supabaseClient";
 
@@ -16,6 +17,7 @@ const PMDashboard = () => {
     { id: "comments", label: "Approve Comments" },
     { id: "stock", label: "Stock Management" },
     { id: "deliveries", label: "Delivery Details" },
+    { id: "deleteByGenre", label: "Delete by Genre" }, // Added this
   ];
 
   const handleLogout = async () => {
@@ -66,6 +68,7 @@ const PMDashboard = () => {
         {activeSection === "comments" && <CommentApproval />}
         {activeSection === "stock" && <StockManagement />}
         {activeSection === "deliveries" && <DeliveryDetails />}
+        {activeSection === "deleteByGenre" && <DeleteByGenrePage />} {/* New */}
       </main>
     </div>
   );
