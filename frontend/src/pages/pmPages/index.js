@@ -4,5 +4,6 @@ import CommentApproval from "./sections/CommentApproval";
 import StockManagement from "./sections/StockManagement";
 import DeliveryDetails from "./sections/DeliveryDetails";
 import AddBookPage from "./sections/AddBookPage";
+import DeleteByGenrePage from "./sections/DeleteByGenrePage";
 
-export { PMDashboard, ProductManagement, CommentApproval, StockManagement, DeliveryDetails, AddBookPage };
+export { PMDashboard, ProductManagement, CommentApproval, StockManagement, DeliveryDetails, AddBookPage , DeleteByGenrePage};

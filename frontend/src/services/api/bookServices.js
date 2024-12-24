@@ -206,3 +206,14 @@ export const searchBooks = async (query) => {
     }
   };
   
+// Add a new book
+export const addBook = async (book) => {
+  const { data, error } = await supabase.from("books").insert([book]);
+
+  if (error) {
+    console.error("Error adding new book:", error.message);
+    return { success: false, message: error.message };
+  }
+
+  return { success: true, data };
+};
