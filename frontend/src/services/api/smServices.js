@@ -263,3 +263,127 @@ export const getTotalRevenue = async (startDate = null, endDate = null) => {
   }
 };
 
+//update the price of a book with the given id
+export const updateBookPrice = async (id, newPrice) => {
+  try {
+    const { error } = await supabase
+      .from("books")
+      .update({ price: newPrice })
+      .eq("book_id", id);
+
+    if (error) {
+      console.error("Error updating book price:", error.message);
+      return { error: error.message };
+    }
+
+    return { error: null };
+  } catch (err) {
+    console.error("Unexpected error updating book price:", err);
+    return { error: err.message };
+  }
+};
+
+//get all books from the database
+export const getAllBooksRaw = async () => {
+  try {
+    const { data, error } = await supabase
+    .from("books")
+    .select(`
+      *,
+      author:authors (author_name),
+      genre:genres (genre_name),
+      language:languages (language_name)
+    `);
+    if (error) {
+      console.error("Error fetching books:", error.message);
+      return { data: [] };
+    }
+    return { data };
+  } catch (err) {
+    console.error("Unexpected error fetching books:", err);
+    return { data: [] };
+  }
+};
+
+// Fetch all refund requests
+export const getRefundRequests = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("returns")
+      .select(`
+        id,
+        order_id,
+        book_id,
+        quantity,
+        item_price,
+        reason,
+        other_reason,
+        return_status,
+        request_date,
+        books (title, stock),
+        users (full_name, email)
+      `)
+      .order("request_date", { ascending: false });
+
+    if (error) throw error;
+
+    return { data, error: null };
+  } catch (err) {
+    console.error("Error fetching refund requests:", err.message);
+    return { data: null, error: err.message };
+  }
+};
+
+// Approve a refund request
+export const approveRefund = async (refundId) => {
+  try {
+    // Get the return request details
+    const { data: returnDetails, error: fetchError } = await supabase
+      .from("returns")
+      .select("book_id, quantity, item_price")
+      .eq("id", refundId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const { book_id, quantity, item_price } = returnDetails;
+
+    // Update stock of the product
+    const { error: stockError } = await supabase
+      .from("books")
+      .update({ stock: supabase.raw("stock + ?", [quantity]) })
+      .eq("id", book_id);
+
+    if (stockError) throw stockError;
+
+    // Update the refund request to approved
+    const { error: statusError } = await supabase
+      .from("returns")
+      .update({ return_status: "approved" })
+      .eq("id", refundId);
+
+    if (statusError) throw statusError;
+
+    return { success: true };
+  } catch (err) {
+    console.error("Error approving refund:", err.message);
+    return { success: false, error: err.message };
+  }
+};
+
+// Reject a refund request
+export const rejectRefund = async (refundId) => {
+  try {
+    const { error } = await supabase
+      .from("returns")
+      .update({ return_status: "rejected" })
+      .eq("id", refundId);
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (err) {
+    console.error("Error rejecting refund:", err.message);
+    return { success: false, error: err.message };
+  }
+};
