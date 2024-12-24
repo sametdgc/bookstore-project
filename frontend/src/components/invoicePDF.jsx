@@ -103,8 +103,7 @@ export const invoicePDF = (orderDetails) => {
   );
   pdf.text("www.chzero.com || chzero@gmail.com", 105, y + 10, { align: "center" });
 
-  // Save the PDF
-  pdf.save(`invoice-${orderDetails.order_id}.pdf`);
+  return pdf;
 };
 
 export default invoicePDF;

@@ -1,21 +1,23 @@
-import React, { useState } from "react";
-import ProductManagement from "./sections/ProductManagement";
-import CommentApproval from "./sections/CommentApproval";
-import StockManagement from "./sections/StockManagement";
-import DeliveryDetails from "./sections/DeliveryDetails";
+import React, { useEffect, useState } from "react";
+import PriceManager from "./sections/priceManager";
+import InvoiceManager from "./sections/invoiceManager";
+import RevenueManager from "./sections/revenueManager";
+import RefundManager from "./sections/refundManager";
+import BulkDiscountUpdate from "./sections/bulkDiscountManager";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../services/supabaseClient";
 
-const PMDashboard = () => {
-  const [activeSection, setActiveSection] = useState("products");
+const SMDashboard = () => {
+  const [activeSection, setActiveSection] = useState("invoice");
   const navigate = useNavigate();
 
   // Sidebar navigation links
   const sidebarLinks = [
-    { id: "products", label: "Manage Products" },
-    { id: "comments", label: "Approve Comments" },
-    { id: "stock", label: "Stock Management" },
-    { id: "deliveries", label: "Delivery Details" },
+    { id: "invoice", label: "Oversee Invoices" },
+    { id: "price", label: "Manage Prices" },
+    { id: "revenue", label: "Revenue Management" },
+    { id: "refund", label: "Refund Management" },
+    { id: "bulkDiscount", label: "Bulk Discount Update" },
   ];
 
   const handleLogout = async () => {
@@ -32,10 +34,12 @@ const PMDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex bg-gray-100 min-h-screen">
       {/* Sidebar */}
-      <aside className="w-64 bg-[#65aa92] text-white p-4">
-        <h1 className="text-2xl font-bold mb-6 text-center">Product Manager Dashboard</h1>
+      <aside className="w-64 bg-[#65aa92] text-white p-4 fixed h-screen">
+        <h1 className="text-2xl font-bold mb-6 text-center">
+          Sales Manager Dashboard
+        </h1>
         <nav className="space-y-4">
           {sidebarLinks.map((link) => (
             <button
@@ -61,14 +65,15 @@ const PMDashboard = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-grow p-6">
-        {activeSection === "products" && <ProductManagement />}
-        {activeSection === "comments" && <CommentApproval />}
-        {activeSection === "stock" && <StockManagement />}
-        {activeSection === "deliveries" && <DeliveryDetails />}
+      <main className="flex-grow ml-64 p-6 overflow-auto">
+        {activeSection === "invoice" && <InvoiceManager />}
+        {activeSection === "price" && <PriceManager />}
+        {activeSection === "revenue" && <RevenueManager />}
+        {activeSection === "refund" && <RefundManager />}
+        {activeSection === "bulkDiscount" && <BulkDiscountUpdate />}
       </main>
     </div>
   );
 };
 
-export default PMDashboard;
+export default SMDashboard;
