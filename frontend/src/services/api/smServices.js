@@ -304,3 +304,86 @@ export const getAllBooksRaw = async () => {
     return { data: [] };
   }
 };
+
+// Fetch all refund requests
+export const getRefundRequests = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("returns")
+      .select(`
+        id,
+        order_id,
+        book_id,
+        quantity,
+        item_price,
+        reason,
+        other_reason,
+        return_status,
+        request_date,
+        books (title, stock),
+        users (full_name, email)
+      `)
+      .order("request_date", { ascending: false });
+
+    if (error) throw error;
+
+    return { data, error: null };
+  } catch (err) {
+    console.error("Error fetching refund requests:", err.message);
+    return { data: null, error: err.message };
+  }
+};
+
+// Approve a refund request
+export const approveRefund = async (refundId) => {
+  try {
+    // Get the return request details
+    const { data: returnDetails, error: fetchError } = await supabase
+      .from("returns")
+      .select("book_id, quantity, item_price")
+      .eq("id", refundId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const { book_id, quantity, item_price } = returnDetails;
+
+    // Update stock of the product
+    const { error: stockError } = await supabase
+      .from("books")
+      .update({ stock: supabase.raw("stock + ?", [quantity]) })
+      .eq("id", book_id);
+
+    if (stockError) throw stockError;
+
+    // Update the refund request to approved
+    const { error: statusError } = await supabase
+      .from("returns")
+      .update({ return_status: "approved" })
+      .eq("id", refundId);
+
+    if (statusError) throw statusError;
+
+    return { success: true };
+  } catch (err) {
+    console.error("Error approving refund:", err.message);
+    return { success: false, error: err.message };
+  }
+};
+
+// Reject a refund request
+export const rejectRefund = async (refundId) => {
+  try {
+    const { error } = await supabase
+      .from("returns")
+      .update({ return_status: "rejected" })
+      .eq("id", refundId);
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (err) {
+    console.error("Error rejecting refund:", err.message);
+    return { success: false, error: err.message };
+  }
+};

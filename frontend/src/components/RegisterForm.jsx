@@ -12,7 +12,7 @@ const RegisterForm = () => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState(1); // Default role is Customer
+  const [role, setRole] = useState(1); 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 

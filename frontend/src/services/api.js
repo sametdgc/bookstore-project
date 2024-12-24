@@ -10,7 +10,8 @@ import { getBooksWithStock,getDeliveryStatuses,updateBookStock,updateDeliverySta
 import { approveReview,disapproveReview,getPendingReviews,getPendingReviewsForBook,getReviewsForBook,submitReview } from "./api/reviewServices";
 import { getUserRoleById,updateUserData } from "./api/userServices";
 import { getAllInvoices, getRevenueByCategory, getTopCustomers, 
-  getBestSellingBooksComposition,getDailyTotalRevenue, getTotalRevenue,updateBookPrice, getAllBooksRaw} from "./api/smServices";
+  getBestSellingBooksComposition,getDailyTotalRevenue, getTotalRevenue,updateBookPrice, getAllBooksRaw,
+  getRefundRequests, approveRefund, rejectRefund} from "./api/smServices";
 import {applyDiscountToBook,getCurrentDiscount, endAllActiveDiscounts} from "./api/discountServices";
 
 
@@ -84,4 +85,7 @@ export {
   applyDiscountToBook,
   getCurrentDiscount,
   endAllActiveDiscounts,
+  getRefundRequests, 
+  approveRefund, 
+  rejectRefund
 }
