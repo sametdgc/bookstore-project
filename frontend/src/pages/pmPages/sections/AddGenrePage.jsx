@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../../../services/supabaseClient";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -7,9 +7,33 @@ const AddGenrePage = () => {
 
   // State for genre fields
   const [genreData, setGenreData] = useState({
-    genre_id: "",
+    genre_id: "", // Automatically determined
     genre_name: "",
   });
+
+  // Fetch the largest genre_id from the database and increment it
+  useEffect(() => {
+    const fetchMaxGenreId = async () => {
+      const { data, error } = await supabase
+        .from("genres")
+        .select("genre_id")
+        .order("genre_id", { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error("Error fetching max genre_id:", error.message);
+      } else if (data && data.length > 0) {
+        setGenreData((prev) => ({
+          ...prev,
+          genre_id: parseInt(data[0].genre_id, 10) + 1, // Increment the largest ID by 1
+        }));
+      } else {
+        setGenreData((prev) => ({ ...prev, genre_id: 1 })); // Default to 1 if no genres exist
+      }
+    };
+
+    fetchMaxGenreId();
+  }, []);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -28,7 +52,7 @@ const AddGenrePage = () => {
     // Prepare the data for insertion
     const dataToInsert = {
       genre_id: parseInt(genreData.genre_id), // Ensure ID is an integer
-      genre_name: genreData.genre_name,
+      genre_name: genreData.genre_name.trim(), // Trim whitespace
     };
 
     console.log("Data to insert:", dataToInsert); // Debugging log
@@ -51,14 +75,13 @@ const AddGenrePage = () => {
 
       {/* Input Form */}
       <div className="space-y-4">
-        {/* Required Fields */}
+        {/* Display the auto-assigned Genre ID */}
         <input
           name="genre_id"
           placeholder="Genre ID *"
-          type="number"
           value={genreData.genre_id}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
+          readOnly
+          className="w-full p-2 border rounded bg-gray-200 cursor-not-allowed"
         />
         <input
           name="genre_name"
