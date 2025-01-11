@@ -8,11 +8,15 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
-import { getDailyTotalRevenue } from "../../../../services/api";
+import {
+  getDailyTotalRevenue,
+  getDailyTotalCost,
+  getDailyNetProfit,
+} from "../../../../services/api";
 import { useSearchParams } from "react-router-dom";
 
 const TotalRevenueChart = () => {
-  const [dailyRevenue, setDailyRevenue] = useState([]);
+  const [chartData, setChartData] = useState([]);
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Read date range from URL params
@@ -22,14 +26,31 @@ const TotalRevenueChart = () => {
   const [startDateInput, setStartDateInput] = useState(startDateQuery);
   const [endDateInput, setEndDateInput] = useState(endDateQuery);
 
-  // Fetch revenue data
+  // Fetch and merge data
   useEffect(() => {
-    const fetchDailyRevenue = async () => {
-      const data = await getDailyTotalRevenue(startDateQuery, endDateQuery);
-      setDailyRevenue(data);
+    const fetchData = async () => {
+      const revenueData = await getDailyTotalRevenue(startDateQuery, endDateQuery);
+      const costData = await getDailyTotalCost(startDateQuery, endDateQuery);
+      const profitData = await getDailyNetProfit(startDateQuery, endDateQuery);
+
+      // Combine the data based on the `date` key
+      const combinedData = revenueData.map((revenue) => {
+        const cost = costData.find((item) => item.date === revenue.date) || { cost: 0 };
+        const profit = profitData.find((item) => item.date === revenue.date) || { profit: 0 };
+
+        return {
+          date: revenue.date,
+          revenue: revenue.revenue,
+          cost: cost.cost,
+          profit: profit.profit,
+        };
+      });
+
+      setChartData(combinedData);
+      console.log(combinedData);
     };
 
-    fetchDailyRevenue();
+    fetchData();
   }, [startDateQuery, endDateQuery]);
 
   // Update URL when filters are applied
@@ -39,7 +60,7 @@ const TotalRevenueChart = () => {
 
   return (
     <div className="w-full p-4">
-      <h2 className="text-xl font-semibold mb-4 text-center">Daily Revenue Over Time</h2>
+      <h2 className="text-xl font-semibold mb-4 text-center">Daily Financial Metrics</h2>
 
       {/* Date Filter */}
       <div className="flex items-center space-x-4 mb-6 justify-center">
@@ -71,24 +92,43 @@ const TotalRevenueChart = () => {
 
       {/* Line Chart */}
       <div className="w-full">
-        {dailyRevenue.length > 0 ? (
+        {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={dailyRevenue} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-              <YAxis />
-              <Tooltip formatter={(value) => `$${value}`} />
+              <YAxis 
+                tickFormatter={(value) => `$${Number(value).toFixed(2)}`} // Ensure value is a number
+              />
+              <Tooltip 
+                formatter={(value) => `$${Number(value).toFixed(2)}`} // Ensure value is a number
+              />
               <Line
                 type="monotone"
                 dataKey="revenue"
                 stroke="#65aa92"
                 strokeWidth={3}
-                dot={{ r: 4 }}
+                dot={false}
+              />
+              <Line
+                type="monotone"
+                dataKey="cost"
+                stroke="#f56565"
+                strokeWidth={3}
+                dot={false}
+              />
+              <Line
+                type="monotone"
+                dataKey="profit"
+                stroke="#4c51bf"
+                strokeWidth={3}
+                dot={false}
               />
             </LineChart>
           </ResponsiveContainer>
+          
         ) : (
-          <p className="text-center text-gray-500">No revenue data for the selected range.</p>
+          <p className="text-center text-gray-500">No data available for the selected range.</p>
         )}
       </div>
     </div>

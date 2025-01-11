@@ -8,11 +8,15 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
-import { getTotalRevenue } from "../../../../services/api";
+import {
+  getTotalRevenue,
+  getTotalCost,
+  getNetProfit,
+} from "../../../../services/api";
 import { useSearchParams } from "react-router-dom";
 
 const TotalRevenueChart = () => {
-  const [dailyRevenue, setDailyRevenue] = useState([]);
+  const [chartData, setChartData] = useState([]);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const startDateQuery = searchParams.get("startDate") || "";
@@ -21,21 +25,35 @@ const TotalRevenueChart = () => {
   const [startDateInput, setStartDateInput] = useState(startDateQuery);
   const [endDateInput, setEndDateInput] = useState(endDateQuery);
 
-  // Fetch data
   useEffect(() => {
-    const fetchDailyRevenue = async () => {
-      const data = await getTotalRevenue(startDateQuery, endDateQuery);
-      setDailyRevenue(data);
+    const fetchData = async () => {
+      const totalRevenueData = await getTotalRevenue(startDateQuery, endDateQuery);
+      const totalCostData = await getTotalCost(startDateQuery, endDateQuery);
+      const netProfitData = await getNetProfit(startDateQuery, endDateQuery);
+
+      // Combine the data based on the `date` key
+      const combinedData = totalRevenueData.map((revenue) => {
+        const cost = totalCostData.find((item) => item.date === revenue.date) || {};
+        const profit = netProfitData.find((item) => item.date === revenue.date) || {};
+        
+        return {
+          date: revenue.date,
+          revenue: revenue.revenue || 0,
+          cost: cost.cost || 0,
+          profit: profit.profit || 0,
+        };
+      });
+
+      setChartData(combinedData);
     };
 
-    fetchDailyRevenue();
+    fetchData();
   }, [startDateQuery, endDateQuery]);
 
   const handleFilter = () => {
     setSearchParams({ startDate: startDateInput, endDate: endDateInput });
   };
 
-  // Date range options
   const setDateRange = (range) => {
     const today = new Date();
     let startDate;
@@ -70,7 +88,9 @@ const TotalRevenueChart = () => {
 
   return (
     <div className="w-full p-4">
-      <h2 className="text-xl font-semibold mb-4 text-center">Total Revenue Over Time</h2>
+      <h2 className="text-xl font-semibold mb-4 text-center">
+        Total Revenue Over Time
+      </h2>
 
       {/* Date Filter */}
       <div className="flex items-center space-x-4 mb-4 justify-center">
@@ -115,25 +135,51 @@ const TotalRevenueChart = () => {
 
       {/* Line Chart */}
       <div className="w-full">
-        {dailyRevenue.length > 0 ? (
+        {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={dailyRevenue} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <LineChart
+              data={chartData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-              <YAxis />
-              <Tooltip formatter={(value) => `$${value}`} />
+              <YAxis
+                tickFormatter={(value) => `$${value.toFixed(2)}`} // Format Y-axis labels to 2 decimal places
+              />
+              <Tooltip
+                formatter={(value) => `$${parseFloat(value).toFixed(2)}`} // Format tooltip values to 2 decimal places
+                labelFormatter={(label) => `Date: ${label}`} // Optional: Add a label formatter for clarity
+              />
               <Line
                 type="monotone"
                 dataKey="revenue"
                 stroke="#65aa92"
                 strokeWidth={3}
-                dot={(props) => (props.payload.revenue === 0 ? null : <circle {...props} />)}
+                dot={false}
                 connectNulls
-                />
+              />
+              <Line
+                type="monotone"
+                dataKey="cost"
+                stroke="#f56565"
+                strokeWidth={3}
+                dot={false}
+                connectNulls
+              />
+              <Line
+                type="monotone"
+                dataKey="profit"
+                stroke="#4c51bf"
+                strokeWidth={3}
+                dot={false}
+                connectNulls
+              />
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <p className="text-center text-gray-500">No revenue data for the selected range.</p>
+          <p className="text-center text-gray-500">
+            No data available for the selected range.
+          </p>
         )}
       </div>
     </div>
