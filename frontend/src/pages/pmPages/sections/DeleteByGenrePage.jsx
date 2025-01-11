@@ -23,7 +23,7 @@ const DeleteByGenrePage = () => {
     fetchGenres();
   }, []);
 
-  // Handle delete books by genre
+  // Handle delete books by genre and delete the genre itself
   const handleDeleteByGenre = async () => {
     if (!selectedGenre) {
       setMessage("Please select a genre.");
@@ -31,7 +31,7 @@ const DeleteByGenrePage = () => {
     }
 
     const confirmDelete = window.confirm(
-      "Are you sure you want to delete all books in this genre? This action cannot be undone."
+      "Are you sure you want to delete all books in this genre and the genre itself? This action cannot be undone."
     );
 
     if (!confirmDelete) return;
@@ -39,18 +39,35 @@ const DeleteByGenrePage = () => {
     setLoading(true);
     setMessage("");
 
-    const { error } = await supabase
+    // Delete books in the selected genre
+    const { error: bookError } = await supabase
       .from("books")
+      .delete()
+      .eq("genre_id", selectedGenre);
+
+    if (bookError) {
+      console.error("Error deleting books:", bookError.message);
+      setLoading(false);
+      setMessage(`Failed to delete books: ${bookError.message}`);
+      return;
+    }
+
+    // Delete the genre itself
+    const { error: genreError } = await supabase
+      .from("genres")
       .delete()
       .eq("genre_id", selectedGenre);
 
     setLoading(false);
 
-    if (error) {
-      console.error("Error deleting books:", error.message);
-      setMessage(`Failed to delete books: ${error.message}`);
+    if (genreError) {
+      console.error("Error deleting genre:", genreError.message);
+      setMessage(`Books were deleted, but failed to delete the genre: ${genreError.message}`);
     } else {
-      setMessage("Books in the selected genre have been successfully deleted.");
+      setMessage("Books and the selected genre have been successfully deleted.");
+      // Refresh genres list
+      setGenres((prevGenres) => prevGenres.filter((g) => g.genre_id !== selectedGenre));
+      setSelectedGenre(""); // Reset selected genre
     }
   };
 
@@ -88,7 +105,7 @@ const DeleteByGenrePage = () => {
             : "bg-red-500 hover:bg-red-600"
         }`}
       >
-        {loading ? "Deleting..." : "Delete Books"}
+        {loading ? "Deleting..." : "Delete Books and Genre"}
       </button>
 
       {/* Message Section */}
