@@ -85,7 +85,7 @@ const AddBookPage = () => {
       alert(`Failed to add the book: ${error.message}`);
     } else {
       alert("Book added successfully!");
-      navigate("/pm/manage-products"); // Navigate back to Product Management page
+      navigate("/pm-dashboard"); // Navigate back to Product Management page
     }
   };
 
