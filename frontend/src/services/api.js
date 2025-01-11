@@ -9,8 +9,11 @@ import { createReturnRequest,getReturnHistoryByOrder } from "./api/returnService
 import { getBooksWithStock,getDeliveryStatuses,updateBookStock,updateDeliveryStatus } from "./api/pmServices";
 import { approveReview,disapproveReview,getPendingReviews,getPendingReviewsForBook,getReviewsForBook,submitReview } from "./api/reviewServices";
 import { getUserRoleById,updateUserData } from "./api/userServices";
-import { getAllInvoices, getRevenueByCategory, getTopCustomers, 
-  getBestSellingBooksComposition,getDailyTotalRevenue, getTotalRevenue,updateBookPrice, getAllBooksRaw,
+import { getAllInvoices, getRevenueByCategory, getProfitByCategory,getCostByCategory, getTopCustomers, 
+  getBestSellingBooksComposition,
+  getDailyTotalRevenue, getDailyTotalCost, getDailyNetProfit, 
+  getTotalRevenue,getTotalCost,getNetProfit,
+  updateBookPrice, getAllBooksRaw,
   getRefundRequests, approveRefund, rejectRefund} from "./api/smServices";
 import {applyDiscountToBook,getCurrentDiscount, endAllActiveDiscounts} from "./api/discountServices";
 
@@ -76,10 +79,16 @@ export {
   updateUserData,
   getAllInvoices,
   getRevenueByCategory,
+  getProfitByCategory,
+  getCostByCategory,
   getTopCustomers,
   getBestSellingBooksComposition,
   getDailyTotalRevenue,
+  getDailyTotalCost,
+  getDailyNetProfit,
   getTotalRevenue,
+  getTotalCost,
+  getNetProfit,
   updateBookPrice,
   getAllBooksRaw,
   applyDiscountToBook,
