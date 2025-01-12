@@ -4,8 +4,11 @@ import { getReturnHistoryByOrder } from "../../services/api";
 
 // Helper function to check if order is delivered
 const isOrderDelivered = (delivery_status) => {
-  console.log(delivery_status);
-  return delivery_status === "delivered";
+  return delivery_status.status === "delivered";
+};
+
+const isOrderCancelled = (delivery_status) => {
+  return delivery_status.status === "cancelled";
 };
 
 // Helper function to check return eligibility (within 30 days)
@@ -60,216 +63,227 @@ const OrderDetailsWindow = ({ order }) => {
 
   return (
     <div className="mt-6">
-      {/* Expandable Section - Order Items */}
-      <div className="border-b pb-4 mb-4">
-        <div
-          className="flex justify-between items-center cursor-pointer"
-          onClick={() => setIsOrderItemsExpanded(!isOrderItemsExpanded)}
-        >
-          <h3 className="text-xl font-semibold text-gray-800">
-            Order Items ({orderItems.length})
-          </h3>
-          <span className="text-[#65aa92]">
-            {isOrderItemsExpanded ? "▲" : "▼"}
-          </span>
+      {/* Display Message for Cancelled Orders */}
+      {isOrderCancelled(order.delivery_status) ? (
+        <div className="py-6 text-center text-lg text-red-500">
+          <p>This order has been cancelled. No actions are available.</p>
         </div>
+      ) : (
+        <>
+          {/* Expandable Section - Order Items */}
+          <div className="border-b pb-4 mb-4">
+            <div
+              className="flex justify-between items-center cursor-pointer"
+              onClick={() => setIsOrderItemsExpanded(!isOrderItemsExpanded)}
+            >
+              <h3 className="text-xl font-semibold text-gray-800">
+                Order Items ({orderItems.length})
+              </h3>
+              <span className="text-[#65aa92]">
+                {isOrderItemsExpanded ? "▲" : "▼"}
+              </span>
+            </div>
 
-        {isOrderItemsExpanded && (
-          <div className="mt-4">
-            {/* Column Headers */}
-            {orderItems.length > 0 ? (
-              <>
-                <div className="grid grid-cols-5 gap-4 py-2 font-semibold text-gray-700 border-b">
-                  <span className="col-span-2">Book Details</span>
-                  <span className="text-center">Price</span>
-                  <span className="text-center">Quantity</span>
-                  <span className="text-right">Subtotal</span>
-                </div>
-
-                {/* Order Items */}
-                {orderItems.map((item) => (
-                  <div
-                    key={item.book_id}
-                    className="grid grid-cols-5 gap-4 items-center border-b py-2"
-                  >
-                    {/* Book Image and Title */}
-                    <div className="col-span-2 flex items-center">
-                      <img
-                        src={
-                          item.book_image_url ||
-                          "https://via.placeholder.com/50x75"
-                        }
-                        alt={item.book_title}
-                        className="w-16 h-24 object-cover rounded cursor-pointer"
-                        onClick={() => navigate(`/books/${item.book_id}`)}
-                      />
-                      <span
-                        onClick={() => navigate(`/books/${item.book_id}`)}
-                        className="ml-4 font-semibold text-[#65aa92] hover:underline cursor-pointer"
-                      >
-                        {item.book_title}
-                      </span>
+            {isOrderItemsExpanded && (
+              <div className="mt-4">
+                {/* Column Headers */}
+                {orderItems.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-5 gap-4 py-2 font-semibold text-gray-700 border-b">
+                      <span className="col-span-2">Book Details</span>
+                      <span className="text-center">Price</span>
+                      <span className="text-center">Quantity</span>
+                      <span className="text-right">Subtotal</span>
                     </div>
 
-                    {/* Price */}
-                    <span className="text-gray-700 text-center">
-                      ${item.item_price.toFixed(2)}
-                    </span>
-
-                    {/* Quantity */}
-                    <span className="text-gray-700 text-center">
-                      {item.quantity}
-                    </span>
-
-                    {/* Subtotal */}
-                    <span className="text-gray-700 text-right">
-                      ${(item.item_price * item.quantity).toFixed(2)}
-                    </span>
-                  </div>
-                ))}
-
-                {/* Shipping Price */}
-                <div className="text-right mt-2 font-semibold text-gray-800">
-                  Shipping: <span className="text-[#65aa92]">$10.00</span>
-                </div>
-
-                {/* Return or Cancel Button */}
-                <div className="text-right mt-4">
-                  {isOrderDelivered(order.delivery_status) ? (
-                    isOrderReturnable(order.order_date) && (
-                      <button
-                        onClick={handleReturnClick}
-                        className="bg-red-500 text-white font-semibold px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                    {/* Order Items */}
+                    {orderItems.map((item) => (
+                      <div
+                        key={item.book_id}
+                        className="grid grid-cols-5 gap-4 items-center border-b py-2"
                       >
-                        Return Item(s)
-                      </button>
-                    )
-                  ) : (
-                    <button
-                      onClick={handleCancelClick}
-                      className="bg-blue-500 text-white font-semibold px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
-                    >
-                      Cancel Order
-                    </button>
-                  )}
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Message when no order items exist */}
-                <div className="py-6 text-center text-gray-600 text-lg">
-                  All items were requested to be returned.
-                </div>
+                        {/* Book Image and Title */}
+                        <div className="col-span-2 flex items-center">
+                          <img
+                            src={
+                              item.book_image_url ||
+                              "https://via.placeholder.com/50x75"
+                            }
+                            alt={item.book_title}
+                            className="w-16 h-24 object-cover rounded cursor-pointer"
+                            onClick={() => navigate(`/books/${item.book_id}`)}
+                          />
+                          <span
+                            onClick={() => navigate(`/books/${item.book_id}`)}
+                            className="ml-4 font-semibold text-[#65aa92] hover:underline cursor-pointer"
+                          >
+                            {item.book_title}
+                          </span>
+                        </div>
 
-                {/* Shipping Price */}
-                <div className="text-right mt-2 font-semibold text-gray-800">
-                  Shipping: <span className="text-[#65aa92]">$10.00</span>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-      </div>
+                        {/* Price */}
+                        <span className="text-gray-700 text-center">
+                          ${item.item_price.toFixed(2)}
+                        </span>
 
-      {/* Expandable Section - Returned Items */}
-      <div className="border-b pb-4">
-        <div
-          className="flex justify-between items-center cursor-pointer"
-          onClick={() => setIsReturnedItemsExpanded(!isReturnedItemsExpanded)}
-        >
-          <h3 className="text-xl font-semibold text-gray-800">
-            Return Requests ({returnedItems.length})
-          </h3>
-          <span className="text-[#65aa92]">
-            {isReturnedItemsExpanded ? "▲" : "▼"}
-          </span>
-        </div>
+                        {/* Quantity */}
+                        <span className="text-gray-700 text-center">
+                          {item.quantity}
+                        </span>
 
-        {isReturnedItemsExpanded && (
-          <div className="mt-4">
-            {/* Column Headers */}
-            {returnedItems.length > 0 ? (
-              <>
-                <div className="grid grid-cols-8 gap-4 py-2 font-semibold text-gray-700 border-b">
-                  <span className="col-span-2">Book Details</span>
-                  <span className="text-center">Price</span>
-                  <span className="text-center">Quantity</span>
-                  <span className="text-center">Subtotal</span>
-                  <span className="text-center">Reason</span>
-                  <span className="text-center">Request Date</span>
-                  <span className="text-center">Status</span>
-                </div>
+                        {/* Subtotal */}
+                        <span className="text-gray-700 text-right">
+                          ${(item.item_price * item.quantity).toFixed(2)}
+                        </span>
+                      </div>
+                    ))}
 
-                {/* Returned Items */}
-                {returnedItems.map((item) => (
-                  <div
-                    key={item.book_id}
-                    className="grid grid-cols-8 gap-4 items-center border-b py-2"
-                  >
-                    {/* Book Image and Title */}
-                    <div className="col-span-2 flex items-center">
-                      <img
-                        src={
-                          item.book_image_url ||
-                          "https://via.placeholder.com/50x75"
-                        }
-                        alt={item.book_title}
-                        className="w-16 h-24 object-cover rounded cursor-pointer"
-                        onClick={() => navigate(`/books/${item.book_id}`)}
-                      />
-                      <span
-                        onClick={() => navigate(`/books/${item.book_id}`)}
-                        className="ml-4 font-semibold text-[#65aa92] hover:underline cursor-pointer"
-                      >
-                        {item.book_title}
-                      </span>
+                    {/* Shipping Price */}
+                    <div className="text-right mt-2 font-semibold text-gray-800">
+                      Shipping: <span className="text-[#65aa92]">$10.00</span>
                     </div>
 
-                    {/* Price */}
-                    <span className="text-gray-700 text-center">
-                      ${item.item_price.toFixed(2)}
-                    </span>
+                    {/* Return or Cancel Button */}
+                    <div className="text-right mt-4">
+                      {isOrderDelivered(order.delivery_status) ? (
+                        isOrderReturnable(order.order_date) && (
+                          <button
+                            onClick={handleReturnClick}
+                            className="bg-red-500 text-white font-semibold px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                          >
+                            Return Item(s)
+                          </button>
+                        )
+                      ) : (
+                        <button
+                          onClick={handleCancelClick}
+                          className="bg-blue-500 text-white font-semibold px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
+                        >
+                          Cancel Order
+                        </button>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Message when no order items exist */}
+                    <div className="py-6 text-center text-gray-600 text-lg">
+                      All items were requested to be returned.
+                    </div>
 
-                    {/* Quantity */}
-                    <span className="text-gray-700 text-center">
-                      {item.quantity}
-                    </span>
-
-                    {/* Subtotal */}
-                    <span className="text-gray-700 text-center">
-                      ${(item.item_price * item.quantity).toFixed(2)}
-                    </span>
-
-                    {/* Return Reason */}
-                    <span className="text-gray-500 text-center italic">
-                      {item.reason === "Other"
-                        ? `Other: ${item.other_reason}`
-                        : item.reason}
-                    </span>
-
-                    {/* Request Date */}
-                    <span className="text-gray-700 text-center">
-                      {new Date(item.request_date)
-                        .toISOString()
-                        .slice(0, 16)
-                        .replace("T", " ")}
-                    </span>
-
-                    {/* Return Status */}
-                    <span className="text-sm font-semibold text-center text-yellow-500">
-                      {item.return_status || "Pending"}
-                    </span>
-                  </div>
-                ))}
-              </>
-            ) : (
-              <div className="py-6 text-center text-gray-600 text-lg">
-                No return requests were made for this order.
+                    {/* Shipping Price */}
+                    <div className="text-right mt-2 font-semibold text-gray-800">
+                      Shipping: <span className="text-[#65aa92]">$10.00</span>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
-        )}
-      </div>
+
+          {/* Expandable Section - Returned Items */}
+          <div className="border-b pb-4">
+            <div
+              className="flex justify-between items-center cursor-pointer"
+              onClick={() =>
+                setIsReturnedItemsExpanded(!isReturnedItemsExpanded)
+              }
+            >
+              <h3 className="text-xl font-semibold text-gray-800">
+                Return Requests ({returnedItems.length})
+              </h3>
+              <span className="text-[#65aa92]">
+                {isReturnedItemsExpanded ? "▲" : "▼"}
+              </span>
+            </div>
+
+            {isReturnedItemsExpanded && (
+              <div className="mt-4">
+                {/* Column Headers */}
+                {returnedItems.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-8 gap-4 py-2 font-semibold text-gray-700 border-b">
+                      <span className="col-span-2">Book Details</span>
+                      <span className="text-center">Price</span>
+                      <span className="text-center">Quantity</span>
+                      <span className="text-center">Subtotal</span>
+                      <span className="text-center">Reason</span>
+                      <span className="text-center">Request Date</span>
+                      <span className="text-center">Status</span>
+                    </div>
+
+                    {/* Returned Items */}
+                    {returnedItems.map((item) => (
+                      <div
+                        key={item.book_id}
+                        className="grid grid-cols-8 gap-4 items-center border-b py-2"
+                      >
+                        {/* Book Image and Title */}
+                        <div className="col-span-2 flex items-center">
+                          <img
+                            src={
+                              item.book_image_url ||
+                              "https://via.placeholder.com/50x75"
+                            }
+                            alt={item.book_title}
+                            className="w-16 h-24 object-cover rounded cursor-pointer"
+                            onClick={() => navigate(`/books/${item.book_id}`)}
+                          />
+                          <span
+                            onClick={() => navigate(`/books/${item.book_id}`)}
+                            className="ml-4 font-semibold text-[#65aa92] hover:underline cursor-pointer"
+                          >
+                            {item.book_title}
+                          </span>
+                        </div>
+
+                        {/* Price */}
+                        <span className="text-gray-700 text-center">
+                          ${item.item_price.toFixed(2)}
+                        </span>
+
+                        {/* Quantity */}
+                        <span className="text-gray-700 text-center">
+                          {item.quantity}
+                        </span>
+
+                        {/* Subtotal */}
+                        <span className="text-gray-700 text-center">
+                          ${(item.item_price * item.quantity).toFixed(2)}
+                        </span>
+
+                        {/* Return Reason */}
+                        <span className="text-gray-500 text-center italic">
+                          {item.reason === "Other"
+                            ? `Other: ${item.other_reason}`
+                            : item.reason}
+                        </span>
+
+                        {/* Request Date */}
+                        <span className="text-gray-700 text-center">
+                          {new Date(item.request_date)
+                            .toISOString()
+                            .slice(0, 16)
+                            .replace("T", " ")}
+                        </span>
+
+                        {/* Return Status */}
+                        <span className="text-sm font-semibold text-center text-yellow-500">
+                          {item.return_status || "Pending"}
+                        </span>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <div className="py-6 text-center text-gray-600 text-lg">
+                    No return requests were made for this order.
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };
