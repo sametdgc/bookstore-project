@@ -11,6 +11,9 @@ const AddGenrePage = () => {
     genre_name: "",
   });
 
+  const [existingGenres, setExistingGenres] = useState([]); // State for existing genres
+  const [loadingGenres, setLoadingGenres] = useState(false); // State for loading indicator
+
   // Fetch the largest genre_id from the database and increment it
   useEffect(() => {
     const fetchMaxGenreId = async () => {
@@ -35,6 +38,27 @@ const AddGenrePage = () => {
     fetchMaxGenreId();
   }, []);
 
+  // Fetch existing genres
+  useEffect(() => {
+    const fetchGenres = async () => {
+      setLoadingGenres(true);
+      const { data, error } = await supabase
+        .from("genres")
+        .select("*")
+        .order("genre_id", { ascending: true }); // Order genres by ID
+
+      if (error) {
+        console.error("Error fetching genres:", error.message);
+      } else {
+        setExistingGenres(data || []);
+      }
+
+      setLoadingGenres(false);
+    };
+
+    fetchGenres();
+  }, []);
+
   // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,7 +79,6 @@ const AddGenrePage = () => {
       genre_name: genreData.genre_name.trim(), // Trim whitespace
     };
 
-
     // Insert the genre into the database
     const { error } = await supabase.from("genres").insert([dataToInsert]);
 
@@ -64,7 +87,12 @@ const AddGenrePage = () => {
       alert(`Failed to add the genre: ${error.message}`);
     } else {
       alert("Genre added successfully!");
-      navigate("/pm-dashboard"); // Navigate back to Product Management page
+      setGenreData({ genre_id: parseInt(genreData.genre_id) + 1, genre_name: "" }); // Reset form
+      const { data: updatedGenres } = await supabase
+        .from("genres")
+        .select("*")
+        .order("genre_id", { ascending: true }); // Refresh and order the genre list
+      setExistingGenres(updatedGenres);
     }
   };
 
@@ -74,7 +102,6 @@ const AddGenrePage = () => {
 
       {/* Input Form */}
       <div className="space-y-4">
-        {/* Display the auto-assigned Genre ID */}
         <input
           name="genre_id"
           placeholder="Genre ID *"
@@ -105,6 +132,33 @@ const AddGenrePage = () => {
         >
           Add Genre
         </button>
+      </div>
+
+      {/* Existing Genres */}
+      <div className="mt-10">
+        <h3 className="text-xl font-semibold mb-4">Existing Genres</h3>
+        {loadingGenres ? (
+          <p className="text-gray-500">Loading genres...</p>
+        ) : existingGenres.length > 0 ? (
+          <table className="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 px-4 py-2">Genre ID</th>
+                <th className="border border-gray-300 px-4 py-2">Genre Name</th>
+              </tr>
+            </thead>
+            <tbody>
+              {existingGenres.map((genre) => (
+                <tr key={genre.genre_id} className="text-center">
+                  <td className="border border-gray-300 px-4 py-2">{genre.genre_id}</td>
+                  <td className="border border-gray-300 px-4 py-2">{genre.genre_name}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="text-gray-500">No genres found.</p>
+        )}
       </div>
     </div>
   );
