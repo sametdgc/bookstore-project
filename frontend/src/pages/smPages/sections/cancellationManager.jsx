@@ -180,9 +180,13 @@ const CancellationManager = () => {
                       request.quantity
                     )
                   }
-                  disabled={processingId === request.cancellation_id}
+                  disabled={
+                    processingId === request.cancellation_id ||
+                    request.status === "approved"
+                  }
                   className={`px-4 py-2 rounded-md transition ${
-                    processingId === request.cancellation_id
+                    processingId === request.cancellation_id ||
+                    request.status === "approved"
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-blue-500 hover:bg-blue-600 text-white"
                   }`}
