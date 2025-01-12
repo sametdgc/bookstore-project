@@ -173,7 +173,6 @@ const SearchPage = () => {
       return sortOrder === "popularity-high" ? ratingB - ratingA : ratingA - ratingB;
     }
     else if (sortOrder.startsWith("name")) {
-      console.log(a.title,b.title);
       return sortOrder === "name-asc" ? 
         a.title.localeCompare(b.title) :
         b.title.localeCompare(a.title);

@@ -177,23 +177,28 @@ export const searchBooks = async (query) => {
   
     // Filter for active discounts (end_date is null or in the future)
     const currentDate = new Date().toISOString();
-    const activeDiscounts = discounts
-      .filter(
-        (discount) =>
-          !discount.discount_end_date || discount.discount_end_date > currentDate
-      );
+    console.log(discounts)
+    console.log(currentDate);
+    const activeDiscounts = discounts.filter((discount) => {
+      const { end_date, start_date } = discount.discounts;
+      return !end_date || new Date(end_date) > new Date(currentDate);
+    });
   
+    console.log(activeDiscounts);
     // Get the most recent active discount for each book
     const discountsByBookId = {};
     activeDiscounts.forEach((discount) => {
       if (
         !discountsByBookId[discount.book_id] ||
-        new Date(discount.discount_start_date) > new Date(discountsByBookId[discount.book_id].discount_start_date)
-      ) {
+        new Date(discount.discounts.start_date) >
+        new Date(discountsByBookId[discount.book_id].discounts.start_date)
+              ) {
         discountsByBookId[discount.book_id] = discount;
       }
     });
 
+    console.log(discountsByBookId);
+    console.log(filteredResults);
     // Merge the discount rate into books
     const booksWithDiscountRate = filteredResults.map((book) => ({
       ...book,

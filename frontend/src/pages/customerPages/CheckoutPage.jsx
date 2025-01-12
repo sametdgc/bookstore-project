@@ -75,7 +75,6 @@ const CheckoutPage = () => {
   }, [isVerificationModalOpen, timeLeft]);
 
   const calculateSubtotal = () => {
-    console.log(cart);
     return cart
       .reduce((total, item) => total + item.book.price * item.quantity * ((100-item.book.discount)/100), 0)
       .toFixed(2);

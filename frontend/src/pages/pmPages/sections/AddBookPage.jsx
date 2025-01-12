@@ -75,7 +75,6 @@ const AddBookPage = () => {
       genre_id: bookData.genre_id ? parseInt(bookData.genre_id) : null, // Convert to integer or null
     };
 
-    console.log("Data to insert:", dataToInsert); // Debugging log
 
     // Insert the book into the database
     const { error } = await supabase.from("books").insert([dataToInsert]);

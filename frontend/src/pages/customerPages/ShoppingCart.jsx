@@ -47,6 +47,7 @@ const ShoppingCart = () => {
       } else {
         // Anonymous user: Load the cart from localStorage
         const savedCart = getLocalCartItems();
+        console.log(savedCart);
 
         // Fetch book details for each item in the cart
         const enrichedCart = await Promise.all(

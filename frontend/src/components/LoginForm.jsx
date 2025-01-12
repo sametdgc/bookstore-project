@@ -50,7 +50,6 @@ const LoginForm = () => {
         
           const localCart = getLocalCartItems();
           await syncLocalCartToDatabase(localCart, userId);
-          console.log(localCart)
           navigate('/shopping-cart'); 
           break;
         default:

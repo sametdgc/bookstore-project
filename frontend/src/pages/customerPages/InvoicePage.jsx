@@ -25,7 +25,6 @@ const sendEmail = async (orderDetails) => {
       console.error("Failed to send email:", result.error);
       alert("Failed to send the email. Please try again.");
     } else {
-      console.log("Email sent successfully:", result);
       alert("Email sent successfully!");
     }
   } catch (error) {

@@ -65,6 +65,8 @@ const BookDetailsPage = () => {
 
     //get current discount
     const fetchDiscount = async () => {
+      console.log("fetching discount");
+      console.log(book_id);
       const { data } = await getCurrentDiscount(book_id);
       if (data) {
         setCurrentDiscount(data.discount_rate);
@@ -241,6 +243,7 @@ const BookDetailsPage = () => {
               style={{ width: "300px", height: "60px" }}
             >
               {/* Discounted Price */}
+              {console.log(currentDiscount)}
               {currentDiscount > 0 ? (
                 <p className="text-[#4a886e] font-bold text-2xl">
                   ${(

@@ -55,7 +55,6 @@ const AddGenrePage = () => {
       genre_name: genreData.genre_name.trim(), // Trim whitespace
     };
 
-    console.log("Data to insert:", dataToInsert); // Debugging log
 
     // Insert the genre into the database
     const { error } = await supabase.from("genres").insert([dataToInsert]);
