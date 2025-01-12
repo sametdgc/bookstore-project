@@ -81,6 +81,50 @@ app.post("/api/send-invoice-email", async (req, res) => {
   }
 });
 
+
+app.post("/api/send-discount-email", async (req, res) => {
+  const { email, booktitle, author, discountName, discountRate, endDate } = req.body;
+  console.log("Incoming Request Data:", req.body); // Log incoming request data for debugging
+  console.log("Assignetd variables:", email, booktitle, author, discountName, discountRate, endDate);
+  // Validate the incoming request data
+  if (!email || !booktitle || !author || !discountName || !discountRate || !endDate) {
+    return res.status(400).json({ error: "Missing required fields: email, bookTitle, author, discountName, discountRate, or endDate." });
+  }
+
+  try {
+    // Simple plain text email message
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <h2 style="color: #007BFF;">Exciting Discount on "${booktitle}"!</h2>
+        <p>Hello,</p>
+        <p>We're thrilled to let you know that a discount has been applied to one of your favorite books:</p>
+        <p><strong>Book:</strong> ${booktitle} by ${author}</p>
+        <p><strong>Discount Name:</strong> ${discountName}</p>
+        <p><strong>Discount Rate:</strong> ${discountRate}%</p>
+        <p><strong>Discount End Date:</strong> ${endDate}</p>
+        <p>Don't miss out on this opportunity to get "${booktitle}" at a discounted price!</p>
+        <p>Best regards,</p>
+        <p><strong>The Chapter Zero Team</strong></p>
+      </div>
+    `;
+
+    // Use Resend API to send the email
+    const emailResponse = await resend.emails.send({
+      from: "Baran Ozcan <chZero@baranozcan.com>", // Replace with your sender's email
+      to: email,
+      subject: `Discount on "${booktitle}" by ${author}!`,
+      html: emailHtml,
+    });
+
+    console.log("Resend API Response:", emailResponse); // Log the response for debugging
+    res.status(200).json({ message: "Discount email sent successfully!", emailResponse });
+  } catch (error) {
+    console.error("Error sending discount email:", error);
+    res.status(500).json({ error: "Failed to send discount email.", details: error.message });
+  }
+});
+
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

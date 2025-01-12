@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { getDeliveryStatuses, updateDeliveryStatus } from "../../../services/api";
+import {
+  getDeliveryStatuses,
+  updateDeliveryStatus,
+} from "../../../services/api";
 
 const DeliveryDetails = () => {
   const [deliveryData, setDeliveryData] = useState([]);
@@ -7,12 +10,12 @@ const DeliveryDetails = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  const itemsPerPage = 5; // Set the number of rows per page
+  const itemsPerPage = 25;
 
   const fetchData = async (page) => {
     setLoading(true);
     try {
-      const { data, count } = await getDeliveryStatuses(page, itemsPerPage); // Fetch with pagination
+      const { data, count } = await getDeliveryStatuses(page, itemsPerPage);
       setDeliveryData(data);
       setTotalPages(Math.ceil(count / itemsPerPage));
     } catch (error) {
@@ -28,7 +31,7 @@ const DeliveryDetails = () => {
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      await updateDeliveryStatus(orderId, newStatus); // API call to update status
+      await updateDeliveryStatus(orderId, newStatus);
       setDeliveryData((prevData) =>
         prevData.map((item) =>
           item.order_id === orderId ? { ...item, status: newStatus } : item
@@ -41,13 +44,19 @@ const DeliveryDetails = () => {
 
   return (
     <div className="bg-white shadow-md rounded-lg p-6">
-      <h2 className="text-2xl font-bold mb-4">Delivery Details</h2>
+      <h2 className="text-3xl font-bold mb-6 text-gray-800">
+        Delivery Details
+      </h2>
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse table-auto">
           <thead>
-            <tr>
+            <tr className="bg-gray-200">
+              <th className="border-b p-4">Delivery ID</th>
               <th className="border-b p-4">Order ID</th>
               <th className="border-b p-4">Customer</th>
+              <th className="border-b p-4">Delivery Address</th>
+              <th className="border-b p-4">Books</th>
+              <th className="border-b p-4">Total Price</th>
               <th className="border-b p-4">Status</th>
               <th className="border-b p-4">Actions</th>
             </tr>
@@ -55,19 +64,79 @@ const DeliveryDetails = () => {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="4" className="p-4 text-center">
+                <td colSpan="8" className="p-4 text-center">
                   Loading...
                 </td>
               </tr>
             ) : deliveryData.length > 0 ? (
               deliveryData.map((item) => (
-                <tr key={item.order_id}>
+                <tr
+                  key={item.delivery_id}
+                  className="hover:bg-gray-100 transition ease-in-out"
+                >
+                  <td className="border-b p-4">{item.delivery_id}</td>
                   <td className="border-b p-4">{item.order_id}</td>
-                  <td className="border-b p-4">{item.order.users.full_name}</td>
-                  <td className="border-b p-4">{item.status}</td>
+                  <td className="border-b p-4">
+                    <div>
+                      <span className="font-bold">
+                        {item.order.users.full_name}
+                      </span>
+                      <br />
+                      <span className="text-sm text-gray-500">
+                        (ID: {item.order.user_id})
+                      </span>
+                    </div>
+                  </td>
+                  <td className="border-b p-4">
+                    {item.order.address
+                      ? `${item.order.address.address_details}, ${item.order.address.district}, ${item.order.address.city}`
+                      : "Address not available"}
+                  </td>
+                  <td className="border-b p-4">
+                    <table className="w-full text-sm border-collapse">
+                      <thead>
+                        <tr>
+                          <th className="border-b p-2 text-gray-600">
+                            Book ID
+                          </th>
+                          <th className="border-b p-2 text-gray-600">
+                            Quantity
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {item.order.order_items.map((orderItem) => (
+                          <tr key={orderItem.book_id}>
+                            <td className="border-b p-2 text-gray-800">
+                              {orderItem.book_id}
+                            </td>
+                            <td className="border-b p-2 text-gray-800">
+                              {orderItem.quantity}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </td>
+                  <td className="border-b p-4">
+                    ${item.order.total_price.toFixed(2)}
+                  </td>
+                  <td className="border-b p-4">
+                    <span
+                      className={`px-2 py-1 rounded-full text-sm ${
+                        item.status === "delivered"
+                          ? "bg-green-100 text-green-600"
+                          : item.status === "in-transit"
+                          ? "bg-yellow-100 text-yellow-600"
+                          : "bg-blue-100 text-blue-600"
+                      }`}
+                    >
+                      {item.status}
+                    </span>
+                  </td>
                   <td className="border-b p-4">
                     <select
-                      className="border p-2 rounded"
+                      className="border p-2 rounded w-full bg-white"
                       value={item.status}
                       onChange={(e) =>
                         handleStatusChange(item.order_id, e.target.value)
@@ -82,7 +151,7 @@ const DeliveryDetails = () => {
               ))
             ) : (
               <tr>
-                <td className="border-b p-4" colSpan="4">
+                <td className="border-b p-4" colSpan="8">
                   No delivery data available.
                 </td>
               </tr>
@@ -92,24 +161,30 @@ const DeliveryDetails = () => {
       </div>
 
       {/* Pagination Controls */}
-      <div className="flex justify-center mt-6 space-x-2">
+      <div className="flex justify-between items-center mt-6">
         <button
           onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           disabled={currentPage === 1}
           className={`px-4 py-2 rounded ${
-            currentPage === 1 ? "bg-gray-300" : "bg-[#65aa92] text-white"
+            currentPage === 1
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#65aa92] text-white"
           }`}
         >
           Previous
         </button>
-        <span className="text-gray-700 py-2">
+        <span className="text-gray-700">
           Page {currentPage} of {totalPages}
         </span>
         <button
-          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+          onClick={() =>
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+          }
           disabled={currentPage === totalPages}
           className={`px-4 py-2 rounded ${
-            currentPage === totalPages ? "bg-gray-300" : "bg-[#65aa92] text-white"
+            currentPage === totalPages
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#65aa92] text-white"
           }`}
         >
           Next
