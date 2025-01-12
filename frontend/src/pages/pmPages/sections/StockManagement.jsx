@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getBooksWithStock, updateBookStock } from "../../../services/api";
+import { supabase } from "../../../services/supabaseClient";
 
 const StockManagement = () => {
   const [books, setBooks] = useState([]);
@@ -17,20 +17,50 @@ const StockManagement = () => {
   // Fetch books with stock information
   const fetchBooks = async () => {
     setLoading(true);
-    const { data, count } = await getBooksWithStock(
-      searchQuery,
-      showOutOfStock,
-      page,
-      booksPerPage
-    );
-    setBooks(data);
-    setTotalBooks(count);
+
+    try {
+      const offset = (page - 1) * booksPerPage;
+
+      // Base query
+      let query = supabase
+        .from("books")
+        .select("*", { count: "exact" })
+        .range(offset, offset + booksPerPage - 1)
+        .order("book_id", { ascending: true });
+
+      // Apply filters
+      if (searchQuery.trim()) {
+        const searchTerm = searchQuery.trim();
+        if (!isNaN(searchTerm)) {
+          // Search by book_id if it's a number
+          query = query.eq("book_id", parseInt(searchTerm, 10));
+        } else {
+          // Search by title
+          query = query.ilike("title", `%${searchTerm}%`);
+        }
+      }
+
+      if (showOutOfStock) {
+        // Show only books with 0 stock
+        query = query.eq("available_quantity", 0);
+      }
+
+      const { data, count, error } = await query;
+
+      if (error) {
+        throw error;
+      }
+
+      setBooks(data || []);
+      setTotalBooks(count || 0);
+    } catch (error) {
+      console.error("Error fetching books with stock:", error.message);
+      setBooks([]);
+      setTotalBooks(0);
+    }
+
     setLoading(false);
   };
-
-  useEffect(() => {
-    fetchBooks();
-  }, [searchQuery, showOutOfStock, page]);
 
   // Handle stock update
   const handleStockUpdate = async () => {
@@ -39,15 +69,29 @@ const StockManagement = () => {
       return;
     }
 
-    const result = await updateBookStock(selectedBook.book_id, newStock);
-    if (result.success) {
+    try {
+      const { error } = await supabase
+        .from("books")
+        .update({ available_quantity: newStock })
+        .eq("book_id", selectedBook.book_id);
+
+      if (error) {
+        throw error;
+      }
+
       alert("Stock updated successfully!");
       setSelectedBook(null);
       fetchBooks();
-    } else {
+    } catch (error) {
       alert("Failed to update stock.");
+      console.error("Error updating stock:", error.message);
     }
   };
+
+  // Effect to fetch books on page load and when filters change
+  useEffect(() => {
+    fetchBooks();
+  }, [searchQuery, showOutOfStock, page]);
 
   // Pagination Controls
   const totalPages = Math.ceil(totalBooks / booksPerPage);
@@ -69,7 +113,10 @@ const StockManagement = () => {
           <input
             type="checkbox"
             checked={showOutOfStock}
-            onChange={() => setShowOutOfStock((prev) => !prev)}
+            onChange={() => {
+              setPage(1); // Reset to page 1 when toggling the checkbox
+              setShowOutOfStock((prev) => !prev);
+            }}
           />
           <span>Show Out of Stock</span>
         </label>
