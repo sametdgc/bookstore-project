@@ -6,6 +6,7 @@ import DeliveryDetails from "./sections/DeliveryDetails";
 import DeleteByGenrePage from "./sections/DeleteByGenrePage"; // Import the new page
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../services/supabaseClient";
+import AddGenrePage from "./sections/AddGenrePage";
 
 const PMDashboard = () => {
   const [activeSection, setActiveSection] = useState("products");
@@ -17,7 +18,8 @@ const PMDashboard = () => {
     { id: "comments", label: "Approve Comments" },
     { id: "stock", label: "Stock Management" },
     { id: "deliveries", label: "Delivery Details" },
-    { id: "deleteByGenre", label: "Delete by Genre" }, // Added this
+    { id: "deleteByGenre", label: "Delete by Genre" },
+    { id: "AddGenre", label: "Add Genre" }, // Added this
   ];
 
   const handleLogout = async () => {
@@ -68,7 +70,8 @@ const PMDashboard = () => {
         {activeSection === "comments" && <CommentApproval />}
         {activeSection === "stock" && <StockManagement />}
         {activeSection === "deliveries" && <DeliveryDetails />}
-        {activeSection === "deleteByGenre" && <DeleteByGenrePage />} {/* New */}
+        {activeSection === "deleteByGenre" && <DeleteByGenrePage />}
+        {activeSection === "AddGenre" && <AddGenrePage />} 
       </main>
     </div>
   );
