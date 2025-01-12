@@ -18,6 +18,7 @@ import {
   HelpAndSupportPage,
   InvoicePage,
   ReturnPage,
+  CancelPage, // Added CancelPage
 } from "./pages/customerPages";
 
 import {
@@ -25,13 +26,17 @@ import {
   AboutPage,
   ReturnRefundPolicyPage,
   SustainabilityPage,
-  CareersPage, // Added CareersPage
+  CareersPage,
 } from "./pages/footerPages";
-import { PMDashboard, AddBookPage,DeleteByGenrePage,AddGenrePage } from "./pages/pmPages";
+import {
+  PMDashboard,
+  AddBookPage,
+  DeleteByGenrePage,
+  AddGenrePage,
+} from "./pages/pmPages";
 import { TopNavBar, Footer } from "./components";
 
 import { SMDashboard } from "./pages/smPages";
-
 
 function App() {
   const location = useLocation();
@@ -64,16 +69,17 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/invoice" element={<InvoicePage />} />
           <Route path="/return/:order_id" element={<ReturnPage />} />
+          <Route path="/cancel/:order_id" element={<CancelPage />} />
           <Route path="/help-and-support" element={<HelpAndSupportPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/sustainability" element={<SustainabilityPage />} />
-          <Route path="/careers" element={<CareersPage />} /> {/* Added this */}
+          <Route path="/careers" element={<CareersPage />} />
           <Route path="*" element={<MainPage />} />
-          <Route path="/pm-dashboard" element={<PMDashboard />} />{" "}
-          <Route path="/sm-dashboard" element={<SMDashboard />} />{" "}
-          <Route path="/pm/add-book" element={<AddBookPage />} />{" "}
-          <Route path="/pm/add-genre" element={<AddGenrePage />} />{" "}
-          <Route path="/pm/delete-genre" element={<DeleteByGenrePage />} />{" "}
+          <Route path="/pm-dashboard" element={<PMDashboard />} />
+          <Route path="/sm-dashboard" element={<SMDashboard />} />
+          <Route path="/pm/add-book" element={<AddBookPage />} />
+          <Route path="/pm/add-genre" element={<AddGenrePage />} />
+          <Route path="/pm/delete-genre" element={<DeleteByGenrePage />} />
         </Routes>
       </div>
 

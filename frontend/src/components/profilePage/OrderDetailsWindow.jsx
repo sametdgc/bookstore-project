@@ -2,6 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getReturnHistoryByOrder } from "../../services/api";
 
+// Helper function to check if order is delivered
+const isOrderDelivered = (delivery_status) => {
+  console.log(delivery_status);
+  return delivery_status === "delivered";
+};
+
 // Helper function to check return eligibility (within 30 days)
 const isOrderReturnable = (orderDate) => {
   const currentDate = new Date();
@@ -48,6 +54,10 @@ const OrderDetailsWindow = ({ order }) => {
     navigate(`/return/${order.order_id}`);
   };
 
+  const handleCancelClick = () => {
+    navigate(`/cancel/${order.order_id}`);
+  };
+
   return (
     <div className="mt-6">
       {/* Expandable Section - Order Items */}
@@ -85,7 +95,10 @@ const OrderDetailsWindow = ({ order }) => {
                     {/* Book Image and Title */}
                     <div className="col-span-2 flex items-center">
                       <img
-                        src={item.book_image_url || "https://via.placeholder.com/50x75"}
+                        src={
+                          item.book_image_url ||
+                          "https://via.placeholder.com/50x75"
+                        }
                         alt={item.book_title}
                         className="w-16 h-24 object-cover rounded cursor-pointer"
                         onClick={() => navigate(`/books/${item.book_id}`)}
@@ -120,17 +133,26 @@ const OrderDetailsWindow = ({ order }) => {
                   Shipping: <span className="text-[#65aa92]">$10.00</span>
                 </div>
 
-                {/* Return Button */}
-                {isOrderReturnable(order.order_date) && (
-                  <div className="text-right mt-4">
+                {/* Return or Cancel Button */}
+                <div className="text-right mt-4">
+                  {isOrderDelivered(order.delivery_status) ? (
+                    isOrderReturnable(order.order_date) && (
+                      <button
+                        onClick={handleReturnClick}
+                        className="bg-red-500 text-white font-semibold px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                      >
+                        Return Item(s)
+                      </button>
+                    )
+                  ) : (
                     <button
-                      onClick={handleReturnClick}
-                      className="bg-red-500 text-white font-semibold px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                      onClick={handleCancelClick}
+                      className="bg-blue-500 text-white font-semibold px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
                     >
-                      Return Item(s)
+                      Cancel Order
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </>
             ) : (
               <>
@@ -187,7 +209,10 @@ const OrderDetailsWindow = ({ order }) => {
                     {/* Book Image and Title */}
                     <div className="col-span-2 flex items-center">
                       <img
-                        src={item.book_image_url || "https://via.placeholder.com/50x75"}
+                        src={
+                          item.book_image_url ||
+                          "https://via.placeholder.com/50x75"
+                        }
                         alt={item.book_title}
                         className="w-16 h-24 object-cover rounded cursor-pointer"
                         onClick={() => navigate(`/books/${item.book_id}`)}
@@ -206,7 +231,9 @@ const OrderDetailsWindow = ({ order }) => {
                     </span>
 
                     {/* Quantity */}
-                    <span className="text-gray-700 text-center">{item.quantity}</span>
+                    <span className="text-gray-700 text-center">
+                      {item.quantity}
+                    </span>
 
                     {/* Subtotal */}
                     <span className="text-gray-700 text-center">
