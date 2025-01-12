@@ -11,6 +11,7 @@ import {
   getLocalWishlistItems,
   addItemToLocalWishlist,
   removeItemFromLocalWishlist,
+  getCurrentDiscount,
 } from "../../services/api.js";
 import Cookies from "js-cookie";
 
@@ -22,6 +23,7 @@ const BookCard = ({ book }) => {
   const [cartMessage, setCartMessage] = useState("");
   const [wishlistMessage, setWishlistMessage] = useState("");
   const [wishlistMessageColor, setWishlistMessageColor] = useState("");
+  const [currentDiscount, setCurrentDiscount] = useState(0);
 
   const userId = Cookies.get("user_id");
 
@@ -43,6 +45,14 @@ const BookCard = ({ book }) => {
       }
     };
 
+    const fetchDiscount = async () => {
+      const { data } = await getCurrentDiscount(book.book_id);
+      if (data) {
+        setCurrentDiscount(data.discount_rate);
+      }
+    };
+
+    fetchDiscount();
     fetchUserAndWishlist();
   }, [book.book_id]);
 
@@ -135,9 +145,22 @@ const BookCard = ({ book }) => {
       {/* Author Name */}
       <p className="text-gray-500 text-sm text-center">{book.author_name}</p>
 
-      {/* Price */}
-      <p className="text-gray-800 text-xl font-bold text-center mt-2">${book.price}</p>
-
+      {/* Discount and Price Section */}
+      <div className="text-center mt-4">
+        {currentDiscount > 0 && (
+          <div className="flex items-center justify-center gap-2 mb-2">
+              <span className="text-[#4a886e] font-bold text-2xl">
+              ${(book.price - book.price * (currentDiscount / 100)).toFixed(2)}
+            </span>
+          </div>
+        )}
+        {currentDiscount > 0 ? (
+          <p className="text-gray-500 line-through text-sm">${book.price.toFixed(2)}</p>
+        ) : (
+          <p className="text-gray-800 text-xl font-bold">${book.price.toFixed(2)}</p>
+        )}
+      </div>
+      
       {/* Add to Cart button */}
       <div className="mt-auto w-full">
         <button

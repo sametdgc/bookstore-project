@@ -120,7 +120,7 @@ export const getCurrentDiscount = async (bookId) => {
     }
   };
   
-  export const endAllActiveDiscounts = async (bookId) => {
+export const endAllActiveDiscounts = async (bookId) => {
     const currentDate = new Date().toISOString();
   
     // Fetch all active discount IDs for the given book

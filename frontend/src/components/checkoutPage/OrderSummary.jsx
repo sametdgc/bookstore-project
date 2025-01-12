@@ -25,11 +25,39 @@ const OrderSummary = ({ cart, shippingCost, calculateTotalPrice }) => {
                 </h3>
               </Link>
               <p className="text-gray-500 mt-1">
-                ${item.book.price.toFixed(2)} x {item.quantity}
+                {item.book.discount > 0 ? (
+                  <>
+                    <span className="text-[#4a886e] font-semibold">
+                      ${(item.book.price * (1 - item.book.discount / 100)).toFixed(2)}
+                    </span>{" "}
+                    <span className="line-through text-sm text-gray-400 ml-2">
+                      ${item.book.price.toFixed(2)}
+                    </span>{" "}
+                    x {item.quantity}
+                  </>
+                ) : (
+                  <>
+                    ${item.book.price.toFixed(2)} x {item.quantity}
+                  </>
+                )}
               </p>
             </div>
             <p className="font-semibold text-right w-24">
-              ${(item.book.price * item.quantity).toFixed(2)}
+              {item.book.discount > 0 ? (
+                <>
+                  <span className="text-[#4a886e] font-semibold">
+                    ${(item.book.price * (1 - item.book.discount / 100) * item.quantity).toFixed(2)}
+                  </span>
+                  <br />
+                  <span className="line-through text-sm text-gray-400">
+                    ${(item.book.price * item.quantity).toFixed(2)}
+                  </span>
+                </>
+              ) : (
+                <>
+                  ${(item.book.price * item.quantity).toFixed(2)}
+                </>
+              )}
             </p>
           </li>
         ))}
@@ -41,7 +69,7 @@ const OrderSummary = ({ cart, shippingCost, calculateTotalPrice }) => {
             $
             {cart
               .reduce(
-                (total, item) => total + item.book.price * item.quantity,
+                (total, item) => total + item.book.price * item.quantity * (100-item.book.discount) / 100,
                 0
               )
               .toFixed(2)}

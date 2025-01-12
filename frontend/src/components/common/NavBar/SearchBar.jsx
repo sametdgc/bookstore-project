@@ -102,7 +102,30 @@ const SearchBar = () => {
               <div className="flex-1">
                 <h3 className="text-black font-semibold">{book.title}</h3>
                 <p className="text-sm text-gray-500">{book.author.author_name}</p>
-                <p className="text-sm font-bold text-gray-500">${book.price}</p>
+                <div className="mt-2">
+                  {book.discount_rate > 0 ? (
+                    <div className="flex flex-col items-start">
+                      {/* Discounted Price */}
+                      <span className="text-[#4a886e] font-bold text-lg">
+                        ${(
+                          book.price -
+                          book.price * (book.discount_rate / 100)
+                        ).toFixed(2)}
+                      </span>
+                      {/* Original Price */}
+                      <p className="text-gray-500 line-through text-sm mt-1">
+                        ${book.price.toFixed(2)}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-start">
+                      {/* Regular Price */}
+                      <span className="text-black font-bold text-lg">
+                        ${book.price.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </li>
           ))}

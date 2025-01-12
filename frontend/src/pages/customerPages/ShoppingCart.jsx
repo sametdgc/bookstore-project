@@ -9,7 +9,8 @@ import {
   getBookDetailsById, 
   getLocalCartItems, 
   updateLocalCartItemQuantity, 
-  removeItemFromLocalCart 
+  removeItemFromLocalCart,
+  getCurrentDiscount, 
 } from '../../services/api';
 
 const ShoppingCart = () => {
@@ -27,7 +28,22 @@ const ShoppingCart = () => {
       if (currentUser) {
         // Logged-in user: Fetch their cart from the database
         const userCartItems = await getCartItems(currentUser.user_metadata.custom_incremented_id);
-        setCart(userCartItems || []);
+        //for each item in the cart, fetch the book discount
+        const enrichedCart = await Promise.all(
+          userCartItems.map(async (item) => {
+            const bookDiscount = await getCurrentDiscount(item.book_id);
+            if(bookDiscount.data !== null){
+              const bookDiscountRate= bookDiscount.data.discount_rate;
+              item.discount_rate = bookDiscountRate||0;
+            } else {
+              item.discount_rate = 0;
+            }
+            return {
+              ...item,
+            };
+          })
+        );
+        setCart(enrichedCart);
       } else {
         // Anonymous user: Load the cart from localStorage
         const savedCart = getLocalCartItems();
@@ -36,6 +52,13 @@ const ShoppingCart = () => {
         const enrichedCart = await Promise.all(
           savedCart.map(async (item) => {
             const bookDetails = await getBookDetailsById(item.book_id);
+            const bookDiscount = await getCurrentDiscount(item.book_id);
+            if(bookDiscount.data !== null){
+              const bookDiscountRate= bookDiscount.data.discount_rate;
+              item.discount_rate = bookDiscountRate||0;
+            } else {
+              item.discount_rate = 0;
+            }
             return {
               ...item,
               ...bookDetails, 
@@ -55,13 +78,13 @@ const ShoppingCart = () => {
 
   // Function to calculate total price (Subtotal + Shipping)
   const calculateTotalPrice = () => {
-    const subtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity * (100-item.discount_rate)/100), 0);
     return (subtotal + shippingCost).toFixed(2);
   };
 
   // Function to calculate subtotal (products only, no shipping)
   const calculateSubtotal = () => {
-    return cart.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
+    return cart.reduce((total, item) => total + (item.price * item.quantity * (100-item.discount_rate)/100), 0).toFixed(2);
   };
   
   const updateQuantity = async (bookId, newQuantity) => {
@@ -81,10 +104,27 @@ const ShoppingCart = () => {
   
       // Reload the cart from the database
       const updatedCart = await getCartItems(userId);
+
+      //for each item in the cart, fetch the book discount
+      const enrichedCart = await Promise.all(
+        updatedCart.map(async (item) => {
+          const bookDiscount = await getCurrentDiscount(item.book_id);
+          if(bookDiscount.data !== null){
+            const bookDiscountRate= bookDiscount.data.discount_rate;
+            item.discount_rate = bookDiscountRate||0;
+          } else {
+            item.discount_rate = 0;
+          }
+          return {
+            ...item,
+          };
+        })
+      );
+
   
       // Restore the original order of the cart (for consistent UI)
       const orderedCart = originalCartOrder.map((originalItem) =>
-        updatedCart.find((updatedItem) => updatedItem.book_id === originalItem.book_id) || originalItem
+        enrichedCart.find((updatedItem) => updatedItem.book_id === originalItem.book_id) || originalItem
       );
   
       setCart(orderedCart);
@@ -96,6 +136,15 @@ const ShoppingCart = () => {
       const enrichedCart = await Promise.all(
         updatedCart.map(async (item) => {
           const bookDetails = await getBookDetailsById(item.book_id);
+
+          const bookDiscount = await getCurrentDiscount(item.book_id);
+          if(bookDiscount.data !== null){
+            const bookDiscountRate= bookDiscount.data.discount_rate;
+            item.discount_rate = bookDiscountRate||0;
+          } else {
+            item.discount_rate = 0;
+          }
+
           return {
             ...item,
             ...bookDetails,
@@ -187,7 +236,7 @@ const ShoppingCart = () => {
                 // Dynamically handle book details for logged-in vs. anonymous users
                 const title = item.book?.title || item.title || 'Unknown Title';
                 const imageUrl = item.book?.image_url || item.image_url || 'https://via.placeholder.com/50x75';
-                const price = item.book?.price || item.price || 0;
+                const price = item.book?.price || (item.price * (100-item.discount_rate)/100) || 0;
 
                 return (
                   <tr key={item.book_id} className="border-b">
@@ -204,7 +253,18 @@ const ShoppingCart = () => {
                         {title}
                       </span>
                     </td>
-                    <td>${price.toFixed(2)}</td>
+                    <td>
+                      {item.discount_rate > 0 ? (
+                        <div>
+                          <span className="text-[#4a886e] font-bold">${price.toFixed(2)}</span>
+                          <span className="text-gray-500 line-through text-sm ml-2">
+                            ${(item.price).toFixed(2)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span>${price.toFixed(2)}</span>
+                      )}
+                    </td>
                     <td>
                       <div className="flex items-center">
                         <button
@@ -232,7 +292,7 @@ const ShoppingCart = () => {
                       </button>
                     </td>
                   </tr>
-                );
+                );  
               })}
             </tbody>
           </table>

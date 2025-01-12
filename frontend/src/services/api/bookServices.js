@@ -106,9 +106,9 @@ export const getBookById = async (bookIds) => {
   }
   return data;
 };
-
+ 
 export const searchBooks = async (query) => {
-    // Query for books by title or ISBN
+    // Query for books by title, ISBN, description, or publisher
     const { data: booksByTitleOrIsbnOrDescorPub, error: mainError } = await supabase
       .from("books")
       .select(
@@ -117,10 +117,10 @@ export const searchBooks = async (query) => {
         author:authors (author_name) -- Join the authors table to get author_name
       `
       )
-      .or(`title.ilike.%${query}%,isbn.ilike.%${query}%,description.ilike.%${query}%,publisher.ilike.%${query}%`); // Search in title, ISBN, or description
+      .or(`title.ilike.%${query}%,isbn.ilike.%${query}%,description.ilike.%${query}%,publisher.ilike.%${query}%`); // Search in title, ISBN, description, or publisher
   
     if (mainError) {
-      console.log("Error fetching books by title or ISBN:", mainError.message);
+      console.log("Error fetching books by title, ISBN, description, or publisher:", mainError.message);
       return [];
     }
   
@@ -152,8 +152,57 @@ export const searchBooks = async (query) => {
     // Remove books without authors
     const filteredResults = combinedResults.filter((book) => book.author);
   
-    return filteredResults;
+    // Query for discounts for all retrieved books
+    const bookIds = filteredResults.map((book) => book.book_id);
+    const { data: discounts, error: discountError } = await supabase
+    .from("bookdiscounts")
+    .select(
+      `
+      book_id,
+      discounts (
+        discount_id,
+        discount_name,
+        discount_rate,
+        start_date,
+        end_date
+      )
+    `
+    )
+    .in("book_id", bookIds); // Get discounts for the retrieved books
+  
+    if (discountError) {
+      console.log("Error fetching discount data:", discountError.message);
+      return filteredResults; // Return results without discounts if the query fails
+    }
+  
+    // Filter for active discounts (end_date is null or in the future)
+    const currentDate = new Date().toISOString();
+    const activeDiscounts = discounts
+      .filter(
+        (discount) =>
+          !discount.discount_end_date || discount.discount_end_date > currentDate
+      );
+  
+    // Get the most recent active discount for each book
+    const discountsByBookId = {};
+    activeDiscounts.forEach((discount) => {
+      if (
+        !discountsByBookId[discount.book_id] ||
+        new Date(discount.discount_start_date) > new Date(discountsByBookId[discount.book_id].discount_start_date)
+      ) {
+        discountsByBookId[discount.book_id] = discount;
+      }
+    });
+
+    // Merge the discount rate into books
+    const booksWithDiscountRate = filteredResults.map((book) => ({
+      ...book,
+      discount_rate: discountsByBookId[book.book_id]?.discounts.discount_rate || 0, // Set discount_rate to 0 if no valid discount
+    }));
+    
+    return booksWithDiscountRate;
   };
+  
   
   // GET a books by genre
   export const getBooksByGenre = async (genreId) => {
