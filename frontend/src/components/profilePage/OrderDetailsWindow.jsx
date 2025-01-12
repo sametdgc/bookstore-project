@@ -85,7 +85,10 @@ const OrderDetailsWindow = ({ order }) => {
                     {/* Book Image and Title */}
                     <div className="col-span-2 flex items-center">
                       <img
-                        src={item.book_image_url || "https://via.placeholder.com/50x75"}
+                        src={
+                          item.book_image_url ||
+                          "https://via.placeholder.com/50x75"
+                        }
                         alt={item.book_title}
                         className="w-16 h-24 object-cover rounded cursor-pointer"
                         onClick={() => navigate(`/books/${item.book_id}`)}
@@ -187,7 +190,10 @@ const OrderDetailsWindow = ({ order }) => {
                     {/* Book Image and Title */}
                     <div className="col-span-2 flex items-center">
                       <img
-                        src={item.book_image_url || "https://via.placeholder.com/50x75"}
+                        src={
+                          item.book_image_url ||
+                          "https://via.placeholder.com/50x75"
+                        }
                         alt={item.book_title}
                         className="w-16 h-24 object-cover rounded cursor-pointer"
                         onClick={() => navigate(`/books/${item.book_id}`)}
@@ -206,7 +212,9 @@ const OrderDetailsWindow = ({ order }) => {
                     </span>
 
                     {/* Quantity */}
-                    <span className="text-gray-700 text-center">{item.quantity}</span>
+                    <span className="text-gray-700 text-center">
+                      {item.quantity}
+                    </span>
 
                     {/* Subtotal */}
                     <span className="text-gray-700 text-center">

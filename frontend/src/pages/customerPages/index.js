@@ -10,6 +10,7 @@ import HelpAndSupportPage from "./HelpAndSupportPage";
 import SearchPage from "./SearchPage";
 import InvoicePage from "./InvoicePage";
 import ReturnPage from "./ReturnPage";
+import CancelPage from "./CancelPage";
 
 export {
   LoginPage,
@@ -23,5 +24,6 @@ export {
   HelpAndSupportPage,
   SearchPage,
   InvoicePage,
-  ReturnPage
+  ReturnPage,
+  CancelPage,
 };
