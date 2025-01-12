@@ -2,15 +2,16 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import SearchBar from "../components/common/NavBar/SearchBar";
-import { searchBooks } from "../services/api"; // Import searchBooks for mocking
+import { searchBooks } from "../services/api";
 
-// Mock the API call and React Router's useNavigate
+// Mock the API call
 jest.mock("../services/api", () => ({
   searchBooks: jest.fn(),
 }));
+
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
-  useNavigate: jest.fn(), // Mock useNavigate as a Jest function
+  useNavigate: jest.fn(),
 }));
 
 import { useNavigate } from "react-router-dom";
@@ -19,13 +20,23 @@ describe("SearchBar Component", () => {
   let mockNavigate;
 
   beforeEach(() => {
-    mockNavigate = jest.fn(); // Initialize mockNavigate as a Jest function
-    useNavigate.mockReturnValue(mockNavigate); // Mock useNavigate to return mockNavigate
-    searchBooks.mockClear(); // Clear any previous calls to searchBooks
+    mockNavigate = jest.fn();
+    useNavigate.mockReturnValue(mockNavigate);
+    searchBooks.mockClear();
   });
 
+  const mockResults = [
+    {
+      book_id: 1,
+      title: "The Great Gatsby",
+      author: { author_name: "F. Scott Fitzgerald" },
+      price: 10.99, // Add valid price
+      discount_rate: 0, // Add discount_rate for completeness
+      image_url: "http://example.com/image.jpg",
+    },
+  ];
+
   test("searches for a book by name", async () => {
-    const mockResults = [{ book_id: 1, title: "The Great Gatsby", author: { author_name: "F. Scott Fitzgerald" } }];
     searchBooks.mockResolvedValueOnce(mockResults);
 
     render(
@@ -45,7 +56,6 @@ describe("SearchBar Component", () => {
   });
 
   test("searches for a book by author name", async () => {
-    const mockResults = [{ book_id: 1, title: "The Great Gatsby", author: { author_name: "F. Scott Fitzgerald" } }];
     searchBooks.mockResolvedValueOnce(mockResults);
 
     render(
@@ -65,9 +75,6 @@ describe("SearchBar Component", () => {
   });
 
   test("searches for a book by description", async () => {
-    const mockResults = [
-      { book_id: 1, title: "The Great Gatsby", author: { author_name: "F. Scott Fitzgerald" }, description: "A classic novel of the Jazz Age." },
-    ];
     searchBooks.mockResolvedValueOnce(mockResults);
 
     render(
@@ -87,10 +94,18 @@ describe("SearchBar Component", () => {
   });
 
   test("searches for a book by ISBN", async () => {
-    const mockResults = [
-      { book_id: 1, title: "The Great Gatsby", author: { author_name: "F. Scott Fitzgerald" }, isbn: "978-0743273565" },
+    const isbnResults = [
+      {
+        book_id: 1,
+        title: "The Great Gatsby",
+        author: { author_name: "F. Scott Fitzgerald" },
+        price: 10.99,
+        discount_rate: 0,
+        image_url: "http://example.com/image.jpg",
+        isbn: "978-0743273565",
+      },
     ];
-    searchBooks.mockResolvedValueOnce(mockResults);
+    searchBooks.mockResolvedValueOnce(isbnResults);
 
     render(
       <MemoryRouter>
@@ -109,10 +124,18 @@ describe("SearchBar Component", () => {
   });
 
   test("searches for a book by publisher", async () => {
-    const mockResults = [
-      { book_id: 1, title: "The Great Gatsby", author: { author_name: "F. Scott Fitzgerald" }, publisher: "Scribner" },
+    const publisherResults = [
+      {
+        book_id: 1,
+        title: "The Great Gatsby",
+        author: { author_name: "F. Scott Fitzgerald" },
+        price: 10.99,
+        discount_rate: 0,
+        image_url: "http://example.com/image.jpg",
+        publisher: "Scribner",
+      },
     ];
-    searchBooks.mockResolvedValueOnce(mockResults);
+    searchBooks.mockResolvedValueOnce(publisherResults);
 
     render(
       <MemoryRouter>

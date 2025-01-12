@@ -13,6 +13,7 @@ describe("OrderSummary Component", () => {
         title: "Book One",
         price: 10.99,
         image_url: "https://via.placeholder.com/50x75",
+        discount: 0,
       },
       quantity: 2,
     },
@@ -23,6 +24,7 @@ describe("OrderSummary Component", () => {
         title: "Book Two",
         price: 20.5,
         image_url: "https://via.placeholder.com/50x75",
+        discount: 0,
       },
       quantity: 1,
     },
@@ -30,11 +32,15 @@ describe("OrderSummary Component", () => {
   const mockShippingCost = 5.0;
   const mockCalculateTotalPrice = jest.fn(() =>
     mockCart.reduce(
-      (total, item) => total + item.book.price * item.quantity,
+      (total, item) =>
+        total +
+        item.book.price *
+          item.quantity *
+          ((100 - (item.book.discount || 0)) / 100), 
       0
     ) + mockShippingCost
   );
-
+  
   const setup = () => {
     render(
       <Router>
