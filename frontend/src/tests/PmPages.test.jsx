@@ -160,14 +160,48 @@ describe("PM Pages Tests", () => {
     });
 
     test("renders Delivery Details page and table", async () => {
+      const mockDeliveryData = [
+        {
+          delivery_id: 1,
+          order_id: 101,
+          status: "processing",
+          order: {
+            users: { full_name: "John Doe", user_id: 1 },
+            address: {
+              address_details: "123 Main St",
+              district: "Central",
+              city: "Metropolis",
+            },
+            order_items: [
+              { book_id: 201, quantity: 2 },
+              { book_id: 202, quantity: 1 },
+            ],
+            total_price: 45.99,
+          },
+        },
+      ];
+    
+      getDeliveryStatuses.mockResolvedValue({ data: mockDeliveryData, count: 1 });
+    
       render(<DeliveryDetails />, { wrapper: MemoryRouter });
-
+    
+      // Wait for the data to load
       await waitFor(() => {
         expect(screen.getByText(/Delivery Details/i)).toBeInTheDocument();
       });
-
-      expect(screen.getByRole("table")).toBeInTheDocument();
+    
+      // Get all tables and target the main one
+      const tables = screen.getAllByRole("table");
+      const mainTable = tables[0]; // Assuming the first table is the delivery table
+      expect(mainTable).toBeInTheDocument();
+    
+      // Verify the content in the main table
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+      expect(screen.getByText("123 Main St, Central, Metropolis")).toBeInTheDocument();
+      expect(screen.getByText("$45.99")).toBeInTheDocument();
+      expect(screen.getByText("processing")).toBeInTheDocument();
     });
+    
 
     test("renders a message when no delivery data is available", async () => {
       getDeliveryStatuses.mockResolvedValue({ data: [], count: 0 });
@@ -181,23 +215,73 @@ describe("PM Pages Tests", () => {
 
     // New Test 1: DeliveryDetails - Checks dropdown default selection
     test("displays default status in the dropdown correctly", async () => {
+      const mockDeliveryData = [
+        {
+          delivery_id: 1,
+          order_id: 101,
+          status: "processing",
+          order: {
+            users: { full_name: "John Doe", user_id: 1 },
+            address: {
+              address_details: "123 Main St",
+              district: "Central",
+              city: "Metropolis",
+            },
+            order_items: [{ book_id: 201, quantity: 2 }],
+            total_price: 45.99,
+          },
+        },
+      ];
+    
+      getDeliveryStatuses.mockResolvedValue({ data: mockDeliveryData, count: 1 });
+    
       render(<DeliveryDetails />, { wrapper: MemoryRouter });
-
+    
+      // Wait for the data to load
       await waitFor(() => {
-        const dropdown = screen.getByDisplayValue(/processing/i);
-        expect(dropdown).toBeInTheDocument();
+        expect(screen.getByText(/Delivery Details/i)).toBeInTheDocument();
       });
+    
+      // Check if the dropdown displays the correct default status
+      const dropdown = screen.getByDisplayValue(/processing/i);
+      expect(dropdown).toBeInTheDocument();
     });
+    
 
     // New Test 2: DeliveryDetails - Validates loading spinner behavior
     test("displays and hides the loading spinner appropriately", async () => {
+      const mockDeliveryData = [
+        {
+          delivery_id: 1,
+          order_id: 101,
+          status: "processing",
+          order: {
+            users: { full_name: "John Doe", user_id: 1 },
+            address: {
+              address_details: "123 Main St",
+              district: "Central",
+              city: "Metropolis",
+            },
+            order_items: [
+              { book_id: 201, quantity: 2 },
+            ],
+            total_price: 45.99,
+          },
+        },
+      ];
+    
+      getDeliveryStatuses.mockResolvedValue({ data: mockDeliveryData, count: 1 });
+    
       render(<DeliveryDetails />, { wrapper: MemoryRouter });
-
+    
+      // Verify the loading spinner is displayed
       expect(screen.getByText(/Loading.../i)).toBeInTheDocument();
-
+    
+      // Wait for the data to load and check that the spinner disappears
       await waitFor(() => {
         expect(screen.queryByText(/Loading.../i)).not.toBeInTheDocument();
       });
     });
+    
   });
 });
