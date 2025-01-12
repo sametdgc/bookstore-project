@@ -177,8 +177,6 @@ export const searchBooks = async (query) => {
   
     // Filter for active discounts (end_date is null or in the future)
     const currentDate = new Date().toISOString();
-    console.log(discounts)
-    console.log(currentDate);
     const activeDiscounts = discounts.filter((discount) => {
       const { end_date, start_date } = discount.discounts;
       return !end_date || new Date(end_date) > new Date(currentDate);
