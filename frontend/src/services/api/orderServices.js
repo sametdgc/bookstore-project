@@ -50,7 +50,7 @@ export const placeOrder = async (orderDetails, cartItems) => {
       order_id: newOrderId,
       book_id: item.book_id,
       quantity: item.quantity,
-      item_price: item.book.price,
+      item_price: item.book.price * (100- item.book.discount)/100
     }));
   
     const { error: orderItemsError } = await supabase.from("orderitems").insert(orderItems);
