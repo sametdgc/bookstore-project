@@ -48,6 +48,7 @@ const DeliveryDetails = () => {
             <tr>
               <th className="border-b p-4">Order ID</th>
               <th className="border-b p-4">Customer</th>
+              <th className="border-b p-4">Delivery Address</th>
               <th className="border-b p-4">Status</th>
               <th className="border-b p-4">Actions</th>
             </tr>
@@ -55,7 +56,7 @@ const DeliveryDetails = () => {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="4" className="p-4 text-center">
+                <td colSpan="5" className="p-4 text-center">
                   Loading...
                 </td>
               </tr>
@@ -64,6 +65,11 @@ const DeliveryDetails = () => {
                 <tr key={item.order_id}>
                   <td className="border-b p-4">{item.order_id}</td>
                   <td className="border-b p-4">{item.order.users.full_name}</td>
+                  <td className="border-b p-4">
+                    {item.order.address
+                      ? `${item.order.address.address_details}, ${item.order.address.district}, ${item.order.address.city}`
+                      : "Address not available"}
+                  </td>
                   <td className="border-b p-4">{item.status}</td>
                   <td className="border-b p-4">
                     <select
@@ -82,7 +88,7 @@ const DeliveryDetails = () => {
               ))
             ) : (
               <tr>
-                <td className="border-b p-4" colSpan="4">
+                <td className="border-b p-4" colSpan="5">
                   No delivery data available.
                 </td>
               </tr>
