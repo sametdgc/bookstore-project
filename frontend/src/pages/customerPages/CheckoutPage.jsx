@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchUser, getCartItems, placeOrder,decrementBookStock} from "../../services/api";
+import { fetchUser, getCartItems, placeOrder, getCurrentDiscount} from "../../services/api";
 import {
   AddressSelector,
   PaymentForm,
@@ -44,6 +44,17 @@ const CheckoutPage = () => {
       if (user) {
         const userId = user.user_metadata.custom_incremented_id;
         const dbCart = await getCartItems(userId);
+
+        //set the discount rate for each book
+        for (let i = 0; i < dbCart.length; i++) {
+          const book = dbCart[i].book;
+          const discount = await getCurrentDiscount(book.book_id);
+          if(discount.data){
+            book.discount = discount.data.discount_rate;
+          } else {
+            book.discount = 0;
+          }
+        }      
         setCart(dbCart || []);
       } else {
         setCart([]);
@@ -64,8 +75,9 @@ const CheckoutPage = () => {
   }, [isVerificationModalOpen, timeLeft]);
 
   const calculateSubtotal = () => {
+    console.log(cart);
     return cart
-      .reduce((total, item) => total + item.book.price * item.quantity, 0)
+      .reduce((total, item) => total + item.book.price * item.quantity * ((100-item.book.discount)/100), 0)
       .toFixed(2);
   };
 

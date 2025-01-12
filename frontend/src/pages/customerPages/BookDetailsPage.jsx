@@ -12,6 +12,7 @@ import {
   addBookToWishlist,
   removeBookFromWishlist,
   getWishlistByUserId,
+  getCurrentDiscount,
 } from "../../services/api";
 import ReviewWindow, { renderStars } from "../../components/ReviewWindow";
 
@@ -23,6 +24,7 @@ const BookDetailsPage = () => {
   const [cartMessage, setCartMessage] = useState("");
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [user, setUser] = useState(null);
+  const [currentDiscount, setCurrentDiscount] = useState(0);
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -61,6 +63,15 @@ const BookDetailsPage = () => {
       }
     };
 
+    //get current discount
+    const fetchDiscount = async () => {
+      const { data } = await getCurrentDiscount(book_id);
+      if (data) {
+        setCurrentDiscount(data.discount_rate);
+      }
+    };
+
+    fetchDiscount();
     fetchBookDetails();
     fetchCurrentUser();
   }, [book_id]);
@@ -226,10 +237,30 @@ const BookDetailsPage = () => {
           </div>
           <div className="md:w-1/4 flex flex-col items-center md:items-end justify-center space-y-4 self-stretch">
             <div
-              className="bg-gray-50 p-4 rounded-md shadow-lg text-center font-semibold"
+              className="bg-gray-50 p-4 rounded-md shadow-lg flex justify-center gap-x-4 items-center w-full"
               style={{ width: "300px", height: "60px" }}
             >
-              <p className="text-2xl text-gray-700">${book.price}</p>
+              {/* Discounted Price */}
+              {currentDiscount > 0 ? (
+                <p className="text-[#4a886e] font-bold text-2xl">
+                  ${(
+                    book.price -
+                    book.price * (currentDiscount / 100)
+                  ).toFixed(2)}
+                </p>
+              ) : (
+                <p className="text-gray-700 text-2xl font-semibold">
+                  ${book.price.toFixed(2)}
+                </p>
+              )}
+
+
+              {/* Original Price */}
+              {currentDiscount > 0 && (
+                <p className="text-gray-500 line-through text-sm">
+                  ${book.price.toFixed(2)}
+                </p>
+              )}
             </div>
             <button
               onClick={book.available_quantity > 0 ? handleAddToCart : null}
