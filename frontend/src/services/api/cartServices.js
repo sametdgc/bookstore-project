@@ -109,6 +109,7 @@ export const getOrCreateCartByUserId = async (userId) => {
         `
         *,
         book:books (
+          book_id,
           title,
           image_url,
           price

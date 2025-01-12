@@ -282,7 +282,6 @@ const ShoppingCart = () => {
                         </button>
                       </div>
                     </td>
-                    {console.log(item, price)}
                     <td>${calculateItemSubtotal({ ...item, price })}</td>
                     <td>
                       <button
