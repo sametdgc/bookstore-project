@@ -149,7 +149,6 @@ const BookCard = ({ book }) => {
       <div className="text-center mt-4">
         {currentDiscount > 0 && (
           <div className="flex items-center justify-center gap-2 mb-2">
-              <span className="text-green-500 text-lg">⚡</span> {/* Changed color to green */}
               <span className="text-[#4a886e] font-bold text-2xl">
               ${(book.price - book.price * (currentDiscount / 100)).toFixed(2)}
             </span>
