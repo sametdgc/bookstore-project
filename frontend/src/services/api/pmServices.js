@@ -78,7 +78,14 @@ export const getDeliveryStatuses = async (page, itemsPerPage) => {
     .select(
       `
       *,
-      order:orders (order_id, order_date, total_price, user_id, users:users (full_name))
+      order:orders (
+        order_id,
+        order_date,
+        total_price,
+        user_id,
+        users:users (full_name),
+        address:addresses (address_details, city, district)
+      )
     `,
       { count: "exact" }
     )
@@ -91,6 +98,7 @@ export const getDeliveryStatuses = async (page, itemsPerPage) => {
     return { data, count };
   }
 };
+
 
 // Update delivery status
 export const updateDeliveryStatus = async (orderId, newStatus) => {
