@@ -178,56 +178,71 @@ const MyProfilePage = () => {
 
                         {/* Delivery Status Icons */}
                         <div className="flex items-center ml-auto mr-6">
-                          {["Processing", "In Transit", "Delivered"].map(
-                            (step, index) => {
-                              const currentStatus =
-                                order.delivery_status?.status.toLowerCase() ||
-                                "processing";
+                          {order.delivery_status?.status.toLowerCase() ===
+                          "cancelled" ? (
+                            // Cancelled Status
+                            <div className="flex items-center">
+                              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-red-500 text-white">
+                                <span className="font-semibold text-lg">X</span>{" "}
+                                {/* Red X Icon */}
+                              </div>
+                              <span className="ml-4 text-red-500 font-medium text-lg">
+                                Order Cancelled
+                              </span>
+                            </div>
+                          ) : (
+                            // Regular Status Progress
+                            ["Processing", "In Transit", "Delivered"].map(
+                              (step, index) => {
+                                const currentStatus =
+                                  order.delivery_status?.status.toLowerCase() ||
+                                  "processing";
 
-                              const isCompleted =
-                                (currentStatus === "processing" &&
-                                  index === 0) ||
-                                (currentStatus === "in-transit" &&
-                                  index <= 1) ||
-                                currentStatus === "delivered";
+                                const isCompleted =
+                                  (currentStatus === "processing" &&
+                                    index === 0) ||
+                                  (currentStatus === "in-transit" &&
+                                    index <= 1) ||
+                                  currentStatus === "delivered";
 
-                              const connectorCompleted =
-                                (currentStatus === "in-transit" &&
-                                  index === 0) ||
-                                currentStatus === "delivered";
+                                const connectorCompleted =
+                                  (currentStatus === "in-transit" &&
+                                    index === 0) ||
+                                  currentStatus === "delivered";
 
-                              return (
-                                <div key={step} className="flex items-center">
-                                  <div
-                                    className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                                      isCompleted
-                                        ? "bg-[#65aa92] text-white"
-                                        : "bg-gray-300 text-gray-700"
-                                    }`}
-                                  >
-                                    {index === 0 ? (
-                                      <Clipboard size={20} />
-                                    ) : index === 1 ? (
-                                      <Truck size={20} />
-                                    ) : (
-                                      <Home size={20} />
+                                return (
+                                  <div key={step} className="flex items-center">
+                                    <div
+                                      className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                                        isCompleted
+                                          ? "bg-[#65aa92] text-white"
+                                          : "bg-gray-300 text-gray-700"
+                                      }`}
+                                    >
+                                      {index === 0 ? (
+                                        <Clipboard size={20} />
+                                      ) : index === 1 ? (
+                                        <Truck size={20} />
+                                      ) : (
+                                        <Home size={20} />
+                                      )}
+                                    </div>
+
+                                    {/* Connector */}
+                                    {index < 2 && (
+                                      <div
+                                        className={`h-1 ${
+                                          connectorCompleted
+                                            ? "bg-[#65aa92]"
+                                            : "bg-gray-300"
+                                        }`}
+                                        style={{ width: "160px" }}
+                                      />
                                     )}
                                   </div>
-
-                                  {/* Connector */}
-                                  {index < 2 && (
-                                    <div
-                                      className={`h-1 ${
-                                        connectorCompleted
-                                          ? "bg-[#65aa92]"
-                                          : "bg-gray-300"
-                                      }`}
-                                      style={{ width: "160px" }}
-                                    />
-                                  )}
-                                </div>
-                              );
-                            }
+                                );
+                              }
+                            )
                           )}
                         </div>
                       </div>
