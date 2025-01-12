@@ -100,6 +100,8 @@ import {
   endAllActiveDiscounts,
 } from "./api/discountServices";
 import { cancelOrder } from "./api/cancelServices";
+import { approveCancellation, createCancellationRequest, getPendingCancellations, rejectCancellation, getCancellationRequests } from "./api/cancellationServices";
+ 
 
 export {
   getUserAddresses,
@@ -181,4 +183,9 @@ export {
   approveRefund,
   rejectRefund,
   cancelOrder,
+  approveCancellation, 
+  createCancellationRequest, 
+  getPendingCancellations, 
+  rejectCancellation,
+  getCancellationRequests
 };

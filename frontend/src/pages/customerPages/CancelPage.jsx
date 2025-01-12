@@ -4,6 +4,7 @@ import {
   getOrderDetailsById,
   cancelOrder,
   updateBookStock,
+  createCancellationRequest
 } from "../../services/api";
 
 const CancelPage = () => {
@@ -62,38 +63,43 @@ const CancelPage = () => {
 
   const handleSubmit = async () => {
     const newErrors = {};
-
+  
+    // Validate reasons for selected items
     Object.entries(selectedItems).forEach(([bookId, details]) => {
       if (!details.reason) {
         newErrors[bookId] = { reason: true };
       }
     });
-
+  
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       alert("Please provide a reason for all selected items.");
       return;
     }
-
+  
     try {
-      // Cancel the order
-      await cancelOrder(order_id);
-
-      // Update stock for each canceled item
+      // Create cancellation requests for selected items
       for (const [bookId, details] of Object.entries(selectedItems)) {
         const item = orderItems.find((i) => i.book_id === parseInt(bookId));
         if (item) {
-          await updateBookStock(bookId, item.quantity);
+          await createCancellationRequest(
+            order_id,
+            parseInt(bookId),
+            item.quantity,
+            details.reason,
+            details.otherReason
+          );
         }
       }
-
-      alert("Order canceled successfully!");
+  
+      alert("Cancellation request submitted successfully!");
       navigate("/profile");
     } catch (error) {
-      console.error("Error canceling order:", error);
-      alert("An error occurred while canceling the order. Please try again.");
+      console.error("Error creating cancellation request:", error);
+      alert("An error occurred while submitting the request. Please try again.");
     }
   };
+  
 
   if (loading) return <div className="text-center mt-10">Loading...</div>;
 
