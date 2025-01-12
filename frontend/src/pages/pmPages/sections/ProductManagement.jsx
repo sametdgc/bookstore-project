@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { getAllBooks, searchBooks } from "../../../services/api/bookServices";
 import { supabase } from "../../../services/supabaseClient";
-import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
+import { Link, useNavigate } from "react-router-dom";
 
 const ProductManagement = () => {
   const [books, setBooks] = useState([]); // State for displaying books
@@ -9,31 +8,42 @@ const ProductManagement = () => {
   const [page, setPage] = useState(1); // Current page
   const booksPerPage = 10; // Number of books per page
   const [searchQuery, setSearchQuery] = useState(""); // Search input value
+  const [isSearching, setIsSearching] = useState(false); // Whether live search is active
   const navigate = useNavigate(); // Initialize navigate function
 
   // Fetch books from the database
   const fetchBooks = async () => {
     setLoading(true);
     const offset = (page - 1) * booksPerPage; // Calculate the offset for pagination
-    const data = await getAllBooks(booksPerPage, offset); // Fetch books with pagination
-    if (data) {
-      setBooks(data);
+    const { data, error } = await supabase
+      .from("books")
+      .select("*")
+      .order("book_id", { ascending: true })
+      .range(offset, offset + booksPerPage - 1); // Fetch books with pagination
+    if (error) {
+      console.error("Error fetching books:", error.message);
+    } else {
+      setBooks(data || []);
     }
     setLoading(false);
   };
 
   // Search books by title
-  const handleSearch = async () => {
-    if (searchQuery.trim() === "") {
-      fetchBooks();
+  const handleSearch = async (query) => {
+    setIsSearching(true);
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("books")
+      .select("*")
+      .ilike("title", `%${query}%`); // Case-insensitive search
+    if (error) {
+      console.error("Error searching books:", error.message);
+      setBooks([]); // Clear books if there's an error
     } else {
-      setLoading(true);
-      const data = await searchBooks(searchQuery);
-      if (data) {
-        setBooks(data);
-      }
-      setLoading(false);
+      setBooks(data || []);
     }
+    setLoading(false);
+    setIsSearching(false);
   };
 
   // Remove a book by its ID
@@ -44,20 +54,38 @@ const ProductManagement = () => {
       alert("Failed to delete the book. Please try again.");
     } else {
       alert("Book removed successfully!");
-      fetchBooks();
+      fetchBooks(); // Refresh the book list after deletion
     }
   };
 
+  // Effect to fetch books on page load and when the page changes
   useEffect(() => {
-    fetchBooks();
-  }, [page]);
+    if (!searchQuery) {
+      fetchBooks();
+    }
+  }, [page, searchQuery]);
+
+  // Effect to handle live search when searchQuery changes
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const debounceTimeout = setTimeout(() => {
+        handleSearch(searchQuery);
+      }, 300); // Add a debounce of 300ms to prevent too many API calls
+      return () => clearTimeout(debounceTimeout); // Cleanup the timeout
+    } else {
+      fetchBooks(); // Fetch the full book list if searchQuery is empty
+    }
+  }, [searchQuery]);
 
   return (
     <div className="bg-white shadow-md rounded-lg p-6">
       {/* Header with Add Book Button */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Manage Books</h2>
-        <Link to="/pm/add-book" className="bg-[#65aa92] text-white px-4 py-2 rounded hover:bg-[#4a886e]">
+        <Link
+          to="/pm/add-book"
+          className="bg-[#65aa92] text-white px-4 py-2 rounded hover:bg-[#4a886e]"
+        >
           Add Book
         </Link>
       </div>
@@ -71,12 +99,6 @@ const ProductManagement = () => {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full p-2 border rounded"
         />
-        <button
-          onClick={handleSearch}
-          className="ml-2 bg-[#65aa92] text-white px-4 py-2 rounded hover:bg-[#4a886e]"
-        >
-          Search
-        </button>
       </div>
 
       {loading ? (
@@ -135,7 +157,7 @@ const ProductManagement = () => {
       <div className="flex justify-between items-center mt-4">
         <button
           onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-          disabled={page === 1}
+          disabled={page === 1 || isSearching}
           className="bg-gray-300 px-4 py-2 rounded disabled:opacity-50"
         >
           Previous
@@ -143,7 +165,7 @@ const ProductManagement = () => {
         <span className="text-gray-700">Page {page}</span>
         <button
           onClick={() => setPage((prev) => prev + 1)}
-          disabled={books.length < booksPerPage}
+          disabled={books.length < booksPerPage || isSearching}
           className="bg-gray-300 px-4 py-2 rounded disabled:opacity-50"
         >
           Next
