@@ -87,6 +87,91 @@ export const getRevenueByCategory = async () => {
   }
 };
 
+export const getProfitByCategory = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("orderitems")
+      .select(
+        `
+          quantity,
+          item_price,
+          books:books (
+            genre_id,
+            genres:genres (genre_name),
+            cost
+          )
+        `
+      );
+    
+    if (error) {
+      console.error("Error fetching profit by category:", error.message);
+      return [];
+    }
+
+    // Group profit by genre
+    const profitByGenre = data.reduce((acc, item) => {
+      const genreName = item.books?.genres?.genre_name || "Unknown";
+      const totalItemProfit = item.quantity * (item.item_price - item.books?.cost);
+
+      acc[genreName] = (acc[genreName] || 0) + totalItemProfit;
+      return acc;
+    }, {});
+
+    // Format data for the chart
+    return Object.keys(profitByGenre).map((genre) => ({
+      category: genre,
+      profit: parseFloat(profitByGenre[genre].toFixed(2)), // Ensure 2 decimal precision
+    }));
+  } catch (err) {
+    console.error("Unexpected error fetching profit by category:", err.message);
+    return [];
+  }
+};
+  
+// get the total COST per category
+export const getCostByCategory = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("orderitems") 
+      .select(
+        `
+          quantity,
+          item_price,
+          books:books (
+            genre_id,
+            genres:genres (genre_name),
+            cost
+          )
+        `
+      );
+
+    if (error) {
+      console.error("Error fetching cost by category:", error.message);
+      return [];
+    }
+
+    // Group cost by genre
+    
+    const costByGenre = data.reduce((acc, item) => {
+      const genreName = item.books?.genres?.genre_name || "Unknown";
+      const totalItemCost = item.quantity * item.books?.cost;
+
+      acc[genreName] = (acc[genreName] || 0) + totalItemCost;
+      return acc;
+    }, {});
+
+    // Format data for the chart
+    return Object.keys(costByGenre).map((genre) => ({
+      category: genre,
+      cost: parseFloat(costByGenre[genre].toFixed(2)), // Ensure 2 decimal precision
+    }));
+  } catch (err) {
+    console.error("Unexpected error fetching cost by category:", err.message);
+    return [];
+  }
+};
+
+
 
 export const getTopCustomers = async () => {
   try {
@@ -211,6 +296,74 @@ export const getDailyTotalRevenue = async (startDate = null, endDate = null) => 
   }
 };
 
+
+export const getDailyTotalCost = async () => {
+  try { 
+    const { data, error } = await supabase
+      .from("orderitems")
+      .select(
+        `
+        quantity,
+        item_price,
+        orders (order_date),
+        books (cost)
+      `
+      );
+
+    if (error) {
+      console.error("Error fetching daily cost:", error.message);
+      return [];
+    }
+
+    // Group and sum cost by day
+    const costByDay = {};
+
+    data.forEach((item) => {
+      const date = item.orders?.order_date.split("T")[0]; // Extract just the date part
+      const totalItemCost = item.quantity * item.books?.cost;
+
+      costByDay[date] = (costByDay[date] || 0) + totalItemCost;
+    });
+
+    // Convert to array format for Recharts
+    return Object.keys(costByDay)
+      .map((date) => ({
+        date,
+        cost: parseFloat(costByDay[date].toFixed(2)),
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by date
+  } catch (err) {
+    console.error("Unexpected error fetching daily cost:", err.message);
+    return [];
+  }
+};
+
+//get the total net profit for each day
+export const getDailyNetProfit = async (startDate = null, endDate = null) => {
+  try {
+    const totalRevenue = await getDailyTotalRevenue(startDate, endDate);
+    const totalCost = await getDailyTotalCost();
+
+    // Combine revenue and cost by date
+    const netProfit = totalRevenue.map(({ date, revenue }) => {
+      const costEntry = totalCost.find((item) => item.date === date);
+      const cost = costEntry ? costEntry.cost : 0;
+      return { date, profit: revenue - cost };
+    });
+
+    return netProfit;
+  }
+  catch (error) {
+    console.error("Error calculating net profit:", error);
+    throw error;
+  }
+}
+
+
+
+
+
+
 //claculates the total revenue so far, what it does is that it fetches all the orders and gorups the total price of orders in the same day
 // and then sums them up, then each day gets the revenue of tat day and all the past days, so the last day will have the total revenue
 //we just returned the given date range
@@ -262,6 +415,87 @@ export const getTotalRevenue = async (startDate = null, endDate = null) => {
     throw error;
   }
 };
+
+export const getTotalCost = async (startDate = null, endDate = null) => {
+  try {
+    // Join orderitems with orders and books to fetch relevant data
+    let query = supabase
+      .from("orderitems")
+      .select(
+        `
+        quantity,
+        books:book_id(price),
+        orders(order_date)
+      `
+      );
+
+    // Apply date filters based on the order date
+    if (startDate) query = query.gte("orders.order_date", startDate);
+    if (endDate) query = query.lte("orders.order_date", endDate);
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching data:", error);
+      throw error;
+    }
+
+    // Group costs by date
+    const costMap = {};
+    data.forEach(({ quantity, books, orders }) => {
+      const date = orders?.order_date.split("T")[0]; // Extract date from order_date
+      const bookCost = books?.price || 0; // Get the cost of the book
+      const totalCost = quantity * bookCost; // Calculate total cost for this item
+
+      if (!costMap[date]) costMap[date] = 0;
+      costMap[date] += totalCost; // Add to the date's total cost
+    });
+
+    // Generate all dates in the range
+    const allDates = [];
+    let currentDate = new Date(startDate);
+    const end = new Date(endDate);
+
+    while (currentDate <= end) {
+      allDates.push(currentDate.toISOString().split("T")[0]); // Add date string
+      currentDate.setDate(currentDate.getDate() + 1); // Increment day
+    }
+
+    // Fill in missing dates with 0 cost and calculate cumulative cost
+    let cumulativeCost = 0;
+    const result = allDates.map((date) => {
+      const dailyCost = costMap[date] || 0;
+      cumulativeCost += dailyCost;
+      return { date, cost: cumulativeCost };
+    });
+
+    return result;
+  } catch (error) {
+    console.error("Error calculating total cost:", error);
+    throw error;
+  }
+};
+
+
+export const getNetProfit = async (startDate = null, endDate = null) => {
+  try {
+    const totalRevenue = await getTotalRevenue(startDate, endDate);
+    const totalCost = await getTotalCost(startDate, endDate);
+
+    // Combine revenue and cost by date
+    const netProfit = totalRevenue.map(({ date, revenue }) => {
+      const costEntry = totalCost.find((item) => item.date === date);
+      const cost = costEntry ? costEntry.cost : 0;
+      return { date, profit: revenue - cost };
+    });
+
+    return netProfit;
+  } catch (error) {
+    console.error("Error calculating net profit:", error);
+    throw error;
+  }
+};
+
 
 //update the price of a book with the given id
 export const updateBookPrice = async (id, newPrice) => {

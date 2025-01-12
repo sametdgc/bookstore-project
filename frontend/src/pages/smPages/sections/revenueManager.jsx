@@ -3,7 +3,6 @@ import TotalRevenueChart from "./charts/TotalRevenueChart";
 import DailyRevenueChart from "./charts/DailyRevenueChart";
 import TopCustomersChart from "./charts/TopCustomersChart";
 import RevenueByCategoryChart from "./charts/RevenueByCategoryChart";
-import GeographicRevenueChart from "./charts/GeographicRevenueChart";
 import RevenueCompositionChart from "./charts/RevenueCompositionChart";
 
 const RevenueManager = () => {
@@ -11,8 +10,7 @@ const RevenueManager = () => {
     { id: "totalRevenue", label: "Total Revenue" },
     { id: "dailyRevenue", label: "Daily Revenue" },
     { id: "topCustomers", label: "Top Customers" },
-    { id: "revenueByCategory", label: "Revenue by Category" },
-    { id: "geographicRevenue", label: "Geographic Revenue" },
+    { id: "revenueByCategory", label: "Categories" },
     { id: "revenueComposition", label: "Revenue Composition" },
   ];
 
@@ -28,8 +26,6 @@ const RevenueManager = () => {
         return <TopCustomersChart />;
       case "revenueByCategory":
         return <RevenueByCategoryChart />;
-      case "geographicRevenue":
-        return <GeographicRevenueChart />;
       case "revenueComposition":
         return <RevenueCompositionChart />;
       default:
