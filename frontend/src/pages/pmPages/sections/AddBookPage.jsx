@@ -12,11 +12,11 @@ const AddBookPage = () => {
     description: "",
     price: "",
     image_url: "",
-    available_quantity: "",
+    available_quantity: "", // Stock is now required
     author_id: "",
     isbn: "",
     language_id: "",
-    genre_id: "",
+    genre_id: "", // Genre ID is now required
   });
 
   // Fetch the largest book_id from the database and increment it
@@ -52,9 +52,12 @@ const AddBookPage = () => {
   // Add book to the database
   const handleAddBook = async () => {
     // Validate required fields
-    if (!bookData.title || !bookData.description || !bookData.price) {
-      alert("Please fill in all required fields: Title, Description, Price.");
-      return;
+    const requiredFields = ["title", "description", "price", "available_quantity", "genre_id"];
+    for (const field of requiredFields) {
+      if (!bookData[field]) {
+        alert(`Please fill in all required fields: Title, Description, Price, Stock Quantity, and Genre ID.`);
+        return;
+      }
     }
 
     // Prepare the data for insertion
@@ -64,17 +67,12 @@ const AddBookPage = () => {
       description: bookData.description,
       price: parseFloat(bookData.price), // Ensure price is a float
       image_url: bookData.image_url || null, // Allow null for optional fields
-      available_quantity: bookData.available_quantity
-        ? parseInt(bookData.available_quantity)
-        : null, // Convert to integer or null
-      author_id: bookData.author_id ? parseInt(bookData.author_id) : null, // Convert to integer or null
+      available_quantity: parseInt(bookData.available_quantity, 10), // Ensure stock is an integer
+      author_id: bookData.author_id ? parseInt(bookData.author_id, 10) : null, // Convert to integer or null
       isbn: bookData.isbn || null, // Allow null for optional fields
-      language_id: bookData.language_id
-        ? parseInt(bookData.language_id)
-        : null, // Convert to integer or null
-      genre_id: bookData.genre_id ? parseInt(bookData.genre_id) : null, // Convert to integer or null
+      language_id: bookData.language_id ? parseInt(bookData.language_id, 10) : null, // Convert to integer or null
+      genre_id: parseInt(bookData.genre_id, 10), // Ensure genre_id is an integer
     };
-
 
     // Insert the book into the database
     const { error } = await supabase.from("books").insert([dataToInsert]);
@@ -126,20 +124,28 @@ const AddBookPage = () => {
           onChange={handleChange}
           className="w-full p-2 border rounded"
         />
+        <input
+          name="available_quantity"
+          placeholder="Stock Quantity *"
+          type="number"
+          value={bookData.available_quantity}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        />
+        <input
+          name="genre_id"
+          placeholder="Genre ID *"
+          type="number"
+          value={bookData.genre_id}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        />
 
         {/* Optional Fields */}
         <input
           name="image_url"
           placeholder="Image URL (Optional)"
           value={bookData.image_url}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          name="available_quantity"
-          placeholder="Stock Quantity (Optional)"
-          type="number"
-          value={bookData.available_quantity}
           onChange={handleChange}
           className="w-full p-2 border rounded"
         />
@@ -163,14 +169,6 @@ const AddBookPage = () => {
           placeholder="Language ID (Optional)"
           type="number"
           value={bookData.language_id}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          name="genre_id"
-          placeholder="Genre ID (Optional)"
-          type="number"
-          value={bookData.genre_id}
           onChange={handleChange}
           className="w-full p-2 border rounded"
         />
