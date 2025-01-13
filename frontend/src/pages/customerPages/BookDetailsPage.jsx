@@ -198,7 +198,9 @@ const BookDetailsPage = () => {
           </div>
           <div className="md:w-2/4 flex flex-col space-y-4">
             <h1 className="text-4xl font-bold text-[#65aa92]">{book.title}</h1>
-            <p className="text-2xl text-gray-700">{book.author.author_name}</p>
+            <p className="text-2xl text-gray-700">
+              {book.author?.author_name || "Unknown author"}
+            </p>
             <p className="text-md text-gray-600 mt-2">{book.description}</p>
             <div className="text-md text-gray-500 space-y-1">
               <p>

@@ -145,7 +145,9 @@ try {
         )
     `
     )
+    .order("order_id", { ascending: false })
     .eq("user_id", userId);
+    
 
     if (error) {
     console.error("Error fetching user orders:", error.message);

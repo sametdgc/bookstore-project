@@ -527,7 +527,9 @@ export const getAllBooksRaw = async () => {
       author:authors (author_name),
       genre:genres (genre_name),
       language:languages (language_name)
-    `);
+    `)
+    .order("book_id", { ascending: false });
+    
     if (error) {
       console.error("Error fetching books:", error.message);
       return { data: [] };
