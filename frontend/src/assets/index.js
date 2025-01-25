@@ -1,4 +1,4 @@
-import chapter0logo from './chapter0logo.png';
+import chapter0Logo from './chapter0Logo.png';
 import registerBackground from './register-background.avif';
 
-export { chapter0logo, registerBackground };
+export { chapter0Logo, registerBackground };

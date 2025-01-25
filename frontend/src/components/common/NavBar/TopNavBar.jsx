@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from 'react-router-dom';
 import { ShoppingCartIcon, HeartIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { chapter0logo } from '../../../assets';
+import { chapter0Logo } from '../../../assets';
 import CategoryLinks from './CategoryLinks';
 import LoginStatus from './LoginStatus';
 import SearchBar from "./SearchBar";
@@ -16,7 +16,7 @@ const TopNavBar = () => {
         {/* Logo with Link to Home */}
         <div className="flex items-center space-x-2">
           <Link to="/">
-            <img src={chapter0logo} alt="Chapter 0 Logo" className="h-12 w-auto" />
+            <img src={chapter0Logo} alt="Chapter 0 Logo" className="h-12 w-auto" />
           </Link>
         </div>
 
