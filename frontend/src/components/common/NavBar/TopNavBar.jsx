@@ -4,7 +4,7 @@ import { ShoppingCartIcon, HeartIcon, Bars3Icon, XMarkIcon } from '@heroicons/re
 import { chapter0logo } from '../../../assets';
 import CategoryLinks from './CategoryLinks';
 import LoginStatus from './LoginStatus';
-import SearchBar from "./Searchbar";
+import SearchBar from "./SearchBar";
 
 const TopNavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
