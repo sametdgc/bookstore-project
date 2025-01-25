@@ -17,7 +17,7 @@ const LoginPage = () => {
         
         <div className="w-1/2 h-full">
           <img
-            src="/src/assets/bookstore.jpg" 
+            src="/bookstore.jpg" 
             alt="Bookstore"
             className="w-full h-full object-cover rounded-r-lg"
           />

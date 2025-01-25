@@ -17,7 +17,7 @@ const RegisterPage = () => {
         {/* Image Section */}
         <div className="w-1/2 h-full flex items-start pt-40 pl-1"> {/* Adjust padding and margin */}
           <img
-            src="/src/assets/bookstore.jpg" // Same image as login page
+            src="/bookstore.jpg" // Same image as login page
             alt="Bookstore"
             className="w-full h-auto object-cover rounded-r-lg transform -translate-x-5 translate-y-10" // Moves left and down
           />
